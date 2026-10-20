@@ -1,5 +1,15 @@
 # Production-readiness assessment
 
+## Review-branch evidence and first supported scope
+
+The historical main assessment below is preserved. It predates the successful review-branch qualification of source `4f440807f20c568a2240ed5ce32f1aab8e9558b0`, full run `3177a6c3-3b64-4e5b-b40b-dc18bf1c7884`. Its statement that no full evidence existed is historical, not the current review-branch result. See the [immutable baseline report](https://github.com/Tobia5/model-sync-starter/blob/a67966d16ccf6c140f4c95bebc2ddfd3ad497364/QM.md) and the [current QM report](../QM.md).
+
+The first supported scope is **known-ID owner-to-Oracle/JPA reconciliation**, using one correctly enlisted local datasource and `JpaTransactionManager`, application-supplied detached DTO mappings and an application-authorized owner reader. This scope does not promise inventory/discovery, broker delivery, vendor connectors or remote writeback. No such feature is added by qualification work.
+
+The configured baseline suite passed; production remains **NO-GO** while applicable [parent release gates](../TODO.md) remain incomplete. In particular, its JDBC test projection did not prove mixed JDBC/JPA atomicity, and its queue-work sum did not explain individual SQL cost. Later proof and measurements must name their own tested source/run and must not overwrite the baseline.
+
+## Historical main assessment
+
 **Date:** 2026-10-20. **Remote baseline:** `a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6`.
 **Decision:** NO-GO for a production-qualified release or an unattended million-record Oracle deployment until the applicable P0 gates in [TODO](../TODO.md) have evidence.
 

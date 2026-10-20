@@ -1,9 +1,13 @@
 # Production qualification backlog
 
-Reviewed 2026-10-20 against main `a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6`.
+Reconciled on the review branch against the immutable qualification below; the original main assessment was `a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6`.
 These are **acceptance gates, not a claim that the project is production-ready**.
 Owners below are suggested responsibilities; no person has accepted an assignment.
 See [assessment](docs/PRODUCTION-READINESS.md), [packaging](docs/PACKAGING.md), and [worker task](docs/CODEX-HANDOFF.md).
+
+**First supported scope:** known-ID owner-to-Oracle/JPA reconciliation in one correctly enlisted local datasource/`JpaTransactionManager`. The application supplies its owner reader, mapping, identity authorization and provider policy. Complete-population inventory, broker delivery, vendor connectors and remote target writes are outside this first scope. Their future gates remain open; interfaces do not constitute implemented connectors.
+
+**B1 (preserved baseline):** source `4f440807f20c568a2240ed5ce32f1aab8e9558b0`, tree `02faa6e6b9b5b8a28af6234d2b1de699a736b735`, full run `3177a6c3-3b64-4e5b-b40b-dc18bf1c7884`, attempt `99a77d95-2499-4964-95d9-8e4ecf67d84d`. [Immutable report](https://github.com/Tobia5/model-sync-starter/blob/a67966d16ccf6c140f4c95bebc2ddfd3ad497364/QM.md), [raw evidence](validation/qualification/2026-10-20/raw-evidence.zip), SHA-256 `ab7ff892a1d8ceafab878deb977d1eacb7becf53bdca5f3dab71ef06eebbf92c`. Leaf criteria below are completed only within that measured scope. **R01–R13 parent gates remain open.**
 
 ## Implemented in the delivered patch; execution still required
 
@@ -18,15 +22,16 @@ See [assessment](docs/PRODUCTION-READINESS.md), [packaging](docs/PACKAGING.md), 
 
 ### R01 — Build the actual repository, not only a reconstructed fixture
 Suggested owner: maintainer/build engineering.
-- [ ] Run Java21 and the pinned Boot platform with `mvn -B -ntp -Plibrary-artifacts clean verify`.
-- [ ] Fix real compiler, framework, AOP, auto-configuration, JPA/H2 and Reactor failures without disabling tests.
-- [ ] Require nonempty, unskipped Surefire reports and preserve logs. Keep Oracle results separately identified.
+- [x] Build Java21 / Boot 4.1.1 with the pinned wrapper: `./mvnw -B -ntp clean verify`; B1 used the explicitly approved project Central settings, exit 0 (50 JUnit tests). Packaging is separate from verification.
+- [x] Dependency-linked compiler, framework, AOP, auto-configuration, JPA/H2 and Reactor tests pass without disabling tests: B1 default run `f50960a1-2cec-438d-90ca-3ea6d70cdc30`.
+- [x] Require and retain nonempty, unskipped reports: B1 full has 52 Surefire / 6 Oracle tests, zero failures/errors/skips, plus PIT 133/135 killed and six semantic Gatling scenarios. Oracle evidence remains separately identified.
 - [ ] Make verification a required branch check; restrict workflow-file changes and protect main.
 Acceptance: reproducible green Actions run on the review commit and on the merge commit, with exact dependency/JDK versions.
 
 ### R02 — Real Oracle concurrency and transaction proof
 Suggested owner: persistence maintainer + DBA/QA.
-- [ ] Test two independent connections/processes enqueueing one new subject, claiming different subjects, recovering expired leases and rejecting stale completion.
+- [x] Two independent Oracle connections coalesce one new subject, and reclaim rejects the old token: B1 `OracleConcurrencyIT`, 2 tests, 0.772 s. This is not independent-process/multi-pod proof.
+- [ ] Independent processes claim different subjects and demonstrate crash/restart fencing under contention.
 - [ ] Test JDBC ledger + JPA projection rollback together, racing inserts, pessimistic/optimistic conflicts and configured transaction-manager datasource enlistment.
 - [ ] Test quota registration races, shared cooldown and admission across pods; include missing/misconfigured quota and database outage.
 - [ ] Set and test statement, lock and transaction timeouts; a fetch timeout does not bound database waits.
@@ -34,16 +39,20 @@ Acceptance: all scenarios pass against the deployed Oracle major version/JDBC dr
 
 ### R03 — Schema migration and rollback/recovery
 Suggested owner: DBA + maintainer.
-- [ ] Exercise v1 to v2 with WAITING, LEASED, DEAD and pending-generation records; validate preserved data/indexes/constraints.
+- [x] Exercise v1 to v2 preserving WAITING/DEAD evidence and enabling IDLE: B1 `OracleMigrationIT`, 1 test, 3.747 s, isolated migration schema.
+- [ ] Extend migration proof to LEASED and pending-generation records, preserved indexes/constraints, interruption and rollback compatibility.
 - [ ] Exercise stop/migrate/start ordering, interruption and backup restoration. Document why an old application cannot read IDLE without compatibility support.
-- [ ] Use versioned application-managed migrations; do not add automatic production DDL to starter startup.
+- [x] Supply versioned v1-to-v2 migration and startup schema validation; no automatic production DDL: B1 migration test and `JdbcWorkStore.verifySchema` / JDBC auto-configuration.
 Acceptance: reviewed migration evidence from a disposable Oracle clone; backup and restore rehearsal; a documented supported rollback path (not a promise that every DDL is reversible).
 
 ### R04 — Scale, quota economics and provider isolation
 Suggested owner: runtime maintainer + performance QA.
-- [ ] Seed a representative million-record ledger and skewed hot-key workload; run several pods with constrained Oracle pool sizes.
-- [ ] Measure DB queries/locks per admitted owner call, denied-admission churn, memory/threads, p95/p99 queue/visit latency and oldest pending age.
-- [ ] Inject 429/Retry-After, slow/hung blocking calls, network reset, database loss, pod kill and shutdown during fetch/commit.
+- [x] Seed one million intents (100k due / 900k future), coalesce 100 hot-key requests, and run four workers with pool 8: B1 `OracleCapacityIT`, 211 persisted completions from 232 controlled stub calls. One JVM, not several pods; one million seeds are not one million completions.
+- [ ] Run several pods at representative distributions and agree sustainable capacity/resource bounds.
+- [x] Retain baseline cost/latency counters: B1 337 measured attempts, 222 stub calls / 201 completions, 34,237,829 summed block-work units, p95/p99 run-one latency 899/927 ms. These are not query counts, visit latency or a freshness SLO.
+- [ ] Diagnose individual claim/SQL counters, quota-denial churn, actual plans/waits, oldest age and sustainable provider/DB economics; compare equivalent resources and workloads before optimization.
+- [x] Inject synthetic 429/timeouts and 5/25 ms latency: B1 Oracle workload (13 rate limits / 8 timeouts); local semantic Gatling cooldown recovery. No real provider or hung-call proof.
+- [ ] Inject hung calls, network reset, database loss, pod kill and shutdown during fetch/commit.
 - [ ] Budget physical calls, including adapter-internal retries, MDM lookups and pagination; prove bursts respect the provider's actual contract.
 - [ ] Confirm whether urgent quota reservations and per-owner bulkheads are required. Weighted priority selection alone does not supply these guarantees.
 Acceptance: agreed resource and freshness SLOs met at target volume; no stale lease writes, runaway memory, busy-spin on cooldown or low-priority starvation. Record measured limits instead of inventing throughput guarantees.
@@ -95,7 +104,7 @@ Acceptance: clean external consumer succeeds; attach publication and consumer ev
 
 ### R11 — Stable release and supply chain
 - [ ] Define supported Boot/JDK/Oracle ranges, semantic versioning, API compatibility tests and migration policy.
-- [ ] Pin a Maven Wrapper with verified checksums; verify repeatable clean builds and artifact checksums/provenance.
+- [x] Pin Maven Wrapper 3.9.9 with distribution integrity and Windows support; clean default/full builds and source-bound artifact hashes: B1. Independent reproducibility/provenance review remains open.
 - [ ] Generate a release SBOM, run dependency/security/license analysis and record triage, not only a scanner installation.
 - [ ] Create a protected tag-based release lane only after qualification. Do not rename SNAPSHOT to 1.0 to imply production approval.
 - [ ] For Maven Central, verify ownership of the chosen group namespace (the existing `io.modelsync` is not proof of domain ownership), signing and current Central Portal requirements.
