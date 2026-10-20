@@ -1,6 +1,13 @@
 name: Model Sync full verification
 on:
   workflow_dispatch:
+    inputs:
+      oracle_mode:
+        description: Approved nonproduction Oracle source
+        type: choice
+        required: true
+        default: external
+        options: [external, disposable-container]
 permissions:
   contents: read
 concurrency:
@@ -25,19 +32,24 @@ jobs:
         id: build
         shell: bash
         env:
-          MODELSYNC_ORACLE_URL: ${{ secrets.MODELSYNC_ORACLE_URL }}
-          MODELSYNC_ORACLE_USER: ${{ secrets.MODELSYNC_ORACLE_USER }}
-          MODELSYNC_ORACLE_PASSWORD: ${{ secrets.MODELSYNC_ORACLE_PASSWORD }}
-          MODELSYNC_ORACLE_MIGRATION_URL: ${{ secrets.MODELSYNC_ORACLE_MIGRATION_URL }}
-          MODELSYNC_ORACLE_MIGRATION_USER: ${{ secrets.MODELSYNC_ORACLE_MIGRATION_USER }}
-          MODELSYNC_ORACLE_MIGRATION_PASSWORD: ${{ secrets.MODELSYNC_ORACLE_MIGRATION_PASSWORD }}
+          MODELSYNC_ORACLE_URL: ${{ inputs.oracle_mode == 'external' && secrets.MODELSYNC_ORACLE_URL || '' }}
+          MODELSYNC_ORACLE_USER: ${{ inputs.oracle_mode == 'external' && secrets.MODELSYNC_ORACLE_USER || '' }}
+          MODELSYNC_ORACLE_PASSWORD: ${{ inputs.oracle_mode == 'external' && secrets.MODELSYNC_ORACLE_PASSWORD || '' }}
+          MODELSYNC_ORACLE_MIGRATION_URL: ${{ inputs.oracle_mode == 'external' && secrets.MODELSYNC_ORACLE_MIGRATION_URL || '' }}
+          MODELSYNC_ORACLE_MIGRATION_USER: ${{ inputs.oracle_mode == 'external' && secrets.MODELSYNC_ORACLE_MIGRATION_USER || '' }}
+          MODELSYNC_ORACLE_MIGRATION_PASSWORD: ${{ inputs.oracle_mode == 'external' && secrets.MODELSYNC_ORACLE_MIGRATION_PASSWORD || '' }}
+          MODELSYNC_ORACLE_CONTAINER: ${{ inputs.oracle_mode == 'disposable-container' && 'EXPLICIT_DISPOSABLE' || '' }}
           MODELSYNC_ORACLE_TEST_SCHEMA_ACK: ${{ vars.MODELSYNC_ORACLE_TEST_SCHEMA_ACK }}
           MODELSYNC_ORACLE_MIGRATION_SCHEMA_ACK: ${{ vars.MODELSYNC_ORACLE_MIGRATION_SCHEMA_ACK }}
           MODELSYNC_FULL_ENV_ACK: ${{ vars.MODELSYNC_FULL_ENV_ACK }}
         run: |
           set +e
           set -o pipefail
-          ./mvnw -B -ntp -Pfull clean verify 2>&1 | tee "$RUNNER_TEMP/model-sync-full.log"
+          if [ '${{ inputs.oracle_mode }}' = 'disposable-container' ]; then
+            python3 scripts/full-oracle-container.py 2>&1 | tee "$RUNNER_TEMP/model-sync-full.log"
+          else
+            ./mvnw -B -ntp -Pfull clean verify 2>&1 | tee "$RUNNER_TEMP/model-sync-full.log"
+          fi
           code=${PIPESTATUS[0]}
           echo "exit=$code" >> "$GITHUB_OUTPUT"
           exit "$code"
@@ -51,7 +63,9 @@ jobs:
           if [ '${{ steps.build.outcome }}' = success ]; then status=PASS; fi
           if [ '${{ steps.build.outcome }}' = failure ]; then status=FAILED; fi
           if grep -q 'BLOCKED full preflight' target/qm/full-build.log 2>/dev/null; then status=BLOCKED; fi
-          args=(--full-command './mvnw -B -ntp -Pfull clean verify' --full-status "$status")
+          command='./mvnw -B -ntp -Pfull clean verify'
+          if [ '${{ inputs.oracle_mode }}' = 'disposable-container' ]; then command='MODELSYNC_ORACLE_CONTAINER=EXPLICIT_DISPOSABLE python3 scripts/full-oracle-container.py (runs ./mvnw -B -ntp -Pfull clean verify)'; fi
+          args=(--full-command "$command" --full-status "$status")
           if [ -n '${{ steps.build.outputs.exit }}' ]; then args+=(--full-exit '${{ steps.build.outputs.exit }}'); fi
           python3 scripts/qm-report.py "${args[@]}"
       - name: Upload run-scoped raw evidence
