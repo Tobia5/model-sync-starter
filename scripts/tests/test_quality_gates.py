@@ -8,6 +8,7 @@ import unittest
 import json
 import time
 from importlib.util import module_from_spec, spec_from_file_location
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from run_evidence import begin, current, fresh, invalidate
@@ -109,6 +110,24 @@ class QualityGateTests(unittest.TestCase):
             self.assertEqual(2, suite['tests'])
             self.assertEqual(1, suite['failures'])
 
+    def test_executed_pit_and_oracle_without_reports_are_failed(self):
+        spec = spec_from_file_location('qm_report_no_xml', ROOT / 'scripts/qm-report.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            (root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"><modules><module>model-sync-persistence-jdbc</module></modules></project>', encoding='utf-8')
+            begin(root)
+            log = root / 'target/qm/full-build.log'
+            log.write_text('[INFO] --- pitest:1.25.9:mutationCoverage (behavioral-mutations) @ model-sync-testkit ---\n'
+                           '[INFO] Running io.modelsync.jdbc.OracleSmokeIT\n', encoding='utf-8')
+            result = module.collect(True, root)
+            self.assertEqual('FAILED', result['mutation']['status'])
+            suite = result['modules']['model-sync-persistence-jdbc']['failsafe']
+            self.assertEqual('FAILED', suite['status'])
+            self.assertEqual('OracleSmokeIT', suite['suites'][0]['name'])
+            self.assertEqual(0, suite['suites'][0]['tests'])
+
     def test_collector_rejects_stale_and_malformed_reports(self):
         spec = spec_from_file_location('qm_report_reject', ROOT / 'scripts/qm-report.py')
         module = module_from_spec(spec)
@@ -163,12 +182,12 @@ class QualityGateTests(unittest.TestCase):
         self.assertIn('Remote load target', result.stderr)
 
     def test_container_lane_requires_explicit_opt_in(self):
-        env = dict(os.environ)
-        env.pop('MODELSYNC_ORACLE_CONTAINER', None)
-        result = subprocess.run([sys.executable, 'scripts/full-oracle-container.py'],
-                                cwd=ROOT, env=env, capture_output=True, text=True)
-        self.assertEqual(2, result.returncode)
-        self.assertIn('EXPLICIT_DISPOSABLE', result.stderr)
+        spec = spec_from_file_location('oracle_container_preflight', ROOT / 'scripts/full-oracle-container.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with patch.dict(os.environ, {'MODELSYNC_ORACLE_CONTAINER': ''}):
+            with self.assertRaisesRegex(ValueError, 'EXPLICIT_DISPOSABLE'):
+                module.preflight()
 
     def test_full_report_rejects_missing_raw_evidence(self):
         with tempfile.TemporaryDirectory() as directory:

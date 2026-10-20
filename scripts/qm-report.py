@@ -10,6 +10,7 @@ import hashlib
 import os
 from pathlib import Path
 from importlib.util import module_from_spec, spec_from_file_location
+import re
 import subprocess
 import xml.etree.ElementTree as ET
 from run_evidence import current, fresh, reactor_modules
@@ -70,12 +71,29 @@ def collect(full: bool, root: Path = ROOT) -> dict:
         run = current(root)
     except ValueError as error:
         return {**empty, 'attribution': 'NONE', 'rejected': [str(error)]}
+    log_path = root / 'target/qm' / ('full-build.log' if full else 'default-build.log')
+    log = ''
+    log_rejected = []
+    if log_path.is_file():
+        try:
+            fresh(log_path, root)
+            log = log_path.read_text(encoding='utf-8', errors='replace')
+        except (OSError, ValueError) as error:
+            log_rejected.append(str(error))
     modules = {}
     for module in reactor_modules(root, full):
         modules[module.name] = {
             'surefire': xml_suites(module / 'target/surefire-reports', root),
             'failsafe': xml_suites(module / 'target/failsafe-reports', root) if full else {'status': 'NOT_RUN', 'files': 0},
         }
+    if full and log and 'model-sync-persistence-jdbc' in modules:
+        oracle = modules['model-sync-persistence-jdbc']['failsafe']
+        reported = {suite['name'].rsplit('.', 1)[-1] for suite in oracle['suites']}
+        for name in ('OracleSmokeIT', 'OracleConcurrencyIT', 'OracleMigrationIT', 'OracleScaleIT', 'OracleCapacityIT'):
+            if name not in reported and re.search(r'\bRunning\s+(?:[\w.]+\.)?' + name + r'\b', log):
+                oracle['suites'].append({'name': name, 'tests': 0, 'failures': 0, 'errors': 0,
+                                         'skipped': 0, 'status': 'FAILED', 'reason': 'executed without XML report'})
+                oracle['status'] = 'FAILED'
     mutation = {'status': 'NOT_RUN'}
     pit = root / 'model-sync-testkit/target/pit-reports/mutations.xml'
     if full and pit.is_file():
@@ -94,6 +112,8 @@ def collect(full: bool, root: Path = ROOT) -> dict:
                         'html': html.is_file()}
         except (OSError, ET.ParseError, ValueError) as error:
             mutation = {'status': 'REJECTED', 'reason': str(error)}
+    elif full and re.search(r'---\s+pitest:[^\s]+:mutationCoverage\b', log):
+        mutation = {'status': 'FAILED', 'reason': 'PIT goal executed without XML report'}
     load = {}
     for path in ((root / 'model-sync-performance/target/qm').glob('load-*.json') if full else ()):
         try:
@@ -105,6 +125,12 @@ def collect(full: bool, root: Path = ROOT) -> dict:
             load[name] = value
         except (OSError, json.JSONDecodeError, ValueError) as error:
             load[path.stem.removeprefix('load-')] = {'status': 'REJECTED', 'reason': str(error)}
+    if full:
+        executions = {'fresh-visits': 'fresh', 'hot-key': 'hot', 'unsafe-values': 'unsafe',
+                      'event-job-visit': 'event', 'cooldown-recovery': 'cooldown', 'leases-ledger': 'leases'}
+        for execution, name in executions.items():
+            if name not in load and re.search(r'---\s+gatling:[^\s]+:test\s+\(' + execution + r'\)', log):
+                load[name] = {'status': 'FAILED', 'reason': 'Gatling goal executed without JSON report'}
     oracle_scale = root / 'model-sync-persistence-jdbc/target/qm/oracle-scale.json'
     try:
         scale = None
@@ -115,6 +141,8 @@ def collect(full: bool, root: Path = ROOT) -> dict:
                 raise ValueError('Malformed Oracle scale evidence')
     except (OSError, json.JSONDecodeError, ValueError) as error:
         scale = {'status': 'REJECTED', 'reason': str(error)}
+    if scale is None and full and re.search(r'\bRunning\s+(?:[\w.]+\.)?OracleScaleIT\b', log):
+        scale = {'status': 'FAILED', 'reason': 'OracleScaleIT executed without JSON report'}
     oracle_workload = root / 'model-sync-persistence-jdbc/target/qm/oracle-workload.json'
     measured = None
     if full and oracle_workload.is_file():
@@ -125,8 +153,10 @@ def collect(full: bool, root: Path = ROOT) -> dict:
                 raise ValueError('Malformed or mismatched Oracle workload evidence')
         except (OSError, json.JSONDecodeError, ValueError) as error:
             measured = {'status': 'REJECTED', 'reason': str(error)}
+    if measured is None and full and re.search(r'\bRunning\s+(?:[\w.]+\.)?OracleCapacityIT\b', log):
+        measured = {'status': 'FAILED', 'reason': 'OracleCapacityIT executed without JSON report'}
     return {'modules': modules, 'mutation': mutation, 'gatling': load, 'oracle_scale': scale,
-            'oracle_workload': measured, 'rejected': [reason for module in modules.values()
+            'oracle_workload': measured, 'rejected': log_rejected + [reason for module in modules.values()
                 for suite in module.values() for reason in suite.get('rejected', [])],
             'attribution': run['run_id']}
 
@@ -142,6 +172,8 @@ def manifest(full: bool, root: Path = ROOT) -> dict:
         paths.extend((root / 'model-sync-performance/target/gatling').glob('**/*'))
         paths.extend((root / 'model-sync-performance/target/qm').glob('*.json'))
         paths.extend((root / 'model-sync-persistence-jdbc/target/qm').glob('*.json'))
+    paths.extend((root / 'target/qm').glob('*.log'))
+    paths.extend((root / 'target/qm').glob('oracle-container.json'))
     files = {}
     rejected = []
     for path in paths:
@@ -187,9 +219,10 @@ def markdown(data: dict) -> str:
     for module_name, module in evidence['modules'].items():
         for runner in ('surefire', 'failsafe'):
             for suite in module[runner].get('suites', []):
-                if suite['failures'] or suite['errors'] or suite['skipped']:
+                if suite['failures'] or suite['errors'] or suite['skipped'] or suite.get('status') == 'FAILED':
                     lines.append(f"{module_name}/{runner}/{suite['name']}: FAILED; {suite['tests']} tests, "
-                                 f"{suite['failures']} failures, {suite['errors']} errors, {suite['skipped']} skipped.")
+                                 f"{suite['failures']} failures, {suite['errors']} errors, {suite['skipped']} skipped."
+                                 + (f" {suite['reason']}." if suite.get('reason') else ''))
     lines += ['', '## Scope and blockers', '',
               'A default PASS does not qualify full release behavior. Full requires nonzero Oracle migration/concurrency/scale/capacity suites, selected PIT scope at 85% killed/generated, and all six Gatling reports. See `scripts/check-full-reports.py`.',
               'The local Gatling harness uses an in-memory test store; its data is not Oracle capacity evidence.',
