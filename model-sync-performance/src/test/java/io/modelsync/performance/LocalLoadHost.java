@@ -156,8 +156,8 @@ public final class LocalLoadHost implements AutoCloseable {
     try {
       Path dir = Path.of("target", "qm"); Files.createDirectories(dir);
       long completed = ledgerKeys.stream().filter(k -> fixture.store.state(k).matched()).count();
-      String json = "{\"scenario\":\"" + mode + "\",\"status\":\"" + status
-          + "\",\"accepted_visits\":" + visits.get() + ",\"job_requests\":" + jobs.get()
+      String json = "{\"scenario\":" + quote(mode) + ",\"status\":" + quote(status)
+          + ",\"accepted_visits\":" + visits.get() + ",\"job_requests\":" + jobs.get()
           + ",\"physical_owner_calls\":" + fixture.calls.get() + ",\"ledger_rows\":" + fixture.store.size()
           + ",\"completed_rows\":" + completed + ",\"synthetic_rows\":" + ledgerKeys.size()
           + ",\"warmup_ms\":0,\"measurement_and_drain_ms\":"
@@ -166,6 +166,17 @@ public final class LocalLoadHost implements AutoCloseable {
           + ",\"available_processors\":" + Runtime.getRuntime().availableProcessors() + "}\n";
       Files.writeString(dir.resolve("load-" + mode + ".json"), json, StandardCharsets.UTF_8);
     } catch (IOException error) { throw new IllegalStateException("Cannot write local load evidence", error); }
+  }
+
+  private static String quote(String value) {
+    StringBuilder out = new StringBuilder("\"");
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      if (c == '"' || c == '\\') out.append('\\').append(c);
+      else if (c < 0x20) out.append(String.format("\\u%04x", (int) c));
+      else out.append(c);
+    }
+    return out.append('"').toString();
   }
 
   @Override public void close() {
