@@ -42,6 +42,7 @@
     <module>model-sync-spring-boot-starter-webclient</module>
     <module>model-sync-testkit</module>
     <module>model-sync-sample</module>
+    <module>model-sync-architecture-tests</module>
   </modules>
   <dependencyManagement>
     <dependencies>
@@ -78,9 +79,54 @@
         <artifactId>maven-jar-plugin</artifactId>
         <version>3.4.2</version>
       </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId><artifactId>exec-maven-plugin</artifactId><version>3.5.0</version>
+        <inherited>false</inherited>
+        <executions><execution><id>default-static-contracts</id><phase>validate</phase><goals><goal>exec</goal></goals>
+          <configuration><executable>python</executable><workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+            <arguments><argument>scripts/default-static.py</argument></arguments>
+          </configuration>
+        </execution></executions>
+      </plugin>
     </plugins>
   </build>
   <profiles>
+    <profile>
+      <id>full</id>
+      <modules><module>model-sync-performance</module></modules>
+      <build><plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId><artifactId>exec-maven-plugin</artifactId><version>3.5.0</version>
+          <inherited>false</inherited>
+          <executions><execution><id>full-preflight</id><phase>initialize</phase><goals><goal>exec</goal></goals>
+            <configuration><executable>python</executable><workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+              <arguments>
+                <argument>scripts/full-preflight.py</argument>
+                <argument>skipTests=${skipTests}</argument>
+                <argument>maven.test.skip=${maven.test.skip}</argument>
+                <argument>skipITs=${skipITs}</argument>
+                <argument>failsafe.skipITs=${failsafe.skipITs}</argument>
+                <argument>pitest.skip=${pitest.skip}</argument>
+                <argument>gatling.skip=${gatling.skip}</argument>
+                <argument>pit.dryRun=${pit.dryRun}</argument>
+                <argument>test=${test}</argument>
+                <argument>it.test=${it.test}</argument>
+                <argument>groups=${groups}</argument>
+                <argument>excludedGroups=${excludedGroups}</argument>
+                <argument>pit.targetClasses=${pit.targetClasses}</argument>
+                <argument>pit.targetTests=${pit.targetTests}</argument>
+                <argument>gatling.simulationClass=${gatling.simulationClass}</argument>
+              </arguments>
+            </configuration>
+          </execution></executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId><artifactId>maven-failsafe-plugin</artifactId><version>3.5.3</version>
+          <executions><execution><id>full-oracle-integration</id><goals><goal>integration-test</goal><goal>verify</goal></goals></execution></executions>
+          <configuration><includes><include>**/*IT.java</include></includes><failIfNoTests>false</failIfNoTests></configuration>
+        </plugin>
+      </plugins></build>
+    </profile>
     <profile>
       <id>library-artifacts</id>
       <build>

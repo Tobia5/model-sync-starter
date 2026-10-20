@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Require nonempty, unskipped Surefire results for each module with unit-test classes.
 
-This does NOT attest that Oracle *IT tests ran. Those require the oracle-it lane.
+This does NOT attest that Oracle *IT tests ran. Those require the explicit full profile.
 Use after Maven clean verify, never against old target directories.
 """
 from __future__ import annotations
@@ -14,6 +14,8 @@ PATTERN = re.compile(r'(?:Test.*|.*Test|.*Tests|.*TestCase)\.java$')
 
 def check(root: Path) -> tuple[int, int]:
     count = modules = 0
+    marker = root / 'target/qm/build-start.txt'
+    started = float(marker.read_text(encoding='utf-8')) if marker.is_file() else None
     for module in sorted(root.glob('model-sync-*')):
         sources = module / 'src/test/java'
         expected = {p.stem for p in sources.rglob('*.java') if PATTERN.fullmatch(p.name)}
@@ -25,6 +27,8 @@ def check(root: Path) -> tuple[int, int]:
         seen: set[str] = set()
         module_count = 0
         for report in reports:
+            if started is not None and report.stat().st_mtime < started:
+                raise ValueError(f'Stale Surefire report: {report.relative_to(root)}')
             document = ET.parse(report).getroot()
             suites = [document] if document.tag == 'testsuite' else list(document.iter('testsuite'))
             for suite in suites:

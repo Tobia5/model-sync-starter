@@ -31,7 +31,7 @@ class PublicationChecks(unittest.TestCase):
                     'SNAPSHOT_CONFIRMATION': 'PUBLISH_SNAPSHOT'}
 
     def test_valid_snapshot(self):
-        self.assertEqual('0.1.0-SNAPSHOT', publish.check(self.root, self.env))
+        self.assertEqual('0.2.0-SNAPSHOT', publish.check(self.root, self.env))
 
     def test_wrong_repository(self):
         self.env['GITHUB_REPOSITORY'] = 'someone/else'
@@ -50,7 +50,7 @@ class PublicationChecks(unittest.TestCase):
         with self.assertRaises(ValueError): publish.check(self.root, self.env)
 
     def test_release_rejected(self):
-        p = self.root / 'pom.xml'; p.write_text(p.read_text().replace('0.1.0-SNAPSHOT', '0.1.0'))
+        p = self.root / 'pom.xml'; p.write_text(p.read_text().replace('0.2.0-SNAPSHOT', '0.2.0'))
         with self.assertRaises(ValueError): publish.check(self.root, self.env)
 
     def test_destination_change_rejected(self):
@@ -62,7 +62,7 @@ class PublicationChecks(unittest.TestCase):
         with self.assertRaises(ValueError): publish.check(self.root, self.env)
 
     def test_child_version_drift(self):
-        p = self.root / 'model-sync-core/pom.xml'; p.write_text(p.read_text().replace('0.1.0-SNAPSHOT', '0.2.0-SNAPSHOT'))
+        p = self.root / 'model-sync-core/pom.xml'; p.write_text(p.read_text().replace('0.2.0-SNAPSHOT', '0.3.0-SNAPSHOT'))
         with self.assertRaises(ValueError): publish.check(self.root, self.env)
 
 class ReportChecks(unittest.TestCase):
