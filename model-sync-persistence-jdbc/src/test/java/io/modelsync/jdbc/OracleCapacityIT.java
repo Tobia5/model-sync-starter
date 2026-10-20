@@ -105,6 +105,7 @@ class OracleCapacityIT {
         // Warm the pool and JIT with bounded real work; measurement starts afterwards.
         for (int i = 0; i < 10; i++) coordinator.runOne();
         long warmupCalls = ownerCalls.get();
+        long warmupCompleted = jdbc.queryForObject("select count(*) from MS_STATE s join MS_WORK w on w.work_id=s.work_id where w.binding_id=? and s.outcome in ('MATCH','APPLIED')", Long.class, binding);
         long beforeWork = jdbc.queryForObject(SESSION_WORK, Long.class);
         long started = System.nanoTime();
         long deadline = started + Duration.ofMinutes(3).toNanos();
@@ -126,6 +127,8 @@ class OracleCapacityIT {
         long elapsedMs = (System.nanoTime() - started) / 1_000_000;
         long dbWork = jdbc.queryForObject(SESSION_WORK, Long.class) - beforeWork;
         long completed = jdbc.queryForObject("select count(*) from MS_STATE s join MS_WORK w on w.work_id=s.work_id where w.binding_id=? and s.outcome in ('MATCH','APPLIED')", Long.class, binding);
+        long measuredCompleted = completed - warmupCompleted;
+        long measuredOwnerCalls = ownerCalls.get() - warmupCalls;
         long projectionRows = jdbc.queryForObject("select count(*) from MS_TEST_PROJECTION", Long.class);
         List<Long> lag = jdbc.query("select s.reconciled_at_ms-w.requested_at_ms from MS_STATE s join MS_WORK w on w.work_id=s.work_id where w.binding_id=? and s.outcome in ('MATCH','APPLIED')",
             (r, n) -> r.getLong(1), binding);
@@ -134,21 +137,28 @@ class OracleCapacityIT {
         assertEquals(completed, projectionRows, "Accepted work is not a completed projection");
         assertEquals(completed, lag.size());
         assertTrue(dbWork >= 0);
+        assertTrue(measuredCompleted > 0 && measuredOwnerCalls > 0);
         assertTrue(limited.get() > 0 && timedOut.get() > 0, "Failure injection was not exercised");
         Path report = Path.of("target", "qm", "oracle-workload.json");
         Files.createDirectories(report.getParent());
         Files.writeString(report, "{\"scope\":\"oracle-backed-reconciliation\",\"rows\":" + ROWS
             + ",\"due_rows\":" + DUE + ",\"hot_requests\":100,\"workers\":" + WORKERS
             + ",\"owner_spacing_ms\":20,\"owner_latency_ms\":{\"ordinary\":5,\"slow\":25}"
-            + ",\"warmup_owner_calls\":" + warmupCalls + ",\"measured_owner_calls\":" + (ownerCalls.get()-warmupCalls)
+            + ",\"warmup_owner_calls\":" + warmupCalls + ",\"warmup_completed_syncs\":" + warmupCompleted
+            + ",\"measured_owner_calls\":" + measuredOwnerCalls
             + ",\"physical_owner_calls\":" + ownerCalls.get() + ",\"provider_429\":" + limited.get()
             + ",\"synthetic_timeouts\":" + timedOut.get() + ",\"ledger_attempts\":" + attempts.get()
-            + ",\"completed_syncs\":" + completed + ",\"projection_rows\":" + projectionRows
+            + ",\"completed_syncs\":" + completed + ",\"measured_completed_syncs\":" + measuredCompleted
+            + ",\"owner_calls_per_second\":" + (1000.0 * measuredOwnerCalls / Math.max(1, elapsedMs))
+            + ",\"completed_syncs_per_second\":" + (1000.0 * measuredCompleted / Math.max(1, elapsedMs))
+            + ",\"owner_failure_rate\":" + ((double) (limited.get()+timedOut.get()) / ownerCalls.get())
+            + ",\"projection_rows\":" + projectionRows
             + ",\"db_session_work\":" + dbWork + ",\"db_work_per_measured_owner_call\":"
-            + (ownerCalls.get() > warmupCalls ? (double) dbWork / (ownerCalls.get()-warmupCalls) : 0)
+            + (double) dbWork / measuredOwnerCalls
             + ",\"run_one_latency_ms\":" + percentiles(latencies)
             + ",\"reconciliation_lag_ms\":" + percentiles(lag)
             + ",\"measurement_ms\":" + elapsedMs + ",\"jvm_max_heap_bytes\":" + Runtime.getRuntime().maxMemory()
+            + ",\"jvm_used_heap_bytes\":" + (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())
             + ",\"available_processors\":" + Runtime.getRuntime().availableProcessors()
             + ",\"pool_max_connections\":8,\"oracle_version\":" + quote(oracleVersion) + "}\n");
       } finally {

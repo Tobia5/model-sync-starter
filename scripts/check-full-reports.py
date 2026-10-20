@@ -83,6 +83,10 @@ def check(root=ROOT):
             or measured.get('workers',0)<2 or measured.get('completed_syncs',0)<150
             or measured.get('completed_syncs')!=measured.get('projection_rows')
             or measured.get('physical_owner_calls',0)<230 or measured.get('db_session_work') is None
+            or measured.get('measured_completed_syncs',0)<=0
+            or measured.get('completed_syncs_per_second') is None
+            or measured.get('owner_calls_per_second') is None
+            or measured.get('owner_failure_rate') is None
             or not isinstance(measured.get('run_one_latency_ms'),dict)
             or not isinstance(measured.get('reconciliation_lag_ms'),dict)):
         raise ValueError('Oracle capacity report lacks completed projections, owner calls, lag or database work')
