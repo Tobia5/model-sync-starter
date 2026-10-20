@@ -6,6 +6,7 @@ import argparse
 from collections import Counter
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 from importlib.util import module_from_spec, spec_from_file_location
 import subprocess
@@ -22,7 +23,10 @@ def load_checker(name: str):
 
 
 def command(*args: str) -> str:
-    result = subprocess.run(args, cwd=ROOT, capture_output=True, text=True, check=False)
+    try:
+        result = subprocess.run(args, cwd=ROOT, capture_output=True, text=True, check=False)
+    except OSError:
+        return 'UNAVAILABLE'
     return (result.stdout or result.stderr).strip().splitlines()[0] if result.returncode == 0 else 'UNAVAILABLE'
 
 
@@ -145,7 +149,8 @@ def main() -> None:
                                 capture_output=True, text=True, check=False).stdout.strip())
     data = {'generated_utc': datetime.now(timezone.utc).isoformat(), 'source_sha': sha,
             'source_tree': tree, 'working_tree_dirty': dirty,
-            'environment': {'java': command('java', '-version'), 'maven': command('mvn', '-version'),
+            'environment': {'java': command('java', '-version'),
+                            'maven': command(str(ROOT / ('mvnw.cmd' if os.name == 'nt' else 'mvnw')), '-version'),
                             'python': command('python', '--version')},
             'runs': runs, 'evidence': collect(), 'blockers': args.blocker}
     out = ROOT / 'target/qm'
@@ -154,7 +159,6 @@ def main() -> None:
     report = markdown(data)
     (out / 'QM.md').write_text(report, encoding='utf-8')
     print(report)
-    import os
     if os.environ.get('GITHUB_STEP_SUMMARY'):
         with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
             summary.write('\n'.join(report.splitlines()[:14]) + '\n')
