@@ -17,6 +17,7 @@ import sys
 import tempfile
 import time
 import uuid
+from run_evidence import invalidate
 
 ROOT = Path(__file__).resolve().parents[1]
 IMAGE = ('ghcr.io/gvenzl/oracle-free:23.26.3-slim@'
@@ -39,6 +40,7 @@ def preflight() -> None:
 
 
 def main() -> int:
+    invalidate(ROOT)
     try:
         preflight()
     except (ValueError, OSError, subprocess.CalledProcessError) as error:
@@ -50,6 +52,9 @@ def main() -> int:
     migration = secrets.token_hex(24)
     schema = (ROOT / 'model-sync-persistence-jdbc/src/main/resources/model-sync/schema/oracle-v2.sql').read_text(encoding='utf-8')
     started = time.monotonic()
+    result_code = 2
+    cleanup_verified = False
+    container_created = False
     with tempfile.TemporaryDirectory(prefix='modelsync-oracle-') as directory:
         setup = Path(directory) / '001-test-schemas.sql'
         setup.write_text('whenever sqlerror exit failure rollback\n'
@@ -67,7 +72,6 @@ def main() -> int:
             f'connect MS_TEST_RUNTIME/{runtime}@//localhost:1521/FREEPDB1\n'
             + schema + '\ncommit;\nexit\n', encoding='utf-8')
         environment = dict(os.environ, ORACLE_PASSWORD=admin)
-        created = False
         try:
             run = docker('run', '--rm', '-d', '--name', name, '--platform', 'linux/amd64',
                          '--cpus', '4', '--memory', '6g', '-p', '127.0.0.1::1521',
@@ -75,7 +79,7 @@ def main() -> int:
                          '--health-timeout', '5s', '--health-retries', '60',
                          '-v', f'{setup.resolve()}:/container-entrypoint-initdb.d/001-test-schemas.sql:ro',
                          '-e', 'ORACLE_PASSWORD', IMAGE, env=environment)
-            created = bool(run.stdout.strip())
+            container_created = bool(run.stdout.strip())
             deadline = time.monotonic() + 900
             while time.monotonic() < deadline:
                 status = docker('inspect', '--format', '{{.State.Health.Status}}', name).stdout.strip()
@@ -96,21 +100,30 @@ def main() -> int:
                 MODELSYNC_ORACLE_MIGRATION_PASSWORD=migration,
                 MODELSYNC_ORACLE_TEST_SCHEMA_ACK='DEDICATED_TEST_SCHEMA',
                 MODELSYNC_ORACLE_MIGRATION_SCHEMA_ACK='DEDICATED_MIGRATION_SCHEMA')
-            result = subprocess.run(['./mvnw', '-B', '-ntp', '-Pfull', 'clean', 'verify'],
+            wrapper = str(ROOT / ('mvnw.cmd' if os.name == 'nt' else 'mvnw'))
+            result = subprocess.run([wrapper, '-B', '-ntp', '-Pfull', 'clean', 'verify'],
                                     cwd=ROOT, env=build_env, check=False)
-            return result.returncode
+            result_code = result.returncode
         except (OSError, subprocess.CalledProcessError, RuntimeError) as error:
             print(f'BLOCKED full preflight: disposable Oracle container unavailable: {error}', file=sys.stderr)
-            return 2
+            result_code = 2
         finally:
-            if created:
+            if container_created:
                 docker('stop', name, check=False)
+                inspected = docker('inspect', name, check=False)
+                cleanup_verified = inspected.returncode != 0 and (
+                    'No such object' in inspected.stderr or 'No such container' in inspected.stderr)
+                if not cleanup_verified:
+                    print('BLOCKED cleanup: disposable Oracle container was not removed', file=sys.stderr)
+                    if result_code == 0:
+                        result_code = 2
             destination = ROOT / 'target/qm'
             destination.mkdir(parents=True, exist_ok=True)
             (destination / 'oracle-container.json').write_text(json.dumps({
                 'image': IMAGE, 'container_name': name, 'elapsed_seconds': round(time.monotonic() - started, 2),
                 'runtime_schema': 'MS_TEST_RUNTIME', 'migration_schema': 'MS_TEST_MIGRATION',
-                'cleanup_requested': created}, sort_keys=True) + '\n', encoding='utf-8')
+                'container_created': container_created, 'cleanup_verified': cleanup_verified}, sort_keys=True) + '\n', encoding='utf-8')
+    return result_code
 
 
 if __name__ == '__main__':
