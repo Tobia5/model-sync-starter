@@ -1,5 +1,9 @@
 package io.modelsync.core;
 
-/** Typed dataset-reading extension point. No vendor protocol is assumed. */
+/**
+ * Typed dataset-reading extension point for Vista-style analytical sources.
+ *
+ * <p>No vendor protocol, transport, or authentication mechanism is assumed by the core library.
+ */
 @FunctionalInterface
-public interface VistaPort extends DatasetPort.Reader { }
+public interface VistaPort extends DatasetPort.Reader {}

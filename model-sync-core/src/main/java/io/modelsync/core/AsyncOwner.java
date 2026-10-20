@@ -1,8 +1,22 @@
 package io.modelsync.core;
 
 import java.util.concurrent.CompletionStage;
+
+/**
+ * Asynchronous authoritative-owner adapter.
+ *
+ * <p>Implementations should create work lazily when {@link #fetchAsync(ReadRequest)} is called and
+ * should avoid hidden retries so provider quota accounting remains explicit.
+ *
+ * @param <T> synchronized model type returned by the owner
+ */
 @FunctionalInterface
 public non-sealed interface AsyncOwner<T> extends OwnerPort<T> {
-    /** Must start lazily when called, and return a cancellable future where possible. */
-    CompletionStage<FetchResult<T>> fetchAsync(ReadRequest request);
+  /**
+   * Fetches the authoritative value for a subject.
+   *
+   * @param request subject and optional validator from the last accepted owner response
+   * @return completion stage containing the owner result
+   */
+  CompletionStage<FetchResult<T>> fetchAsync(ReadRequest request);
 }
