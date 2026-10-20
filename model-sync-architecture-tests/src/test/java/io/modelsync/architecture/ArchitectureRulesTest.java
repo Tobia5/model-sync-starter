@@ -54,7 +54,6 @@ class ArchitectureRulesTest {
     int sourceModules = 0;
     while (names.find()) {
       String module = names.group(1);
-      if (module.equals("model-sync-architecture-tests")) continue; // negative fixtures live here
       Path dir = root.resolve(module);
       assertTrue(Files.isRegularFile(dir.resolve("pom.xml")), "Missing declared module " + module);
       for (String lane : List.of("main", "test")) {
