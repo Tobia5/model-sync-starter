@@ -23,8 +23,20 @@ public final class JdbcWorkStore implements WorkStore {
     String version =
         jdbc.queryForObject(
             "select meta_value from MS_META where meta_name='schema_version'", String.class);
-    if (!"1".equals(version))
+    if (!"1".equals(version) && !"2".equals(version))
       throw new IllegalStateException("Unsupported Model Sync schema version");
+  }
+
+  @Override
+  public boolean supportsOnDemand() {
+    return "2".equals(jdbc.queryForObject(
+        "select meta_value from MS_META where meta_name='schema_version'", String.class));
+  }
+
+  @Override
+  public void completeOnDemand(WorkLease lease, SyncState state, Instant now) {
+    if (!supportsOnDemand()) throw new IllegalStateException("ON_DEMAND requires schema v2");
+    completeInternal(lease, state, null, now);
   }
 
   private void tx() {
@@ -41,7 +53,8 @@ public final class JdbcWorkStore implements WorkStore {
       String status,
       String token,
       Long until,
-      long nextAt) {}
+      long nextAt,
+      String lastCode) {}
 
   private Row row(ResultSet r) throws SQLException {
     long until = r.getLong("lease_until_ms");
@@ -57,7 +70,8 @@ public final class JdbcWorkStore implements WorkStore {
         r.getString("work_status"),
         r.getString("lease_token"),
         leaseUntil,
-        r.getLong("next_at_ms"));
+        r.getLong("next_at_ms"),
+        r.getString("last_error_code"));
   }
 
   private Optional<Row> locked(String id) {
@@ -110,6 +124,36 @@ public final class JdbcWorkStore implements WorkStore {
         attempts,
         id);
     return id;
+  }
+
+  @Override
+  public Optional<String> enqueueRefresh(WorkKey key, Priority priority, Instant now) {
+    tx();
+    Objects.requireNonNull(priority, "priority");
+    String id = key.storageId();
+    Optional<Row> found = locked(id);
+    if (found.isEmpty()) {
+      try {
+        jdbc.update("insert into MS_WORK (work_id,binding_id,tenant_id,subject_id,priority,generation,attempts,force_refresh,work_status,next_at_ms,requested_at_ms) values (?,?,?,?,?,1,0,0,'WAITING',?,?)",
+            id, key.binding(), key.subject().tenant(), key.subject().id(), priority.ordinal(), now.toEpochMilli(), now.toEpochMilli());
+        return Optional.of(id);
+      } catch (DuplicateKeyException concurrentInsert) {
+        found = locked(id);
+        if (found.isEmpty()) throw concurrentInsert;
+      }
+    }
+    Row row = found.orElseThrow();
+    if (!row.key().equals(key)) throw new IllegalStateException("Work identity collision");
+    if (row.status().equals("DEAD")) return Optional.empty();
+    if (row.status().equals("LEASED")) return Optional.of(id);
+    boolean idle = row.status().equals("IDLE");
+    // A visit may accelerate a periodic refresh, but must never bypass an error backoff.
+    long due = idle ? now.toEpochMilli() : row.lastCode() == null
+        ? Math.min(row.nextAt(), now.toEpochMilli()) : row.nextAt();
+    jdbc.update("update MS_WORK set work_status='WAITING',priority=?,next_at_ms=?,generation=?,requested_at_ms=? where work_id=?",
+        Math.min(row.priority(), priority.ordinal()), due,
+        idle ? row.generation() + 1 : row.generation(), now.toEpochMilli(), id);
+    return Optional.of(id);
   }
 
   @Override
@@ -195,6 +239,10 @@ public final class JdbcWorkStore implements WorkStore {
 
   @Override
   public void complete(WorkLease lease, SyncState s, Instant nextAt, Instant now) {
+    completeInternal(lease, s, Objects.requireNonNull(nextAt, "nextAt"), now);
+  }
+
+  private void completeInternal(WorkLease lease, SyncState s, Instant nextAt, Instant now) {
     tx();
     Row r = currentToken(lease);
     int updated =
@@ -222,13 +270,15 @@ public final class JdbcWorkStore implements WorkStore {
           s.outcome(),
           millis(s.sourceChangedAt()));
     boolean pending = r.generation() != lease.generation();
+    boolean idle = !pending && nextAt == null;
     jdbc.update(
         "update MS_WORK set"
-            + " work_status='WAITING',priority=?,force_refresh=?,next_at_ms=?,attempts=0,last_error_code=null,lease_token=null,lease_until_ms=null"
+            + " work_status=?,priority=?,force_refresh=?,next_at_ms=?,attempts=0,last_error_code=null,lease_token=null,lease_until_ms=null"
             + " where work_id=?",
+        idle ? "IDLE" : "WAITING",
         pending ? r.priority() : Priority.BACKGROUND.ordinal(),
         pending && r.force() ? 1 : 0,
-        (pending ? now : nextAt).toEpochMilli(),
+        (pending || idle ? now : nextAt).toEpochMilli(),
         lease.key().storageId());
   }
 

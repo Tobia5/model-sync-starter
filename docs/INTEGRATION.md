@@ -1,5 +1,8 @@
 # Integration guide
 
+> **Trigger-extension update:** for job/event/visit APIs, on-demand recurrence and current validation boundaries, use the [handbook](USER-HANDBOOK.md), [arc42 architecture](ARC42.md), [production runbook](PRODUCTION.md) and [review report](REVIEW.md). This document retains the original design/history; original test counts and schema-v1 examples are not the new release evidence.
+
+
 ## 1. Source DTO versus JPA entity
 
 Use an immutable source-owned DTO as the type argument to `ModelBinding<T>`. Map it to your existing JPA entity through `JpaProjectionMapping<T,E>`:

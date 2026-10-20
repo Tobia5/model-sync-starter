@@ -35,6 +35,10 @@ public final class SyncCoordinator {
     this.options = Objects.requireNonNull(options);
     this.priorities = Objects.requireNonNull(priorities);
     this.jitter = Objects.requireNonNull(jitter);
+    if (registry.all().stream().anyMatch(b -> b.refreshMode() == RefreshMode.ON_DEMAND)
+        && !store.supportsOnDemand()) {
+      throw new IllegalStateException("ON_DEMAND requires an idle-capable WorkStore; JDBC requires schema v2");
+    }
   }
 
   public Optional<WorkLease> claim() {
@@ -75,8 +79,7 @@ public final class SyncCoordinator {
                   && exact
                   && b.freshness().age(state.validatedAt(), now) == FreshnessPolicy.Age.FRESH) {
                 // Do not renew age just because somebody read the cached data.
-                store.complete(
-                    lease, state, state.validatedAt().plus(b.freshness().refreshAfter()), now);
+                complete(b, lease, state, state.validatedAt().plus(b.freshness().refreshAfter()), now);
                 return Optional.empty();
               }
               String validator = exact ? state.validator() : null;
@@ -168,9 +171,18 @@ public final class SyncCoordinator {
           }
           SyncState next =
               new SyncState(p.lease().key(), now, matched, digest, validator, outcome, changed);
-          store.complete(p.lease(), next, now.plus(b.freshness().refreshAfter()), now);
+          complete(b, p.lease(), next, now.plus(b.freshness().refreshAfter()), now);
           return null;
         });
+  }
+
+  private void complete(ModelBinding<?> binding, WorkLease lease, SyncState state,
+                        Instant nextAt, Instant now) {
+    if (binding.refreshMode() == RefreshMode.ON_DEMAND) {
+      store.completeOnDemand(lease, state, now);
+    } else {
+      store.complete(lease, state, nextAt, now);
+    }
   }
 
   public void failed(WorkLease lease, Throwable failure) {

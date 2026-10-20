@@ -49,6 +49,22 @@ public final class MemoryWorkStore implements WorkStore, SnapshotResource {
   }
 
   @Override
+  public synchronized Optional<String> enqueueRefresh(WorkKey key, Priority priority, Instant now) {
+    Objects.requireNonNull(priority, "priority");
+    Cell c = rows.get(key.storageId());
+    if (c == null) return Optional.of(enqueue(key, priority, false, now));
+    if (!c.key().equals(key)) throw new IllegalStateException("Work identity collision");
+    if (c.status().equals("DEAD")) return Optional.empty();
+    if (c.status().equals("LEASED")) return Optional.of(key.storageId());
+    boolean idle = c.status().equals("IDLE");
+    Instant due = idle ? now : c.lastCode() == null && now.isBefore(c.due()) ? now : c.due();
+    Priority best = c.priority().ordinal() < priority.ordinal() ? c.priority() : priority;
+    rows.put(key.storageId(), new Cell(key, best, idle ? c.generation() + 1 : c.generation(),
+        c.attempts(), c.force(), "WAITING", c.token(), c.until(), due, c.lastCode()));
+    return Optional.of(key.storageId());
+  }
+
+  @Override
   public synchronized Optional<WorkLease> claim(Priority p, Instant now, Duration duration) {
     Optional<Cell> selected =
         rows.values().stream()
@@ -101,7 +117,21 @@ public final class MemoryWorkStore implements WorkStore, SnapshotResource {
   }
 
   @Override
+  public boolean supportsOnDemand() {
+    return true;
+  }
+
+  @Override
+  public synchronized void completeOnDemand(WorkLease lease, SyncState state, Instant now) {
+    completeInternal(lease, state, null, now);
+  }
+
+  @Override
   public synchronized void complete(WorkLease lease, SyncState state, Instant nextAt, Instant now) {
+    completeInternal(lease, state, Objects.requireNonNull(nextAt, "nextAt"), now);
+  }
+
+  private void completeInternal(WorkLease lease, SyncState state, Instant nextAt, Instant now) {
     if (failNextComplete) {
       failNextComplete = false;
       throw new IllegalStateException("INJECTED_COMPLETION_FAILURE");
@@ -117,10 +147,10 @@ public final class MemoryWorkStore implements WorkStore, SnapshotResource {
             c.generation(),
             0,
             pending && c.force(),
-            "WAITING",
+            !pending && nextAt == null ? "IDLE" : "WAITING",
             null,
             null,
-            pending ? now : nextAt,
+            pending || nextAt == null ? now : nextAt,
             null));
   }
 

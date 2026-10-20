@@ -2,3 +2,4 @@ io.modelsync.autoconfigure.ModelSyncJdbcAutoConfiguration
 io.modelsync.autoconfigure.ModelSyncAutoConfiguration
 io.modelsync.autoconfigure.ModelSyncAopAutoConfiguration
 io.modelsync.autoconfigure.ModelSyncReactorAutoConfiguration
+io.modelsync.autoconfigure.ModelSyncTriggerAutoConfiguration

@@ -1,5 +1,8 @@
 # Architecture: authority-aware model synchronization
 
+> **Trigger-extension update:** for job/event/visit APIs, on-demand recurrence and current validation boundaries, use the [handbook](USER-HANDBOOK.md), [arc42 architecture](ARC42.md), [production runbook](PRODUCTION.md) and [review report](REVIEW.md). This document retains the original design/history; original test counts and schema-v1 examples are not the new release evidence.
+
+
 ## 1. Scope and architectural position
 
 Model Sync is an **operational pull-reconciliation starter**, not an ORM replacement and not a generic replication database. Its default use case is: an external party owns a set of fields, the application stores a local replica or temporary cache, and the application needs bounded-staleness access and accountable reconciliation under a provider request budget.

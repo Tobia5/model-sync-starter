@@ -22,6 +22,15 @@ public interface WorkStore {
   String enqueue(WorkKey key, Priority priority, boolean force, Instant now);
 
   /**
+   * Coalesces a visit refresh without resetting retries/cooldowns, reviving DEAD work, or
+   * adding a new generation to an in-flight request. Empty means refresh suppressed (DEAD).
+   * Custom stores must implement these stronger semantics before exposing age-on-visit.
+   */
+  default Optional<String> enqueueRefresh(WorkKey key, Priority priority, Instant now) {
+    throw new UnsupportedOperationException("WorkStore does not support safe visit admission");
+  }
+
+  /**
    * Claims ready work for a priority bucket.
    *
    * @param priority priority bucket
@@ -57,6 +66,22 @@ public interface WorkStore {
    * @param now completion time
    */
   void complete(WorkLease lease, SyncState state, Instant nextAt, Instant now);
+
+  /**
+   * Capability check used during coordinator construction. Existing custom stores remain
+   * compatible with PERIODIC bindings, but must explicitly implement idle completion to opt in.
+   */
+  default boolean supportsOnDemand() {
+    return false;
+  }
+
+  /**
+   * Completes without scheduling a periodic refresh. A newer request generation must remain
+   * WAITING, not be parked. Requires the same lease lock and transaction as complete().
+   */
+  default void completeOnDemand(WorkLease lease, SyncState state, Instant now) {
+    throw new UnsupportedOperationException("WorkStore does not support on-demand completion");
+  }
 
   /**
    * Reschedules a lease after quota denial, cooldown, or failure.

@@ -1,5 +1,8 @@
 # Validation report
 
+> **Trigger-extension update:** for job/event/visit APIs, on-demand recurrence and current validation boundaries, use the [handbook](USER-HANDBOOK.md), [arc42 architecture](ARC42.md), [production runbook](PRODUCTION.md) and [review report](REVIEW.md). This document retains the original design/history; original test counts and schema-v1 examples are not the new release evidence.
+
+
 Artifact: Model Sync `0.1.0-SNAPSHOT` · prepared 2026-10-19.
 
 ## Executed in the generation environment

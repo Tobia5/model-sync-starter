@@ -47,6 +47,12 @@ public final class ModelSync<T> {
     return tx.required(() -> store.enqueue(key, priority, force, clock.instant()));
   }
 
+  /** Automatic visit admission; unlike an explicit request, does not revive quarantined work. */
+  public Optional<String> requestRefresh(String tenant, String id, Priority priority) {
+    WorkKey key = new WorkKey(binding.id(), new SubjectKey(tenant, id));
+    return tx.required(() -> store.enqueueRefresh(key, priority, clock.instant()));
+  }
+
   /**
    * Reads the latest known synchronization state for a subject.
    *

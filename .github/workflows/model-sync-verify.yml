@@ -1,0 +1,43 @@
+name: Model Sync verification
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: model-sync-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      # Official v4 refs resolved via GitHub on 2026-10-20; pinned, not floating tags.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Offline contracts and static boundaries
+        run: |
+          bash scripts/test-triggers.sh
+          python3 scripts/check-architecture.py
+          python3 scripts/check-docs.py
+          java scripts/SourceSyntaxCheck.java .
+      - name: Maven framework and H2 lane
+        run: mvn -B -ntp verify
+      - name: Preserve test reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: model-sync-test-reports
+          path: |
+            **/target/surefire-reports/*
+            **/target/failsafe-reports/*
+          if-no-files-found: warn
+          retention-days: 14

@@ -20,6 +20,7 @@ public final class ModelBinding<T> {
   private final LocalRole role;
   private final FreshnessPolicy freshness;
   private final boolean repair;
+  private final RefreshMode refreshMode;
 
   private ModelBinding(Builder<T> b) {
     id = SubjectKey.checked(b.id, "binding", 128);
@@ -33,6 +34,7 @@ public final class ModelBinding<T> {
     role = Objects.requireNonNull(b.role);
     freshness = Objects.requireNonNull(b.freshness);
     repair = b.repair;
+    refreshMode = Objects.requireNonNull(b.refreshMode, "refreshMode");
   }
 
   /**
@@ -92,6 +94,11 @@ public final class ModelBinding<T> {
     return freshness;
   }
 
+  /** Returns whether successful work recurs automatically or waits for another trigger. */
+  public RefreshMode refreshMode() {
+    return refreshMode;
+  }
+
   /** Returns whether owner values may repair the local projection. */
   public boolean repair() {
     return repair;
@@ -122,6 +129,7 @@ public final class ModelBinding<T> {
     private LocalRole role = LocalRole.REPLICA;
     private FreshnessPolicy freshness = FreshnessPolicy.defaults();
     private boolean repair;
+    private RefreshMode refreshMode = RefreshMode.PERIODIC;
 
     private Builder(String id, Class<T> type) {
       this.id = id;
@@ -219,6 +227,15 @@ public final class ModelBinding<T> {
      */
     public Builder<T> freshness(FreshnessPolicy value) {
       freshness = value;
+      return this;
+    }
+
+    /**
+     * Sets recurrence independently of trigger and worker execution style.
+     * ON_DEMAND requires a WorkStore supporting durable idle completion.
+     */
+    public Builder<T> refreshMode(RefreshMode value) {
+      refreshMode = Objects.requireNonNull(value, "refreshMode");
       return this;
     }
 

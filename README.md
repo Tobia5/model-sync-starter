@@ -4,7 +4,25 @@
 
 Version: `0.1.0-SNAPSHOT` · Java 21 · Spring Boot BOM `4.1.1` · Oracle-first ledger · JPA business projections · optional WebClient.
 
-> **Validation boundary:** the dependency-free Java core was compiled and its 77 contract scenarios passed in this environment. All 82 Java files were syntax-parsed, and the 13-module dependency graph was checked. Maven was unavailable and dependency downloads were unavailable. Consequently, the full Maven reactor, Spring/H2 integration tests, Oracle smoke test, and live REST integrations were **not executed**. This is a source reference implementation to build and validate, not a production-certified binary or a claim of a successful full build. See [validation](docs/VALIDATION.md).
+> **Review status:** this extension adds explicit job, event and age-on-visit APIs, plus optional on-demand recurrence. The offline lane passes **77 existing + 41 new contracts**. Full Maven/Spring/H2 and Oracle qualification remain unexecuted locally. Start with the [user handbook](docs/USER-HANDBOOK.md), [complete arc42 architecture](docs/ARC42.md), [production runbook](docs/PRODUCTION.md) and [review/evidence report](docs/REVIEW.md). This is not a production-certified release.
+
+## Job, event and age-on-visit synchronization
+
+```java
+// Source-change event: durable request, not an inline external call.
+String ticket = triggers.accept(SyncRequested.changed("customer", tenant, sourceId));
+
+// Explicit visit: trusted local value or pending/suppressed metadata.
+VisitResult<Customer> view = triggers.model("customer", Customer.class)
+    .visit(tenant, sourceId, VisitPolicy.STALE_WHILE_REVALIDATE);
+
+// Bounded job: drains due work; does not enumerate the external population.
+SyncJob.Result run = job.run(100, Duration.ofSeconds(30));
+```
+
+Choose `.refreshMode(RefreshMode.ON_DEMAND)` on a binding to leave it IDLE after completion instead of polling unvisited records. PERIODIC remains the default. Schema v2 is required for JDBC on-demand mode. Events/visits still need an enabled worker or job to execute their work. Passive visits preserve cooldown/backoff and never revive DEAD work.
+
+The original one-shot sample remains unchanged and uses the periodic v1 path. See the handbook for v2 provisioning and opt-in cron/event configuration.
 
 ## The API decision
 
@@ -33,7 +51,7 @@ Prerequisites: JDK 21 and a Maven installation with access to Maven Central or y
 
 ```bash
 # Already executable without external Java dependencies:
-bash scripts/test-core.sh
+bash scripts/test-triggers.sh
 python3 scripts/check-architecture.py
 java scripts/SourceSyntaxCheck.java .
 

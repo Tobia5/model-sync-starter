@@ -1,5 +1,8 @@
 # AOP design: narrow, optional and transaction-aware
 
+> **Trigger-extension update:** for job/event/visit APIs, on-demand recurrence and current validation boundaries, use the [handbook](USER-HANDBOOK.md), [arc42 architecture](ARC42.md), [production runbook](PRODUCTION.md) and [review report](REVIEW.md). This document retains the original design/history; original test counts and schema-v1 examples are not the new release evidence.
+
+
 ## 1. Why annotations do not define authority
 
 A domain class can be a source-owned DTO in one route and a cached projection in another. Annotating the entity as globally “owner” or “slave” mixes authority with storage. This library instead uses a class-based `ModelBinding<T>` as the route definition.
