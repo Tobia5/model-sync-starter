@@ -7,6 +7,7 @@ import sys
 import xml.etree.ElementTree as ET
 from run_evidence import current, fresh
 from gatling_evidence import measured as gatling_measured
+from queue_evidence import check as check_queue_evidence
 
 ROOT=Path(__file__).resolve().parents[1]
 SIMULATIONS={'fresh','hot','unsafe','event','cooldown','leases'}
@@ -103,6 +104,7 @@ def check(root=ROOT):
             or not isinstance(measured.get('run_one_latency_ms'),dict)
             or not isinstance(measured.get('reconciliation_lag_ms'),dict)):
         raise ValueError('Oracle capacity report lacks completed projections, owner calls, lag or database work')
+    check_queue_evidence(root,capacity,measured)
     return {'junit_tests':tests,'oracle_suites':sorted(found),'pit_counts':dict(counts),
             'pit_score':score,'gatling':load,'oracle_scale':capacity,'oracle_workload':measured}
 

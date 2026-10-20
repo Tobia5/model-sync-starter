@@ -164,6 +164,10 @@ def main() -> int:
             'grant select on v_$statname to MS_TEST_RUNTIME;\n'
             'grant select on v_$sesstat to MS_TEST_RUNTIME;\n'
             'grant select on v_$session to MS_TEST_RUNTIME;\n'
+            'grant select on v_$session_event to MS_TEST_RUNTIME;\n'
+            'grant select on v_$sql to MS_TEST_RUNTIME;\n'
+            'grant select on v_$sql_plan to MS_TEST_RUNTIME;\n'
+            'grant select on v_$sql_plan_statistics_all to MS_TEST_RUNTIME;\n'
             f'connect MS_TEST_RUNTIME/{runtime}@//localhost:1521/FREEPDB1\n'
             + schema + '\ncommit;\nexit\n', encoding='utf-8')
         environment = dict(os.environ, ORACLE_PASSWORD=admin)

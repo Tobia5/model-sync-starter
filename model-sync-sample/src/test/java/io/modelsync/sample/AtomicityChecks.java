@@ -122,7 +122,7 @@ abstract class AtomicityChecks {
     return coordinator.prepare(lease).orElseThrow();
   }
 
-  void failedCompletion(AtomicityFault fault) throws Exception {
+  Exception failedCompletion(AtomicityFault fault) throws Exception {
     var prepared = prepare();
     var before = committed();
     faults.fault = fault;
@@ -144,6 +144,7 @@ abstract class AtomicityChecks {
     assertNull(retry.token());
     assertEquals(1, retry.attempts());
     assertEquals(before.generation(), retry.generation());
+    return failure;
   }
 
   AtomicitySnapshot committed() throws Exception {

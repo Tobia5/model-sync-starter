@@ -328,6 +328,17 @@ class QualityGateTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'EXPLICIT_DISPOSABLE'):
                 module.preflight()
 
+    def test_queue_evidence_rejects_estimated_plans_and_combined_or_regressed_counters(self):
+        from queue_evidence import plans, counters
+        with self.assertRaisesRegex(ValueError, 'actual row-source'):
+            plans([{'SQL_ID': 'fixture', 'EXECUTIONS': 1, 'actual_plan': ['EXPLAIN PLAN estimates only']}])
+        with self.assertRaisesRegex(ValueError, 'Separate Oracle counters'):
+            counters({'db_session_work': 100})
+        with self.assertRaisesRegex(ValueError, 'regressed'):
+            counters({'db block gets': 1, 'consistent gets': -1, 'physical reads': 0,
+                      'execute count': 2, 'redo size': 1})
+        plans([{'SQL_ID': 'fixture', 'EXECUTIONS': 1, 'actual_plan': ['| Starts | A-Rows | Buffers |']}])
+
     def test_container_uses_selected_project_settings_and_keeps_full_goals(self):
         spec = spec_from_file_location('oracle_container_maven', ROOT / 'scripts/full-oracle-container.py')
         module = module_from_spec(spec)

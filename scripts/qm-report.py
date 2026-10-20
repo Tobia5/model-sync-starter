@@ -247,8 +247,12 @@ def markdown(data: dict) -> str:
     for name, item in sorted(evidence['gatling'].items()):
         if 'http' in item:
             lines.append(f'Gatling HTTP {name}: ' + json.dumps(item['http'], sort_keys=True))
-    lines.append('Oracle scale: ' + (json.dumps(evidence['oracle_scale'], sort_keys=True) if evidence['oracle_scale'] else 'NOT_RUN.'))
-    lines.append('Oracle reconciliation workload: ' + (json.dumps(evidence['oracle_workload'], sort_keys=True) if evidence['oracle_workload'] else 'NOT_RUN.'))
+    for label, key in (('Oracle scale', 'oracle_scale'), ('Oracle reconciliation workload', 'oracle_workload')):
+        item = evidence[key]
+        # Full cursor plans/statistics remain in raw JSON and evidence.json, not a multi-megabyte summary.
+        summary = {k: v for k, v in item.items() if k not in
+                   ('distributions', 'seed_work', 'cleanup_work', 'table_statistics', 'index_statistics', 'phase_diagnostics')} if item else None
+        lines.append(label + ': ' + (json.dumps(summary, sort_keys=True) if summary else 'NOT_RUN.'))
     for module_name, module in evidence['modules'].items():
         for runner in ('surefire', 'failsafe'):
             for suite in module[runner].get('suites', []):
@@ -257,7 +261,7 @@ def markdown(data: dict) -> str:
                                  f"{suite['failures']} failures, {suite['errors']} errors, {suite['skipped']} skipped."
                                  + (f" {suite['reason']}." if suite.get('reason') else ''))
     lines += ['', '## Scope and blockers', '',
-              'A default PASS does not qualify full release behavior. Full requires nonzero Oracle migration/concurrency/scale/capacity suites, selected PIT scope at 85% killed/generated, and all six Gatling reports. See `scripts/check-full-reports.py`.',
+              'A default PASS does not qualify full release behavior. Full requires Oracle migration/concurrency/scale/capacity and seven starter JPA/JDBC atomicity tests, actual claim plans/counters, selected PIT scope at 85% killed/generated, and all six Gatling reports. See `scripts/check-full-reports.py`.',
               'The local Gatling harness uses an in-memory test store; its data is not Oracle capacity evidence.',
               'No package publication or production deployment is authorized by this report.', '']
     if evidence['rejected']:

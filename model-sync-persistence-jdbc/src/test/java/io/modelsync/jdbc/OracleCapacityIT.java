@@ -15,6 +15,8 @@ import java.time.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.LinkedHashMap;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -50,6 +52,7 @@ class OracleCapacityIT {
     config.setMaximumPoolSize(8); config.setMinimumIdle(8);
     // Keep this bounded measurement's session-counter population stable; close all eight at test exit.
     config.setMaxLifetime(0);
+    config.setConnectionInitSql("alter session set statistics_level=all");
     config.setPoolName("modelsync-capacity");
     try (HikariDataSource source = new HikariDataSource(config)) {
       JdbcTemplate jdbc = new JdbcTemplate(source);
@@ -68,11 +71,20 @@ class OracleCapacityIT {
           + " subject_id varchar2(256 char) not null, projection_value varchar2(512 char) not null,"
           + " revision varchar2(36 char) not null, expires_at_ms number(19),"
           + " primary key (tenant_id,subject_id))");
+      Map<String, Object> phases = new LinkedHashMap<>();
+      phases.put("scope", "oracle-backed-reconciliation-phase-diagnostics");
+      phases.put("statistics_level", "ALL");
+      phases.put("pool_max_connections", 8);
+      Path phaseReport = Path.of("target/qm/oracle-workload-phases.json");
       try {
         long requestedAt = System.currentTimeMillis();
+        var seedBefore = OracleMeasurements.snapshot(jdbc);
         long seedStarted = System.nanoTime();
         seed(jdbc, binding, requestedAt);
         long seedElapsedMs = (System.nanoTime() - seedStarted) / 1_000_000;
+        phases.put("seed_ms", seedElapsedMs);
+        phases.put("seed_work", OracleMeasurements.difference(seedBefore, OracleMeasurements.snapshot(jdbc)));
+        OracleMeasurements.write(phaseReport, phases);
         assertEquals(ROWS, jdbc.queryForObject("select count(*) from MS_WORK where binding_id=?", Integer.class, binding));
         assertEquals(DUE, jdbc.queryForObject("select count(*) from MS_WORK where binding_id=? and next_at_ms=0", Integer.class, binding));
         var manager = new DataSourceTransactionManager(source);
@@ -80,6 +92,7 @@ class OracleCapacityIT {
         var store = new JdbcWorkStore(jdbc);
         var quota = new JdbcQuotaGate(jdbc, manager, Clock.systemUTC());
         quota.register(quotaGroup, Duration.ofMillis(20)); // 50 physical calls/s, shared by all workers.
+        var measuredQuota = new MeasuredQuotaGate(quota);
         AtomicInteger ownerCalls = new AtomicInteger();
         AtomicInteger limited = new AtomicInteger();
         AtomicInteger timedOut = new AtomicInteger();
@@ -105,14 +118,20 @@ class OracleCapacityIT {
           gateway.request(binding, "synthetic", "1", Priority.URGENT, true);
         assertEquals(ROWS, jdbc.queryForObject("select count(*) from MS_WORK", Integer.class),
             "Hot requests must coalesce to one durable key");
-        var coordinator = new SyncCoordinator(registry, store, tx, quota, Clock.systemUTC(),
+        var coordinator = new SyncCoordinator(registry, store, tx, measuredQuota, Clock.systemUTC(),
             SyncOptions.defaults(), WeightedPriorities.defaults(), () -> 0.5);
         // Warm the pool and JIT with bounded real work; measurement starts afterwards.
+        var warmupBefore = OracleMeasurements.snapshot(jdbc);
         long warmupStarted = System.nanoTime();
         for (int i = 0; i < 10; i++) coordinator.runOne();
         long warmupElapsedMs = (System.nanoTime() - warmupStarted) / 1_000_000;
         long warmupCalls = ownerCalls.get();
         long warmupCompleted = jdbc.queryForObject("select count(*) from MS_STATE s join MS_WORK w on w.work_id=s.work_id where w.binding_id=? and s.outcome in ('MATCH','APPLIED')", Long.class, binding);
+        phases.put("warmup_work", OracleMeasurements.difference(warmupBefore, OracleMeasurements.snapshot(jdbc)));
+        var measurementBefore = OracleMeasurements.snapshot(jdbc);
+        long grantsBefore = measuredQuota.granted.get();
+        long denialsBefore = measuredQuota.denied.get();
+        long cooldownsBefore = measuredQuota.cooldowns.get();
         long beforeWork = jdbc.queryForObject(SESSION_WORK, Long.class);
         long started = System.nanoTime();
         long deadline = started + Duration.ofMinutes(3).toNanos();
@@ -133,6 +152,19 @@ class OracleCapacityIT {
         }
         long elapsedMs = (System.nanoTime() - started) / 1_000_000;
         long dbWork = jdbc.queryForObject(SESSION_WORK, Long.class) - beforeWork;
+        phases.put("measurement_work", OracleMeasurements.difference(measurementBefore, OracleMeasurements.snapshot(jdbc)));
+        @SuppressWarnings("unchecked") var previousSql = (List<Map<String, Object>>) measurementBefore.get("sql_cursors");
+        phases.put("claim_plans", OracleMeasurements.claimPlans(jdbc, previousSql));
+        phases.put("table_statistics", jdbc.queryForList("select table_name,num_rows,blocks,last_analyzed,stale_stats from user_tab_statistics where table_name='MS_WORK'"));
+        phases.put("index_statistics", jdbc.queryForList("select index_name,num_rows,leaf_blocks,clustering_factor,last_analyzed from user_indexes where table_name='MS_WORK' order by index_name"));
+        long measuredGrants = measuredQuota.granted.get() - grantsBefore;
+        long measuredDenials = measuredQuota.denied.get() - denialsBefore;
+        phases.put("measurement_ms", elapsedMs);
+        phases.put("measured_quota_grants", measuredGrants);
+        phases.put("measured_quota_denials", measuredDenials);
+        phases.put("measured_provider_cooldowns", measuredQuota.cooldowns.get() - cooldownsBefore);
+        phases.put("measured_ledger_attempts", attempts.get());
+        OracleMeasurements.write(phaseReport, phases);
         long completed = jdbc.queryForObject("select count(*) from MS_STATE s join MS_WORK w on w.work_id=s.work_id where w.binding_id=? and s.outcome in ('MATCH','APPLIED')", Long.class, binding);
         long measuredCompleted = completed - warmupCompleted;
         long measuredOwnerCalls = ownerCalls.get() - warmupCalls;
@@ -163,18 +195,34 @@ class OracleCapacityIT {
             + ",\"jvm_used_heap_bytes\":" + (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())
             + ",\"available_processors\":" + Runtime.getRuntime().availableProcessors()
             + ",\"pool_max_connections\":8,\"pool_max_lifetime_ms\":0,\"oracle_version\":" + quote(oracleVersion) + "}\n");
+        @SuppressWarnings("unchecked") Map<String, Object> workload =
+            tools.jackson.databind.json.JsonMapper.builder().build().readValue(Files.readString(report), Map.class);
+        workload.put("measured_quota_grants", measuredGrants);
+        workload.put("measured_quota_denials", measuredDenials);
+        workload.put("db_work_per_ledger_attempt", attempts.get() == 0 ? null : (double) dbWork / attempts.get());
+        workload.put("db_work_per_completed_sync", measuredCompleted == 0 ? null : (double) dbWork / measuredCompleted);
+        workload.put("phase_diagnostics", phases);
+        OracleMeasurements.write(report, workload);
         assertTrue(ownerCalls.get() >= OWNER_CALL_TARGET, "Owner-call target not reached before bounded deadline");
         assertTrue(completed >= 150, "Too few completed reconciliations for the declared workload");
         assertEquals(completed, projectionRows, "Accepted work is not a completed projection");
         assertEquals(completed, lag.size());
         assertTrue(dbWork >= 0);
         assertTrue(measuredCompleted > 0 && measuredOwnerCalls > 0);
+        assertEquals(measuredOwnerCalls, measuredGrants, "Each admission must have exactly one controlled owner entry");
+        assertEquals(attempts.get(), measuredGrants + measuredDenials, "Separate quota-denial churn from admitted work");
         assertTrue(limited.get() > 0 && timedOut.get() > 0, "Failure injection was not exercised");
       } finally {
+        var cleanupBefore = OracleMeasurements.snapshot(jdbc);
+        long cleanupStarted = System.nanoTime();
         jdbc.update("delete from MS_STATE where work_id in (select work_id from MS_WORK where binding_id=?)", binding);
         jdbc.update("delete from MS_WORK where binding_id=?", binding);
         jdbc.update("delete from MS_QUOTA where quota_group=?", quotaGroup);
         jdbc.execute("drop table MS_TEST_PROJECTION purge");
+        phases.put("cleanup_ms", (System.nanoTime() - cleanupStarted) / 1_000_000);
+        phases.put("cleanup_work", OracleMeasurements.difference(cleanupBefore, OracleMeasurements.snapshot(jdbc)));
+        phases.put("cleanup_rows_remaining", jdbc.queryForObject("select count(*) from MS_WORK where binding_id=?", Integer.class, binding));
+        OracleMeasurements.write(phaseReport, phases);
       }
     }
   }

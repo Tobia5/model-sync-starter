@@ -15,8 +15,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OracleAtomicityIT extends AtomicityChecks {
   @Test void failureInActualOracleCommitRollsBackBoth() throws Exception {
-    failedCompletion(AtomicityFault.ORACLE_COMMIT);
+    Exception failure = failedCompletion(AtomicityFault.ORACLE_COMMIT);
     assertTrue(faults.completionReached, "Deferred violation must reach physical COMMIT");
+    assertTrue(faults.deferredStatementsAccepted, "Both deferred duplicates must succeed before physical COMMIT");
+    StringBuilder causes = new StringBuilder();
+    for (Throwable cause = failure; cause != null; cause = cause.getCause()) causes.append(cause.getMessage());
+    assertTrue(causes.toString().contains("MS_TEST_ATOMIC_UQ"), "Failure must identify the deferred Oracle constraint");
     assertEquals(0, jdbc.queryForObject("select count(*) from MS_TEST_ATOMIC_COMMIT", Integer.class));
   }
 

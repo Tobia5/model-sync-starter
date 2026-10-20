@@ -33,6 +33,7 @@
     </dependency>
     <dependency><groupId>io.modelsync</groupId><artifactId>model-sync-spring</artifactId><version>${project.version}</version><scope>test</scope></dependency>
     <dependency><groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>tools.jackson.core</groupId><artifactId>jackson-databind</artifactId><scope>test</scope></dependency>
   </dependencies>
   <profiles>
     <profile>

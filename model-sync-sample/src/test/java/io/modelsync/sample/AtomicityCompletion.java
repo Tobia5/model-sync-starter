@@ -28,6 +28,7 @@ final class AtomicityCompletion implements TransactionSynchronization {
       // Oracle accepts these statements and rejects the deferred UNIQUE constraint at COMMIT.
       jdbc.update("insert into MS_TEST_ATOMIC_COMMIT (duplicate_value) values (1)");
       jdbc.update("insert into MS_TEST_ATOMIC_COMMIT (duplicate_value) values (1)");
+      faults.deferredStatementsAccepted = true;
     } else {
       throw new IllegalStateException("injected beforeCommit failure");
     }
