@@ -1,0 +1,18 @@
+{
+  "artifact": "model-sync-starter",
+  "version": "0.1.0-SNAPSHOT",
+  "java_release": 21,
+  "spring_boot_bom": "4.1.1",
+  "modules": 13,
+  "core_compiled": true,
+  "offline_contracts_passed": 77,
+  "offline_contracts_failed": 0,
+  "java_syntax_files": 82,
+  "java_syntax_errors": 0,
+  "dependency_graph_validated": true,
+  "full_maven_build_executed": false,
+  "spring_integration_tests_executed": false,
+  "oracle_integration_tests_executed": false,
+  "external_api_tests_executed": false,
+  "reason_unexecuted": "Maven was unavailable and dependencies could not be downloaded in the build environment."
+}

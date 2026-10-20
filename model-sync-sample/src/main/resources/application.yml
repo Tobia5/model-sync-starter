@@ -1,0 +1,22 @@
+spring:
+  profiles:
+    default: demo
+  main:
+    web-application-type: none
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+  sql:
+    init:
+      mode: never
+model-sync:
+  enabled: true
+  worker-enabled: false
+  aop:
+    enabled: true
+  quotas:
+    customer-owner: 600ms
+  lease: 60s
+  fetch-timeout: 15s
+  concurrency: 4

@@ -1,0 +1,78 @@
+PASS subject rejects blank tenant
+PASS subject rejects control characters
+PASS subject rejects oversized ID
+PASS work keys isolate tenants
+PASS work keys isolate model bindings
+PASS work keys use unambiguous length prefixes
+PASS fingerprint distinguishes null and empty
+PASS fingerprint distinguishes concatenation collisions
+PASS fingerprint is deterministic
+PASS invalid freshness order rejected
+PASS unknown validation age
+PASS future validation time is unknown
+PASS freshness expires at exact max age
+PASS refresh is due at exact refresh age
+PASS incomplete bindings rejected
+PASS duplicate binding IDs rejected
+PASS typed lookup rejects wrong model
+PASS unknown route fails before enqueue
+PASS ambiguous class lookup requires a route
+PASS boundary catalog includes registered models only
+PASS initial owner fetch repairs allowed projection
+PASS verify-only never creates local data
+PASS durable replica has no cache expiry
+PASS temporary cache gets separate retention deadline
+PASS fresh cache hit does not call owner or reset age
+PASS force refresh bypasses freshness but not quota
+PASS fresh local read is local-only
+PASS expired cache is not returned by local facade
+PASS unchanged owner renews verification and cache TTL
+PASS eviction keeps ledger and forces unconditional fetch
+PASS expired payload cannot use an ETag shortcut
+PASS local drift disables ETag shortcut
+PASS invalid 304 without cache is quarantined
+PASS 404 does not delete existing projection
+PASS fresh mismatch is not marked reconciled
+PASS failed source call never renews validation
+PASS quota denial does not count as source failure
+PASS provider 429 establishes shared cooldown
+PASS smooth quota permits one admission per interval
+PASS quota configuration conflict fails closed
+PASS unknown quota fails closed
+PASS weighted priorities protect background share
+PASS zero priority weights rejected
+PASS unused priority capacity is borrowed
+PASS coalesced requests share one durable work item
+PASS request during lease is not lost on completion
+PASS periodic work does not retain an urgent priority forever
+PASS expired lease is reclaimed with a new token
+PASS stale worker cannot apply its response
+PASS stale failure cannot alter a newer lease
+PASS concurrent local revision prevents stale overwrite
+PASS CAS conflict is rescheduled without failure penalty
+PASS projection and ledger roll back together
+PASS business transaction rollback removes new intent
+PASS worker rejects ambient business transaction
+PASS retry exhaustion moves work to dead state
+PASS explicit new request revives dead work
+PASS lease duration is validated against fetch timeout
+PASS async owners work without Reactor in core
+PASS matching dataset manifests reconcile
+PASS dataset snapshot mismatch is incomparable
+PASS unresolved dataset records prevent a pass
+PASS equal counts do not conceal changed content
+PASS missing dataset checksum is incomplete
+PASS different business totals are detected
+PASS dataset row count difference is detected
+PASS negative dataset count is rejected
+PASS concurrent callers coalesce without losing generations
+PASS quota allows only one concurrent admission
+PASS maxAge blocks serving a non-expiring replica
+PASS strict local read rejects stale but bounded cache
+PASS unverified local projection is diagnostic only
+PASS relative provider cooldown uses the coordinator clock
+PASS blank dataset checksums cannot pass
+PASS dataset identity cannot be inferred from null fields
+PASS null owner response is a permanent adapter error
+PASS header validators cannot contain line breaks
+CORE CONTRACTS: 77 passed, 0 failed

@@ -1,0 +1,13 @@
+# Apply the reviewed ledger and sample schemas manually BEFORE selecting this profile.
+spring:
+  datasource:
+    url: ${MODELSYNC_ORACLE_URL}
+    username: ${MODELSYNC_ORACLE_USER}
+    password: ${MODELSYNC_ORACLE_PASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  sql:
+    init:
+      mode: never

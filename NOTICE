@@ -1,0 +1,7 @@
+Model Sync — source reference implementation
+Prepared for Tobias, 2026.
+
+This project is independent of Spring, VMware/Broadcom, Oracle, IBM and any Vista product.
+Those names identify integration technologies, not endorsement or bundled proprietary software.
+No credentials, proprietary customer schemas or vendor-specific IBM/Vista implementations are included.
+Project source is supplied under the Apache License, Version 2.0. Dependencies retain their own licenses.
