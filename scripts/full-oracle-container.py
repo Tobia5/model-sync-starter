@@ -17,7 +17,7 @@ import sys
 import tempfile
 import time
 import uuid
-from run_evidence import invalidate
+from run_evidence import current, identity, invalidate
 
 ROOT = Path(__file__).resolve().parents[1]
 IMAGE = ('ghcr.io/gvenzl/oracle-free:23.26.3-slim@'
@@ -26,6 +26,18 @@ IMAGE = ('ghcr.io/gvenzl/oracle-free:23.26.3-slim@'
 
 def docker(*args: str, check: bool = True, env: dict | None = None) -> subprocess.CompletedProcess:
     return subprocess.run(['docker', *args], check=check, capture_output=True, text=True, env=env)
+
+
+def error_detail(error: BaseException) -> str:
+    if isinstance(error, subprocess.CalledProcessError) and error.stderr:
+        return error.stderr.strip()
+    return str(error)
+
+
+def write_infrastructure(record: dict) -> None:
+    destination = ROOT / 'target/qm/oracle-container.json'
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(record, sort_keys=True) + '\n', encoding='utf-8')
 
 
 def preflight() -> None:
@@ -41,10 +53,17 @@ def preflight() -> None:
 
 def main() -> int:
     invalidate(ROOT)
+    attempt = {'attempt_id': str(uuid.uuid4()), **identity(ROOT), 'image': IMAGE,
+               'runtime_schema': 'MS_TEST_RUNTIME', 'migration_schema': 'MS_TEST_MIGRATION'}
     try:
         preflight()
     except (ValueError, OSError, subprocess.CalledProcessError) as error:
-        print(f'BLOCKED full preflight: disposable Docker lane unavailable: {error}', file=sys.stderr)
+        detail = error_detail(error)
+        print(f'BLOCKED full preflight: disposable Docker lane unavailable: {detail}', file=sys.stderr)
+        if os.environ.get('MODELSYNC_ORACLE_CONTAINER') == 'EXPLICIT_DISPOSABLE':
+            write_infrastructure({**attempt, 'status': 'BLOCKED', 'phase': 'Docker preflight',
+                                  'error': detail, 'container_created': False,
+                                  'cleanup_verified': True, 'run_id': None})
         return 2
     name = 'msq-' + uuid.uuid4().hex[:12]
     admin = secrets.token_hex(24)
@@ -72,6 +91,8 @@ def main() -> int:
             f'connect MS_TEST_RUNTIME/{runtime}@//localhost:1521/FREEPDB1\n'
             + schema + '\ncommit;\nexit\n', encoding='utf-8')
         environment = dict(os.environ, ORACLE_PASSWORD=admin)
+        phase = 'Oracle image pull/container start'
+        blocker_detail = None
         try:
             run = docker('run', '--rm', '-d', '--name', name, '--platform', 'linux/amd64',
                          '--cpus', '4', '--memory', '6g', '-p', '127.0.0.1::1521',
@@ -80,6 +101,7 @@ def main() -> int:
                          '-v', f'{setup.resolve()}:/container-entrypoint-initdb.d/001-test-schemas.sql:ro',
                          '-e', 'ORACLE_PASSWORD', IMAGE, env=environment)
             container_created = bool(run.stdout.strip())
+            phase = 'Oracle database startup/health'
             deadline = time.monotonic() + 900
             while time.monotonic() < deadline:
                 status = docker('inspect', '--format', '{{.State.Health.Status}}', name).stdout.strip()
@@ -100,12 +122,15 @@ def main() -> int:
                 MODELSYNC_ORACLE_MIGRATION_PASSWORD=migration,
                 MODELSYNC_ORACLE_TEST_SCHEMA_ACK='DEDICATED_TEST_SCHEMA',
                 MODELSYNC_ORACLE_MIGRATION_SCHEMA_ACK='DEDICATED_MIGRATION_SCHEMA')
+            phase = 'full Maven verification'
             wrapper = str(ROOT / ('mvnw.cmd' if os.name == 'nt' else 'mvnw'))
             result = subprocess.run([wrapper, '-B', '-ntp', '-Pfull', 'clean', 'verify'],
                                     cwd=ROOT, env=build_env, check=False)
             result_code = result.returncode
         except (OSError, subprocess.CalledProcessError, RuntimeError) as error:
-            print(f'BLOCKED full preflight: disposable Oracle container unavailable: {error}', file=sys.stderr)
+            detail = error_detail(error)
+            print(f'BLOCKED full preflight: {phase}: {detail}', file=sys.stderr)
+            blocker_detail = detail
             result_code = 2
         finally:
             if container_created:
@@ -117,12 +142,16 @@ def main() -> int:
                     print('BLOCKED cleanup: disposable Oracle container was not removed', file=sys.stderr)
                     if result_code == 0:
                         result_code = 2
-            destination = ROOT / 'target/qm'
-            destination.mkdir(parents=True, exist_ok=True)
-            (destination / 'oracle-container.json').write_text(json.dumps({
-                'image': IMAGE, 'container_name': name, 'elapsed_seconds': round(time.monotonic() - started, 2),
-                'runtime_schema': 'MS_TEST_RUNTIME', 'migration_schema': 'MS_TEST_MIGRATION',
-                'container_created': container_created, 'cleanup_verified': cleanup_verified}, sort_keys=True) + '\n', encoding='utf-8')
+            try:
+                run_id = current(ROOT)['run_id']
+            except ValueError:
+                run_id = None
+            write_infrastructure({**attempt, 'run_id': run_id, 'container_name': name,
+                                  'elapsed_seconds': round(time.monotonic() - started, 2),
+                                  'container_created': container_created,
+                                  'cleanup_verified': cleanup_verified if container_created else True,
+                                  'phase': phase, 'error': blocker_detail,
+                                  'status': 'PASS' if result_code == 0 else 'FAILED' if run_id else 'BLOCKED'})
     return result_code
 
 
