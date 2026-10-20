@@ -189,6 +189,18 @@ class QualityGateTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'EXPLICIT_DISPOSABLE'):
                 module.preflight()
 
+    def test_container_uses_selected_project_settings_and_keeps_full_goals(self):
+        spec = spec_from_file_location('oracle_container_maven', ROOT / 'scripts/full-oracle-container.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with patch.dict(os.environ, {'MODELSYNC_MAVEN_SETTINGS': module.PROJECT_SETTINGS}):
+            command = module.maven_command()
+        self.assertEqual(['-Pfull', 'clean', 'verify'], command[-3:])
+        self.assertEqual(str(ROOT / module.PROJECT_SETTINGS), command[command.index('-s') + 1])
+        with patch.dict(os.environ, {'MODELSYNC_MAVEN_SETTINGS': '../unreviewed.xml'}):
+            with self.assertRaisesRegex(ValueError, 'reviewed project Maven settings'):
+                module.maven_command()
+
     def test_full_report_rejects_missing_raw_evidence(self):
         with tempfile.TemporaryDirectory() as directory:
             script = ROOT / 'scripts/check-full-reports.py'

@@ -9,6 +9,8 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'target/qm'
 OUT.mkdir(parents=True, exist_ok=True)
 WRAPPER = str(ROOT / ('mvnw.cmd' if os.name == 'nt' else 'mvnw'))
+SETTINGS = os.environ.get('MODELSYNC_MAVEN_SETTINGS')
+SETTINGS_ARGS = ['-s', str(ROOT / SETTINGS)] if SETTINGS else []
 NS = {'m': 'http://maven.apache.org/POM/4.0.0'}
 
 
@@ -21,7 +23,7 @@ def goals(path: Path) -> set[tuple[str, str]]:
 
 for name, profile in (('default', []), ('full', ['-Pfull'])):
     output = OUT / f'effective-{name}.xml'
-    result = subprocess.run([WRAPPER, '-B', '-ntp', '-N', *profile,
+    result = subprocess.run([WRAPPER, '-B', '-ntp', *SETTINGS_ARGS, '-N', *profile,
                              'help:effective-pom', f'-Doutput={output}'], cwd=ROOT,
                             capture_output=True, text=True, check=False)
     if result.returncode or not output.is_file():

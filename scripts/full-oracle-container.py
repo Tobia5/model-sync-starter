@@ -7,6 +7,7 @@ the uniquely named container is stopped in all exit paths.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -22,6 +23,7 @@ from run_evidence import current, identity, invalidate
 ROOT = Path(__file__).resolve().parents[1]
 IMAGE = ('ghcr.io/gvenzl/oracle-free:23.26.3-slim@'
          'sha256:6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd')
+PROJECT_SETTINGS = '.mvn/qualification-central.settings.xml'
 
 
 def docker(*args: str, check: bool = True, env: dict | None = None) -> subprocess.CompletedProcess:
@@ -40,6 +42,20 @@ def write_infrastructure(record: dict) -> None:
     destination.write_text(json.dumps(record, sort_keys=True) + '\n', encoding='utf-8')
 
 
+def maven_command() -> list[str]:
+    wrapper = str(ROOT / ('mvnw.cmd' if os.name == 'nt' else 'mvnw'))
+    command = [wrapper, '-B', '-ntp']
+    selected = os.environ.get('MODELSYNC_MAVEN_SETTINGS')
+    if selected:
+        if selected != PROJECT_SETTINGS:
+            raise ValueError('Only the reviewed project Maven settings may be selected')
+        path = ROOT / selected
+        if not path.is_file():
+            raise ValueError('Reviewed project Maven settings file is absent')
+        command.extend(('-s', str(path)))
+    return [*command, '-Pfull', 'clean', 'verify']
+
+
 def preflight() -> None:
     if os.environ.get('MODELSYNC_ORACLE_CONTAINER') != 'EXPLICIT_DISPOSABLE':
         raise ValueError('MODELSYNC_ORACLE_CONTAINER=EXPLICIT_DISPOSABLE is required')
@@ -48,6 +64,7 @@ def preflight() -> None:
     if any(os.environ.get(k) for k in ('MODELSYNC_ORACLE_URL', 'MODELSYNC_ORACLE_USER',
                                       'MODELSYNC_ORACLE_PASSWORD')):
         raise ValueError('Container mode cannot reuse external Oracle credentials')
+    maven_command()
     docker('info', '--format', '{{.Server.Version}}')
 
 
@@ -55,6 +72,10 @@ def main() -> int:
     invalidate(ROOT)
     attempt = {'attempt_id': str(uuid.uuid4()), **identity(ROOT), 'image': IMAGE,
                'runtime_schema': 'MS_TEST_RUNTIME', 'migration_schema': 'MS_TEST_MIGRATION'}
+    selected = os.environ.get('MODELSYNC_MAVEN_SETTINGS')
+    attempt['maven_settings'] = selected or 'USER_DEFAULT'
+    if selected == PROJECT_SETTINGS and (ROOT / selected).is_file():
+        attempt['maven_settings_sha256'] = hashlib.sha256((ROOT / selected).read_bytes()).hexdigest()
     try:
         preflight()
     except (ValueError, OSError, subprocess.CalledProcessError) as error:
@@ -123,8 +144,7 @@ def main() -> int:
                 MODELSYNC_ORACLE_TEST_SCHEMA_ACK='DEDICATED_TEST_SCHEMA',
                 MODELSYNC_ORACLE_MIGRATION_SCHEMA_ACK='DEDICATED_MIGRATION_SCHEMA')
             phase = 'full Maven verification'
-            wrapper = str(ROOT / ('mvnw.cmd' if os.name == 'nt' else 'mvnw'))
-            result = subprocess.run([wrapper, '-B', '-ntp', '-Pfull', 'clean', 'verify'],
+            result = subprocess.run(maven_command(),
                                     cwd=ROOT, env=build_env, check=False)
             result_code = result.returncode
         except (OSError, subprocess.CalledProcessError, RuntimeError) as error:
