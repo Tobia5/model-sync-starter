@@ -65,7 +65,7 @@ def preflight() -> None:
                                       'MODELSYNC_ORACLE_PASSWORD')):
         raise ValueError('Container mode cannot reuse external Oracle credentials')
     maven_command()
-    docker('info', '--format', '{{.Server.Version}}')
+    docker('info', '--format', '{{.ServerVersion}}')
 
 
 def main() -> int:

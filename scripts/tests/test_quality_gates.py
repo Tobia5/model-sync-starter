@@ -201,6 +201,17 @@ class QualityGateTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'reviewed project Maven settings'):
                 module.maven_command()
 
+    def test_container_preflight_uses_supported_docker_info_field(self):
+        spec = spec_from_file_location('oracle_container_docker_info', ROOT / 'scripts/full-oracle-container.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        env = {'MODELSYNC_ORACLE_CONTAINER': 'EXPLICIT_DISPOSABLE',
+               'MODELSYNC_FULL_ENV_ACK': 'DISPOSABLE_NONPRODUCTION',
+               'MODELSYNC_ORACLE_URL': '', 'MODELSYNC_ORACLE_USER': '', 'MODELSYNC_ORACLE_PASSWORD': ''}
+        with patch.dict(os.environ, env), patch.object(module, 'docker') as command:
+            module.preflight()
+        command.assert_called_once_with('info', '--format', '{{.ServerVersion}}')
+
     def test_full_report_rejects_missing_raw_evidence(self):
         with tempfile.TemporaryDirectory() as directory:
             script = ROOT / 'scripts/check-full-reports.py'
