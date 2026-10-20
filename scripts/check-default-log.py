@@ -5,7 +5,8 @@ import re
 import sys
 
 path = Path(sys.argv[1])
-text = path.read_text(encoding='utf-8', errors='replace')
+raw = path.read_bytes()
+text = raw.decode('utf-16' if raw.startswith((b'\xff\xfe', b'\xfe\xff')) else 'utf-8', errors='replace')
 goals = re.findall(r'\[INFO\]\s+---\s+([\w.-]+):[\w.-]+:([\w.-]+)\s+\(', text)
 if not goals:
     raise SystemExit('No Maven plugin executions found in default build log')
