@@ -70,6 +70,17 @@ public final class CoreContracts {
                 () ->
                     new FreshnessPolicy(
                         Duration.ofDays(2), Duration.ofDays(1), Duration.ofDays(1))));
+    test("freshness requires positive durations", () -> {
+      for (Duration invalid : List.of(Duration.ZERO, Duration.ofSeconds(-1))) {
+        throwsType(IllegalArgumentException.class, () -> new FreshnessPolicy(invalid, Duration.ofSeconds(1), Duration.ofSeconds(1)));
+        throwsType(IllegalArgumentException.class, () -> new FreshnessPolicy(Duration.ofSeconds(1), invalid, Duration.ofSeconds(1)));
+        throwsType(IllegalArgumentException.class, () -> new FreshnessPolicy(Duration.ofSeconds(1), Duration.ofSeconds(1), invalid));
+      }
+    });
+    test("equal refresh and maximum ages are valid", () -> {
+      var policy = new FreshnessPolicy(Duration.ofSeconds(1), Duration.ofSeconds(1), Duration.ofSeconds(1));
+      eq(FreshnessAge.EXPIRED, policy.age(Instant.EPOCH, Instant.EPOCH.plusSeconds(1)));
+    });
     test(
         "unknown validation age",
         () -> eq(FreshnessAge.UNKNOWN, FreshnessPolicy.defaults().age(null, Instant.now())));
@@ -237,6 +248,26 @@ public final class CoreContracts {
           eq("NOT_MODIFIED", f.state().outcome());
           eq(f.clock.instant().plusSeconds(30), f.local().expiresAt());
         });
+    test("304 preserves absent metadata and accepts refreshed owner metadata", () -> {
+      var f = new CoreFixture();
+      Instant changed = f.clock.instant().minusSeconds(100);
+      f.behavior.set(r -> new FetchResult<>(FetchStatus.FOUND, "source", "\"v1\"", changed));
+      f.enqueue(); f.run(); f.advance(11);
+      f.behavior.set(r -> FetchResult.unchanged(null)); f.run();
+      eq("\"v1\"", f.state().validator()); eq(changed, f.state().sourceChangedAt());
+      Instant refreshed = changed.plusSeconds(1);
+      f.advance(11);
+      f.behavior.set(r -> new FetchResult<>(FetchStatus.NOT_MODIFIED, null, "\"v2\"", refreshed)); f.run();
+      eq("\"v2\"", f.state().validator()); eq(refreshed, f.state().sourceChangedAt());
+    });
+    test("verify-only 304 renews agreement without changing projection", () -> {
+      var f = new CoreFixture(false, false);
+      f.projection.compareAndSet(f.key.subject(), null, "source", null);
+      f.enqueue(); f.run(); String revision = f.local().revision(); f.advance(11);
+      f.behavior.set(r -> FetchResult.unchanged(null)); f.run();
+      eq("NOT_MODIFIED", f.state().outcome()); eq(revision, f.local().revision());
+      eq(f.clock.instant(), f.state().reconciledAt());
+    });
     test(
         "eviction keeps ledger and forces unconditional fetch",
         () -> {
@@ -328,6 +359,41 @@ public final class CoreContracts {
           eq(1, f.store.inspect(f.key).attempts());
           eq("FETCH_FAILED", f.store.inspect(f.key).lastCode());
         });
+    test("retry timing grows exponentially with deterministic jitter", () -> {
+      var f = new CoreFixture();
+      f.behavior.set(r -> { throw new java.io.IOException("synthetic failure"); });
+      f.enqueue(); f.run(); eq(f.clock.instant().plusMillis(1500), f.store.inspect(f.key).due());
+      f.clock.advance(Duration.ofMillis(1500)); f.run();
+      eq(2, f.store.inspect(f.key).attempts());
+      eq(f.clock.instant().plusMillis(3000), f.store.inspect(f.key).due());
+    });
+    test("wrapped rate limits preserve shared cooldown without failure penalties", () -> {
+      for (Throwable failure : List.of(new CompletionException(new RateLimitedAfter(Duration.ofSeconds(90))),
+          new ExecutionException(new RateLimitedAfter(Duration.ofSeconds(90))))) {
+        var f = new CoreFixture(); f.enqueue(); var lease = f.coordinator.claim().orElseThrow();
+        f.coordinator.failed(lease, failure);
+        eq(0, f.store.inspect(f.key).attempts());
+        eq(f.clock.instant().plusSeconds(90), f.store.inspect(f.key).due());
+        eq(f.clock.instant().plusSeconds(90), f.gate.acquire("owner").retryAt());
+      }
+    });
+    test("ordinary exception causes do not gain rate-limit semantics", () -> {
+      var f = new CoreFixture(); f.enqueue(); var lease = f.coordinator.claim().orElseThrow();
+      f.coordinator.failed(lease, new IllegalStateException(new RateLimitedAfter(Duration.ofSeconds(90))));
+      eq(1, f.store.inspect(f.key).attempts()); eq("FETCH_FAILED", f.store.inspect(f.key).lastCode());
+      check(f.gate.acquire("owner").granted());
+    });
+    test("completion wrapper without a cause remains a counted failure", () -> {
+      var f = new CoreFixture(); f.enqueue(); var lease = f.coordinator.claim().orElseThrow();
+      f.coordinator.failed(lease, new CompletionException((Throwable) null));
+      eq(1, f.store.inspect(f.key).attempts()); eq("FETCH_FAILED", f.store.inspect(f.key).lastCode());
+    });
+    test("interrupted owner restores the caller interrupt flag", () -> {
+      var f = new CoreFixture(); f.behavior.set(r -> { throw new InterruptedException("synthetic interrupt"); });
+      f.enqueue();
+      try { f.run(); check(Thread.currentThread().isInterrupted()); }
+      finally { Thread.interrupted(); }
+    });
     test(
         "quota denial does not count as source failure",
         () -> {
@@ -726,6 +792,7 @@ public final class CoreContracts {
           f.run();
           eq(f.clock.instant().plusSeconds(90), f.store.inspect(f.key).due());
           eq(0, f.store.inspect(f.key).attempts());
+          eq(f.clock.instant().plusSeconds(90), f.gate.acquire("owner").retryAt());
         });
     test(
         "blank dataset checksums cannot pass",

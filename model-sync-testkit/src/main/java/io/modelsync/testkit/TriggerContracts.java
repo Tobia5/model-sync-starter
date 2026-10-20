@@ -187,6 +187,19 @@ public final class TriggerContracts {
       try { eq(SyncJobStopReason.INTERRUPTED, new SyncJob(f.coordinator()).run(1, Duration.ofSeconds(1)).stopReason()); check(Thread.currentThread().isInterrupted()); }
       finally { Thread.interrupted(); }
     });
+    test("job stops at the exact monotonic deadline", () -> {
+      var f = fixture(RefreshMode.ON_DEMAND); f.visit(VisitPolicy.REQUIRE_FRESH);
+      var n = new java.util.concurrent.atomic.AtomicLong();
+      var r = new SyncJob(f.coordinator(), () -> n.getAndAdd(5)).run(1, Duration.ofNanos(5));
+      eq(SyncJobStopReason.TIME_BUDGET, r.stopReason()); eq(0, r.attempted()); eq(0, f.base().calls.get());
+    });
+    test("same job can run again after an empty drain", () -> {
+      var f = fixture(RefreshMode.ON_DEMAND); var job = new SyncJob(f.coordinator());
+      eq(SyncJobStopReason.EMPTY, job.run(1, Duration.ofSeconds(1)).stopReason());
+      f.visit(VisitPolicy.REQUIRE_FRESH);
+      var r = job.run(1, Duration.ofSeconds(1));
+      eq(SyncJobStopReason.ITEM_LIMIT, r.stopReason()); eq(1, r.attempted()); eq(1, f.base().calls.get());
+    });
     test("overlapping same-instance job is rejected", () -> {
       var f = fixture(RefreshMode.ON_DEMAND); var job = new SyncJob(f.coordinator()); var inner = new AtomicReference<SyncJobResult>();
       f.base().behavior.set(r -> { inner.set(job.run(1, Duration.ofSeconds(1))); return FetchResult.found("x", "v1"); });
