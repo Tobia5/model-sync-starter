@@ -32,87 +32,126 @@ def command(*args: str) -> str:
     return (result.stdout or result.stderr).strip().splitlines()[0] if result.returncode == 0 else 'UNAVAILABLE'
 
 
-def xml_suites(directory: Path) -> dict:
+def xml_suites(directory: Path, root: Path) -> dict:
     result = Counter()
     files = 0
+    rejected = []
+    named = []
     for path in directory.glob('TEST-*.xml'):
-        fresh(path, ROOT)
         try:
+            fresh(path, root)
             doc = ET.parse(path).getroot()
             suites = [doc] if doc.tag == 'testsuite' else list(doc.iter('testsuite'))
+            if not suites:
+                raise ValueError('No JUnit test suite')
+            counts = Counter()
             for suite in suites:
                 for key in ('tests', 'errors', 'failures', 'skipped'):
-                    result[key] += int(suite.get(key, 0))
+                    value = int(suite.attrib[key])
+                    if value < 0:
+                        raise ValueError(f'Negative {key}')
+                    counts[key] += value
+            result.update(counts)
+            named.extend({'name': suite.get('name', path.stem),
+                          **{key: int(suite.attrib[key]) for key in ('tests', 'errors', 'failures', 'skipped')}}
+                         for suite in suites)
             files += 1
-        except (OSError, ET.ParseError, ValueError):
-            result['malformed'] += 1
-    return {'files': files, **dict(result)}
+        except (OSError, ET.ParseError, ValueError, KeyError) as error:
+            rejected.append(f'{path.relative_to(root)}: {error}')
+    status = ('REJECTED' if rejected else 'NOT_RUN' if not files else
+              'FAILED' if not result['tests'] or result['errors'] or result['failures'] or result['skipped'] else 'PASS')
+    return {'status': status, 'files': files, **dict(result), 'suites': named, 'rejected': rejected}
 
 
-def collect(qualified: bool, full: bool) -> dict:
-    if not qualified:
-        return {'modules': {}, 'mutation': {'status': 'NOT_RUN'}, 'gatling': {},
-                'oracle_scale': None, 'oracle_workload': None,
-                'attribution': 'NONE: build did not pass evidence admission'}
-    run = current(ROOT)
+def collect(full: bool, root: Path = ROOT) -> dict:
+    empty = {'modules': {}, 'mutation': {'status': 'NOT_RUN'}, 'gatling': {},
+             'oracle_scale': None, 'oracle_workload': None, 'rejected': []}
+    try:
+        run = current(root)
+    except ValueError as error:
+        return {**empty, 'attribution': 'NONE', 'rejected': [str(error)]}
     modules = {}
-    for module in reactor_modules(ROOT, full):
+    for module in reactor_modules(root, full):
         modules[module.name] = {
-            'surefire': xml_suites(module / 'target/surefire-reports'),
-            'failsafe': xml_suites(module / 'target/failsafe-reports') if full else {'files': 0},
+            'surefire': xml_suites(module / 'target/surefire-reports', root),
+            'failsafe': xml_suites(module / 'target/failsafe-reports', root) if full else {'status': 'NOT_RUN', 'files': 0},
         }
     mutation = {'status': 'NOT_RUN'}
-    pit = ROOT / 'model-sync-testkit/target/pit-reports/mutations.xml'
+    pit = root / 'model-sync-testkit/target/pit-reports/mutations.xml'
     if full and pit.is_file():
         try:
-            fresh(pit, ROOT)
+            fresh(pit, root)
             counts = Counter(item.get('status', 'UNKNOWN') for item in ET.parse(pit).getroot().iter('mutation'))
             total = sum(counts.values())
-            mutation = {'status': 'MEASURED', 'counts': dict(counts), 'generated': total,
+            html = pit.parent / 'index.html'
+            if html.is_file():
+                fresh(html, root)
+            score = 100 * counts['KILLED'] / total if total else None
+            mutation = {'status': 'PASS' if score is not None and score >= 85 and
+                        not any(counts[x] for x in ('TIMED_OUT', 'RUN_ERROR', 'UNKNOWN')) and html.is_file()
+                        else 'FAILED', 'counts': dict(counts), 'generated': total,
                         'killed_over_generated_percent': round(100 * counts['KILLED'] / total, 2) if total else None,
-                        'html': (pit.parent / 'index.html').is_file()}
-        except ET.ParseError:
-            mutation = {'status': 'MALFORMED'}
+                        'html': html.is_file()}
+        except (OSError, ET.ParseError, ValueError) as error:
+            mutation = {'status': 'REJECTED', 'reason': str(error)}
     load = {}
-    for path in ((ROOT / 'model-sync-performance/target/qm').glob('load-*.json') if full else ()):
+    for path in ((root / 'model-sync-performance/target/qm').glob('load-*.json') if full else ()):
         try:
-            fresh(path, ROOT)
-            load[path.stem.removeprefix('load-')] = json.loads(path.read_text(encoding='utf-8'))
-        except (OSError, json.JSONDecodeError):
-            load[path.stem] = {'status': 'MALFORMED'}
-    oracle_scale = ROOT / 'model-sync-persistence-jdbc/target/qm/oracle-scale.json'
+            fresh(path, root)
+            name = path.stem.removeprefix('load-')
+            value = json.loads(path.read_text(encoding='utf-8'))
+            if not isinstance(value, dict) or value.get('scenario') != name or value.get('status') not in ('PASS', 'FAILED'):
+                raise ValueError('Malformed or mismatched Gatling evidence')
+            load[name] = value
+        except (OSError, json.JSONDecodeError, ValueError) as error:
+            load[path.stem.removeprefix('load-')] = {'status': 'REJECTED', 'reason': str(error)}
+    oracle_scale = root / 'model-sync-persistence-jdbc/target/qm/oracle-scale.json'
     try:
-        scale = json.loads(oracle_scale.read_text(encoding='utf-8')) if full and oracle_scale.is_file() else None
-        if scale is not None: fresh(oracle_scale, ROOT)
-    except (OSError, json.JSONDecodeError):
-        scale = {'status': 'MALFORMED'}
-    oracle_workload = ROOT / 'model-sync-persistence-jdbc/target/qm/oracle-workload.json'
+        scale = None
+        if full and oracle_scale.is_file():
+            fresh(oracle_scale, root)
+            scale = json.loads(oracle_scale.read_text(encoding='utf-8'))
+            if not isinstance(scale, dict):
+                raise ValueError('Malformed Oracle scale evidence')
+    except (OSError, json.JSONDecodeError, ValueError) as error:
+        scale = {'status': 'REJECTED', 'reason': str(error)}
+    oracle_workload = root / 'model-sync-persistence-jdbc/target/qm/oracle-workload.json'
     measured = None
     if full and oracle_workload.is_file():
-        fresh(oracle_workload, ROOT)
-        measured = json.loads(oracle_workload.read_text(encoding='utf-8'))
+        try:
+            fresh(oracle_workload, root)
+            measured = json.loads(oracle_workload.read_text(encoding='utf-8'))
+            if not isinstance(measured, dict) or measured.get('scope') != 'oracle-backed-reconciliation':
+                raise ValueError('Malformed or mismatched Oracle workload evidence')
+        except (OSError, json.JSONDecodeError, ValueError) as error:
+            measured = {'status': 'REJECTED', 'reason': str(error)}
     return {'modules': modules, 'mutation': mutation, 'gatling': load, 'oracle_scale': scale,
-            'oracle_workload': measured,
+            'oracle_workload': measured, 'rejected': [reason for module in modules.values()
+                for suite in module.values() for reason in suite.get('rejected', [])],
             'attribution': run['run_id']}
 
 
-def manifest(full: bool) -> dict:
-    run = current(ROOT)
+def manifest(full: bool, root: Path = ROOT) -> dict:
+    run = current(root)
     paths = []
-    for module in reactor_modules(ROOT, full):
+    for module in reactor_modules(root, full):
         paths.extend((module / 'target/surefire-reports').glob('TEST-*.xml'))
         if full: paths.extend((module / 'target/failsafe-reports').glob('TEST-*.xml'))
     if full:
-        paths.extend((ROOT / 'model-sync-testkit/target/pit-reports').glob('**/*'))
-        paths.extend((ROOT / 'model-sync-performance/target/gatling').glob('**/*'))
-        paths.extend((ROOT / 'model-sync-performance/target/qm').glob('*.json'))
-        paths.extend((ROOT / 'model-sync-persistence-jdbc/target/qm').glob('*.json'))
+        paths.extend((root / 'model-sync-testkit/target/pit-reports').glob('**/*'))
+        paths.extend((root / 'model-sync-performance/target/gatling').glob('**/*'))
+        paths.extend((root / 'model-sync-performance/target/qm').glob('*.json'))
+        paths.extend((root / 'model-sync-persistence-jdbc/target/qm').glob('*.json'))
     files = {}
+    rejected = []
     for path in paths:
         if path.is_file():
-            fresh(path, ROOT)
-            files[path.relative_to(ROOT).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
-    return {**run, 'files_sha256': files}
+            try:
+                fresh(path, root)
+                files[path.relative_to(root).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
+            except (OSError, ValueError) as error:
+                rejected.append(str(error))
+    return {**run, 'files_sha256': files, 'rejected': rejected}
 
 
 def markdown(data: dict) -> str:
@@ -136,19 +175,31 @@ def markdown(data: dict) -> str:
     ]
     for lane in ('default', 'full'):
         item = runs[lane]
-        lines.append(f"| {lane} | `{item['command']}` | {item['exit'] if item['exit'] is not None else '—'} | {item['status']} |")
+        lines.append(f"| {lane} | `{item['command']}` | {item['exit'] if item['exit'] is not None else 'NOT_RUN'} | {item['status']} |")
     lines += ['', '## Measured evidence', '',
               f"Surefire: {unit['tests']} tests, {unit['failures']} failures, {unit['errors']} errors, {unit['skipped']} skipped across {sum(v['surefire']['files'] for v in evidence['modules'].values())} XML files.",
               f"Failsafe: {integration['tests']} tests, {integration['failures']} failures, {integration['errors']} errors, {integration['skipped']} skipped across {sum(v['failsafe']['files'] for v in evidence['modules'].values())} XML files."]
     pit = evidence['mutation']
-    lines.append('PIT: ' + (f"{pit['generated']} mutations; {pit['counts']}; killed/generated {pit['killed_over_generated_percent']}%." if pit['status'] == 'MEASURED' else pit['status'] + '.'))
-    lines.append('Gatling: ' + (', '.join(sorted(evidence['gatling'])) + ' in-memory semantic scenario evidence present.' if evidence['gatling'] else 'NOT_RUN; no latency percentiles or completed-throughput measurement.'))
+    lines.append('PIT: ' + (f"{pit['status']}; {pit['generated']} mutations; {pit['counts']}; killed/generated {pit['killed_over_generated_percent']}%." if 'generated' in pit else pit['status'] + '.'))
+    lines.append('Gatling: ' + (', '.join(f"{name}={item['status']}" for name, item in sorted(evidence['gatling'].items())) + ' in-memory semantic scenarios.' if evidence['gatling'] else 'NOT_RUN; no latency percentiles or completed-throughput measurement.'))
     lines.append('Oracle scale: ' + (json.dumps(evidence['oracle_scale'], sort_keys=True) if evidence['oracle_scale'] else 'NOT_RUN.'))
     lines.append('Oracle reconciliation workload: ' + (json.dumps(evidence['oracle_workload'], sort_keys=True) if evidence['oracle_workload'] else 'NOT_RUN.'))
+    for module_name, module in evidence['modules'].items():
+        for runner in ('surefire', 'failsafe'):
+            for suite in module[runner].get('suites', []):
+                if suite['failures'] or suite['errors'] or suite['skipped']:
+                    lines.append(f"{module_name}/{runner}/{suite['name']}: FAILED; {suite['tests']} tests, "
+                                 f"{suite['failures']} failures, {suite['errors']} errors, {suite['skipped']} skipped.")
     lines += ['', '## Scope and blockers', '',
               'A default PASS does not qualify full release behavior. Full requires nonzero Oracle migration/concurrency/scale/capacity suites, selected PIT scope at 85% killed/generated, and all six Gatling reports. See `scripts/check-full-reports.py`.',
               'The local Gatling harness uses an in-memory test store; its data is not Oracle capacity evidence.',
               'No package publication or production deployment is authorized by this report.', '']
+    if evidence['rejected']:
+        lines.append('Rejected evidence: ' + '; '.join(evidence['rejected']))
+    for kind, item in [('PIT', pit), *[(f'Gatling {name}', value) for name, value in evidence['gatling'].items()],
+                       ('Oracle scale', evidence['oracle_scale']), ('Oracle workload', evidence['oracle_workload'])]:
+        if isinstance(item, dict) and item.get('status') == 'REJECTED':
+            lines.append(f"Rejected {kind} evidence: {item.get('reason', 'invalid report')}")
     for blocker in data['blockers']:
         lines.append(f'- {blocker}')
     return '\n'.join(lines) + '\n'
@@ -179,9 +230,8 @@ def main() -> None:
     tree = command('git', 'rev-parse', 'HEAD^{tree}')
     dirty = bool(subprocess.run(['git', 'status', '--porcelain'], cwd=ROOT,
                                 capture_output=True, text=True, check=False).stdout.strip())
-    qualified = any(item['status'] == 'PASS' for item in runs.values())
-    full = runs['full']['status'] == 'PASS'
-    evidence = collect(qualified, full)
+    full = runs['full']['status'] != 'NOT_RUN'
+    evidence = collect(full)
     data = {'generated_utc': datetime.now(timezone.utc).isoformat(), 'source_sha': sha,
             'source_tree': tree, 'working_tree_dirty': dirty,
             'environment': {'java': command('java', '-version'),
@@ -190,11 +240,11 @@ def main() -> None:
             'runs': runs, 'evidence': evidence, 'blockers': args.blocker}
     out = ROOT / 'target/qm'
     out.mkdir(parents=True, exist_ok=True)
-    if not qualified:
-        (out / 'raw-manifest.json').unlink(missing_ok=True)
     (out / 'evidence.json').write_text(json.dumps(data, indent=2, sort_keys=True) + '\n', encoding='utf-8')
-    if qualified:
+    if evidence['attribution'] != 'NONE':
         (out / 'raw-manifest.json').write_text(json.dumps(manifest(full), indent=2, sort_keys=True) + '\n', encoding='utf-8')
+    else:
+        (out / 'raw-manifest.json').unlink(missing_ok=True)
     report = markdown(data)
     (out / 'QM.md').write_text(report, encoding='utf-8')
     print(report)

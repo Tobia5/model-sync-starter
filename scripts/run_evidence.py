@@ -31,6 +31,12 @@ def begin(root: Path) -> dict:
     return data
 
 
+def invalidate(root: Path) -> None:
+    """An attempted run cannot inherit a prior run's evidence marker."""
+    (root / 'target/qm/run-context.json').unlink(missing_ok=True)
+    (root / 'target/qm/raw-manifest.json').unlink(missing_ok=True)
+
+
 def current(root: Path) -> dict:
     marker = root / 'target/qm/run-context.json'
     if not marker.is_file():
@@ -67,4 +73,11 @@ def reactor_modules(root: Path, full: bool = False) -> list[Path]:
 
 
 if __name__ == '__main__':
-    print(json.dumps(begin(Path(__file__).resolve().parents[1]), sort_keys=True))
+    import sys
+    root = Path(__file__).resolve().parents[1]
+    if sys.argv[1:] == ['invalidate']:
+        invalidate(root)
+    elif not sys.argv[1:]:
+        print(json.dumps(begin(root), sort_keys=True))
+    else:
+        raise SystemExit('Usage: run_evidence.py [invalidate]')

@@ -10,7 +10,7 @@ import time
 from importlib.util import module_from_spec, spec_from_file_location
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from run_evidence import begin, current, fresh
+from run_evidence import begin, current, fresh, invalidate
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -60,18 +60,75 @@ class QualityGateTests(unittest.TestCase):
         module = module_from_spec(spec)
         spec.loader.exec_module(module)
         with tempfile.TemporaryDirectory() as directory:
-            original = module.ROOT
-            module.ROOT = Path(directory)
-            try:
-                stale = module.ROOT / 'model-sync-testkit/target/pit-reports/mutations.xml'
-                stale.parent.mkdir(parents=True)
-                stale.write_text('<mutations><mutation status="KILLED"/></mutations>', encoding='utf-8')
-                result = module.collect(False, False)
-                self.assertEqual('NONE: build did not pass evidence admission', result['attribution'])
-                self.assertEqual('NOT_RUN', result['mutation']['status'])
-                self.assertEqual({}, result['modules'])
-            finally:
-                module.ROOT = original
+            root = self.fixture_repo(directory)
+            (root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"/>', encoding='utf-8')
+            begin(root)
+            pit = root / 'model-sync-testkit/target/pit-reports/mutations.xml'
+            pit.parent.mkdir(parents=True)
+            pit.write_text('<mutations><mutation status="KILLED"/></mutations>', encoding='utf-8')
+            self.assertEqual('FAILED', module.collect(True, root)['mutation']['status'])
+            invalidate(root)
+            result = module.collect(True, root)
+            self.assertEqual('NONE', result['attribution'])
+            self.assertEqual('NOT_RUN', result['mutation']['status'])
+            self.assertEqual({}, result['modules'])
+
+    def test_failed_pit_run_retains_fresh_measured_counts(self):
+        spec = spec_from_file_location('qm_report_pit', ROOT / 'scripts/qm-report.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            (root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"/>', encoding='utf-8')
+            run = begin(root)
+            pit = root / 'model-sync-testkit/target/pit-reports/mutations.xml'
+            pit.parent.mkdir(parents=True)
+            pit.write_text('<mutations>' + '<mutation status="KILLED"/>' +
+                           '<mutation status="SURVIVED"/>' * 3 + '</mutations>', encoding='utf-8')
+            (pit.parent / 'index.html').write_text('<html/>', encoding='utf-8')
+            result = module.collect(True, root)
+            self.assertEqual(run['run_id'], result['attribution'])
+            self.assertEqual('FAILED', result['mutation']['status'])
+            self.assertEqual({'KILLED': 1, 'SURVIVED': 3}, result['mutation']['counts'])
+            self.assertEqual(25.0, result['mutation']['killed_over_generated_percent'])
+
+    def test_failed_oracle_suite_retains_fresh_measured_failure(self):
+        spec = spec_from_file_location('qm_report_oracle', ROOT / 'scripts/qm-report.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            (root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"><modules><module>model-sync-persistence-jdbc</module></modules></project>', encoding='utf-8')
+            begin(root)
+            report = root / 'model-sync-persistence-jdbc/target/failsafe-reports/TEST-io.modelsync.OracleSmokeIT.xml'
+            report.parent.mkdir(parents=True)
+            report.write_text('<testsuite name="io.modelsync.OracleSmokeIT" tests="2" errors="0" failures="1" skipped="0"/>', encoding='utf-8')
+            result = module.collect(True, root)
+            suite = result['modules']['model-sync-persistence-jdbc']['failsafe']
+            self.assertEqual('FAILED', suite['status'])
+            self.assertEqual(2, suite['tests'])
+            self.assertEqual(1, suite['failures'])
+
+    def test_collector_rejects_stale_and_malformed_reports(self):
+        spec = spec_from_file_location('qm_report_reject', ROOT / 'scripts/qm-report.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            (root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"><modules><module>model-sync-core</module></modules></project>', encoding='utf-8')
+            stale = root / 'model-sync-core/target/surefire-reports/TEST-Stale.xml'
+            stale.parent.mkdir(parents=True)
+            stale.write_text('<testsuite tests="5" failures="0" errors="0" skipped="0"/>', encoding='utf-8')
+            old = time.time() - 60
+            os.utime(stale, (old, old))
+            begin(root)
+            malformed = stale.parent / 'TEST-Malformed.xml'
+            malformed.write_text('<testsuite', encoding='utf-8')
+            suite = module.collect(False, root)['modules']['model-sync-core']['surefire']
+            self.assertEqual('REJECTED', suite['status'])
+            self.assertEqual(0, suite['files'])
+            self.assertEqual(0, suite.get('tests', 0))
+            self.assertEqual(2, len(suite['rejected']))
 
     def disposable_inputs(self):
         env = dict(os.environ)

@@ -32,13 +32,15 @@ jobs:
         run: |
           set +e
           set -o pipefail
+          python3 scripts/run_evidence.py invalidate
+          if [ "$?" -ne 0 ]; then exit 2; fi
           ./mvnw -B -ntp clean verify 2>&1 | tee "$RUNNER_TEMP/model-sync-default.log"
           code=${PIPESTATUS[0]}
           python3 scripts/check-default-log.py "$RUNNER_TEMP/model-sync-default.log"
           audit=$?
           echo "exit=$code" >> "$GITHUB_OUTPUT"
-          if [ "$audit" -ne 0 ]; then exit "$audit"; fi
-          exit "$code"
+          if [ "$code" -ne 0 ]; then exit "$code"; fi
+          exit "$audit"
       - name: Record quality evidence
         if: always()
         shell: bash

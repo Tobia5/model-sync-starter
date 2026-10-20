@@ -45,6 +45,8 @@ jobs:
         run: |
           set +e
           set -o pipefail
+          python3 scripts/run_evidence.py invalidate
+          if [ "$?" -ne 0 ]; then exit 2; fi
           if [ '${{ inputs.oracle_mode }}' = 'disposable-container' ]; then
             python3 scripts/full-oracle-container.py 2>&1 | tee "$RUNNER_TEMP/model-sync-full.log"
           else
