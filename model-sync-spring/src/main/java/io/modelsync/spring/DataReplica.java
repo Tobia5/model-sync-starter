@@ -1,4 +1,6 @@
 package io.modelsync.spring;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import java.lang.annotation.*;
 import org.springframework.beans.factory.annotation.Qualifier;

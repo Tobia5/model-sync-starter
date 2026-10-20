@@ -1,4 +1,6 @@
 package io.modelsync.autoconfigure;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;

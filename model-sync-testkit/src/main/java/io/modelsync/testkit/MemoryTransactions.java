@@ -1,6 +1,9 @@
 package io.modelsync.testkit;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
-import io.modelsync.core.LocalTransactions;
+import io.modelsync.core.port.LocalTransactions;
 import java.util.*;
 import java.util.function.Supplier;
 

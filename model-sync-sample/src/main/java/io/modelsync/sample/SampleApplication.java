@@ -1,4 +1,6 @@
 package io.modelsync.sample;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
 import org.springframework.boot.*;

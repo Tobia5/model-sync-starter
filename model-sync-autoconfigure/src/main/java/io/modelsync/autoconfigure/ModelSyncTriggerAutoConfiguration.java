@@ -1,9 +1,11 @@
 package io.modelsync.autoconfigure;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
-import io.modelsync.core.SyncCoordinator;
-import io.modelsync.core.SyncGateway;
-import io.modelsync.core.SyncJob;
-import io.modelsync.core.SyncTriggers;
+import io.modelsync.core.application.SyncCoordinator;
+import io.modelsync.core.application.SyncGateway;
+import io.modelsync.core.application.SyncJob;
+import io.modelsync.core.application.SyncTriggers;
 import io.modelsync.spring.ScheduledSyncJob;
 import io.modelsync.spring.SyncEventListener;
 import java.time.ZoneId;

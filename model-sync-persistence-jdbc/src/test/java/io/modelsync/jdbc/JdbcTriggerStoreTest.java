@@ -1,4 +1,6 @@
 package io.modelsync.jdbc;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
 import java.time.*;
@@ -103,7 +105,7 @@ class JdbcTriggerStoreTest {
   @Test void claimedOldTokenCannotChangeReclaimedSubject() {
     enqueue(); var old = claim();
     tx.executeWithoutResult(s -> store.claim(Priority.HIGH, now.plusSeconds(61), Duration.ofSeconds(60)).orElseThrow());
-    assertThrows(SyncExceptions.LeaseLost.class, () -> tx.executeWithoutResult(s ->
+    assertThrows(LeaseLost.class, () -> tx.executeWithoutResult(s ->
         store.completeOnDemand(old, SyncState.empty(key), now.plusSeconds(61))));
   }
   @Test void v1StillValidButDoesNotSupportOnDemand() {

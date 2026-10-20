@@ -1,6 +1,11 @@
 package io.modelsync.jdbc;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
-import io.modelsync.core.DatasetPort;
+import io.modelsync.core.port.DatasetReader;
+import io.modelsync.core.DatasetSlice;
+import io.modelsync.core.DatasetManifest;
 import java.math.BigDecimal;
 import java.util.*;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -8,7 +13,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 /**
  * Read a source-defined manifest view with bound parameters; no external SQL comes from end users.
  */
-public final class JdbcDatasetReader implements DatasetPort.Reader {
+public final class JdbcDatasetReader implements DatasetReader {
   private final NamedParameterJdbcTemplate jdbc;
   private final String query;
   private final Map<String, String> totalColumns;
@@ -21,7 +26,7 @@ public final class JdbcDatasetReader implements DatasetPort.Reader {
   }
 
   @Override
-  public DatasetPort.Manifest inspect(DatasetPort.Slice requested) {
+  public DatasetManifest inspect(DatasetSlice requested) {
     Map<String, Object> p = new HashMap<>();
     p.put("dataset", requested.dataset());
     p.put("tenant", requested.tenant());
@@ -33,8 +38,8 @@ public final class JdbcDatasetReader implements DatasetPort.Reader {
         query,
         p,
         (rs, row) -> {
-          DatasetPort.Slice actual =
-              new DatasetPort.Slice(
+          DatasetSlice actual =
+              new DatasetSlice(
                   rs.getString("dataset_id"),
                   rs.getString("tenant_id"),
                   rs.getString("snapshot_id"),
@@ -50,7 +55,7 @@ public final class JdbcDatasetReader implements DatasetPort.Reader {
           if (rs.wasNull()) throw new java.sql.SQLException("Manifest row_count is NULL");
           long unresolved = rs.getLong("unresolved_count");
           if (rs.wasNull()) throw new java.sql.SQLException("Manifest unresolved_count is NULL");
-          return new DatasetPort.Manifest(
+          return new DatasetManifest(
               actual, rows, unresolved, totals, rs.getString("content_digest"));
         });
   }

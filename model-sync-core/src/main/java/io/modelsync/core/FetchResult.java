@@ -12,27 +12,17 @@ import java.util.Objects;
  * @param validator owner validator such as an ETag, if supplied
  * @param sourceChangedAt owner-supplied source-change timestamp, if supplied
  */
-public record FetchResult<T>(Status status, T value, String validator, Instant sourceChangedAt) {
-  /** Owner response category understood by the coordinator. */
-  public enum Status {
-    /** Owner returned the current value. */
-    FOUND,
-    /** Owner reported that the caller's validator is still current. */
-    NOT_MODIFIED,
-    /** Owner reported that the subject is absent. */
-    ABSENT
-  }
-
+public record FetchResult<T>(FetchStatus status, T value, String validator, Instant sourceChangedAt) {
   public FetchResult {
     Objects.requireNonNull(status);
     if (validator != null
         && (validator.length() > 1024
             || validator.indexOf('\r') >= 0
             || validator.indexOf('\n') >= 0))
-      throw new SyncExceptions.Permanent("INVALID_VALIDATOR");
-    if (status == Status.FOUND && value == null)
+      throw new Permanent("INVALID_VALIDATOR");
+    if (status == FetchStatus.FOUND && value == null)
       throw new IllegalArgumentException("FOUND needs a value");
-    if (status != Status.FOUND && value != null)
+    if (status != FetchStatus.FOUND && value != null)
       throw new IllegalArgumentException("Unexpected value");
   }
 
@@ -45,7 +35,7 @@ public record FetchResult<T>(Status status, T value, String validator, Instant s
    * @param <T> synchronized model type
    */
   public static <T> FetchResult<T> found(T v, String etag) {
-    return new FetchResult<>(Status.FOUND, v, etag, null);
+    return new FetchResult<>(FetchStatus.FOUND, v, etag, null);
   }
 
   /**
@@ -56,7 +46,7 @@ public record FetchResult<T>(Status status, T value, String validator, Instant s
    * @param <T> synchronized model type
    */
   public static <T> FetchResult<T> unchanged(String etag) {
-    return new FetchResult<>(Status.NOT_MODIFIED, null, etag, null);
+    return new FetchResult<>(FetchStatus.NOT_MODIFIED, null, etag, null);
   }
 
   /**
@@ -66,6 +56,6 @@ public record FetchResult<T>(Status status, T value, String validator, Instant s
    * @param <T> synchronized model type
    */
   public static <T> FetchResult<T> absent() {
-    return new FetchResult<>(Status.ABSENT, null, null, null);
+    return new FetchResult<>(FetchStatus.ABSENT, null, null, null);
   }
 }

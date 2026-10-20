@@ -1,6 +1,10 @@
 package io.modelsync.jdbc;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
-import io.modelsync.core.QuotaGate;
+import io.modelsync.core.port.QuotaGate;
+import io.modelsync.core.QuotaAdmission;
 import java.time.*;
 import java.util.*;
 import org.springframework.dao.DuplicateKeyException;
@@ -52,7 +56,7 @@ public final class JdbcQuotaGate implements QuotaGate {
   }
 
   @Override
-  public Admission acquire(String group) {
+  public QuotaAdmission acquire(String group) {
     return Objects.requireNonNull(
         independent.execute(
             status -> {
@@ -64,12 +68,12 @@ public final class JdbcQuotaGate implements QuotaGate {
                       group);
               if (q == null) throw new IllegalStateException("Unknown quota: " + group);
               long now = clock.millis();
-              if (now < q[1]) return Admission.waitUntil(Instant.ofEpochMilli(q[1]));
+              if (now < q[1]) return QuotaAdmission.waitUntil(Instant.ofEpochMilli(q[1]));
               jdbc.update(
                   "update MS_QUOTA set next_allowed_ms=? where quota_group=?",
                   Math.addExact(now, q[0]),
                   group);
-              return Admission.allow();
+              return QuotaAdmission.allow();
             }));
   }
 

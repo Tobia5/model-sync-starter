@@ -1,4 +1,6 @@
 package io.modelsync.spring;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.Priority;
 import java.lang.annotation.*;

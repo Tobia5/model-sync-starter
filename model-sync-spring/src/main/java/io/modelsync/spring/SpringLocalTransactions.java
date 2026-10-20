@@ -1,6 +1,9 @@
 package io.modelsync.spring;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
-import io.modelsync.core.LocalTransactions;
+import io.modelsync.core.port.LocalTransactions;
 import java.util.function.Supplier;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronizationManager;

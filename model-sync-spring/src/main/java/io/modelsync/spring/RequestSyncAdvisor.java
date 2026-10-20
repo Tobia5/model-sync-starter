@@ -1,4 +1,7 @@
 package io.modelsync.spring;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
 import java.lang.reflect.*;
@@ -23,14 +26,7 @@ public final class RequestSyncAdvisor extends AbstractPointcutAdvisor {
   private final SyncGateway gateway;
   private final LocalTransactions tx;
   private final ConcurrentMap<String, Expression> expressions = new ConcurrentHashMap<>();
-  private final Pointcut pointcut =
-      new StaticMethodMatcherPointcut() {
-        @Override
-        public boolean matches(Method method, Class<?> targetClass) {
-          Method actual = AopUtils.getMostSpecificMethod(method, targetClass);
-          return AnnotatedElementUtils.hasAnnotation(actual, RequestSync.class);
-        }
-      };
+  private final Pointcut pointcut = new RequestSyncMethodPointcut();
 
   public RequestSyncAdvisor(SyncGateway gateway, LocalTransactions tx) {
     this.gateway = gateway;
@@ -74,10 +70,10 @@ public final class RequestSyncAdvisor extends AbstractPointcutAdvisor {
             try {
               return invocation.proceed();
             } catch (Throwable error) {
-              throw new InvocationFailure(error);
+              throw new RequestSyncInvocationFailure(error);
             }
           });
-    } catch (InvocationFailure failure) {
+    } catch (RequestSyncInvocationFailure failure) {
       throw failure.getCause();
     }
   }
@@ -118,9 +114,4 @@ public final class RequestSyncAdvisor extends AbstractPointcutAdvisor {
           "@RequestSync is synchronous; use an explicit JPA transaction bridge for reactive code");
   }
 
-  private static final class InvocationFailure extends RuntimeException {
-    InvocationFailure(Throwable cause) {
-      super(cause);
-    }
-  }
 }

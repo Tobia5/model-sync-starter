@@ -1,6 +1,10 @@
 package io.modelsync.rest;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
+import io.modelsync.core.http.HttpSemantics;
 import java.net.URI;
 import java.util.Objects;
 import java.util.function.Function;
@@ -36,14 +40,14 @@ public final class RestClientOwner<T> implements BlockingOwner<T> {
               .onStatus(
                   status -> status.is3xxRedirection() && status.value() != 304,
                   (req, res) -> {
-                    throw new SyncExceptions.Permanent("HTTP_REDIRECT");
+                    throw new Permanent("HTTP_REDIRECT");
                   })
               .toEntity(type);
       if (response.getStatusCode().value() == 304)
         return FetchResult.unchanged(response.getHeaders().getETag());
       if (response.getStatusCode().value() != 200)
-        throw new SyncExceptions.Permanent("UNEXPECTED_SUCCESS_STATUS");
-      if (response.getBody() == null) throw new SyncExceptions.Permanent("EMPTY_BODY");
+        throw new Permanent("UNEXPECTED_SUCCESS_STATUS");
+      if (response.getBody() == null) throw new Permanent("EMPTY_BODY");
       return FetchResult.found(response.getBody(), response.getHeaders().getETag());
     } catch (RestClientResponseException response) {
       if (response.getStatusCode().value() == 404) return FetchResult.absent();

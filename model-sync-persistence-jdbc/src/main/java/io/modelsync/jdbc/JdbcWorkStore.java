@@ -1,4 +1,7 @@
 package io.modelsync.jdbc;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
 import java.sql.*;
@@ -44,22 +47,10 @@ public final class JdbcWorkStore implements WorkStore {
       throw new IllegalStateException("Ledger operation outside local transaction");
   }
 
-  private record Row(
-      WorkKey key,
-      int priority,
-      long generation,
-      int attempts,
-      boolean force,
-      String status,
-      String token,
-      Long until,
-      long nextAt,
-      String lastCode) {}
-
-  private Row row(ResultSet r) throws SQLException {
+  private JdbcWorkRow row(ResultSet r) throws SQLException {
     long until = r.getLong("lease_until_ms");
     Long leaseUntil = r.wasNull() ? null : until;
-    return new Row(
+    return new JdbcWorkRow(
         new WorkKey(
             r.getString("binding_id"),
             new SubjectKey(r.getString("tenant_id"), r.getString("subject_id"))),
@@ -74,7 +65,7 @@ public final class JdbcWorkStore implements WorkStore {
         r.getString("last_error_code"));
   }
 
-  private Optional<Row> locked(String id) {
+  private Optional<JdbcWorkRow> locked(String id) {
     return jdbc
         .query("select * from MS_WORK where work_id=? for update", (r, n) -> row(r), id)
         .stream()
@@ -86,7 +77,7 @@ public final class JdbcWorkStore implements WorkStore {
     tx();
     Objects.requireNonNull(priority);
     String id = key.storageId();
-    Optional<Row> found = locked(id);
+    Optional<JdbcWorkRow> found = locked(id);
     if (found.isEmpty()) {
       try {
         jdbc.update(
@@ -107,7 +98,7 @@ public final class JdbcWorkStore implements WorkStore {
         if (found.isEmpty()) throw concurrentInsert;
       }
     }
-    Row r = found.orElseThrow();
+    JdbcWorkRow r = found.orElseThrow();
     // Hash collisions are fantastically unlikely, but never treat one as the same subject.
     if (!r.key().equals(key)) throw new IllegalStateException("Work identity collision");
     String status = r.status().equals("LEASED") ? "LEASED" : "WAITING";
@@ -131,7 +122,7 @@ public final class JdbcWorkStore implements WorkStore {
     tx();
     Objects.requireNonNull(priority, "priority");
     String id = key.storageId();
-    Optional<Row> found = locked(id);
+    Optional<JdbcWorkRow> found = locked(id);
     if (found.isEmpty()) {
       try {
         jdbc.update("insert into MS_WORK (work_id,binding_id,tenant_id,subject_id,priority,generation,attempts,force_refresh,work_status,next_at_ms,requested_at_ms) values (?,?,?,?,?,1,0,0,'WAITING',?,?)",
@@ -142,7 +133,7 @@ public final class JdbcWorkStore implements WorkStore {
         if (found.isEmpty()) throw concurrentInsert;
       }
     }
-    Row row = found.orElseThrow();
+    JdbcWorkRow row = found.orElseThrow();
     if (!row.key().equals(key)) throw new IllegalStateException("Work identity collision");
     if (row.status().equals("DEAD")) return Optional.empty();
     if (row.status().equals("LEASED")) return Optional.of(id);
@@ -164,9 +155,9 @@ public final class JdbcWorkStore implements WorkStore {
         "select * from MS_WORK where priority=? and ((work_status='WAITING' and next_at_ms<=?) or"
             + " (work_status='LEASED' and lease_until_ms<=?)) order by next_at_ms,work_id for"
             + " update skip locked";
-    Optional<Row> selected =
+    Optional<JdbcWorkRow> selected =
         jdbc.execute(
-            (ConnectionCallback<Optional<Row>>)
+            (ConnectionCallback<Optional<JdbcWorkRow>>)
                 connection -> {
                   try (PreparedStatement ps = connection.prepareStatement(sql)) {
                     ps.setInt(1, priority.ordinal());
@@ -180,7 +171,7 @@ public final class JdbcWorkStore implements WorkStore {
                   }
                 });
     if (selected == null || selected.isEmpty()) return Optional.empty();
-    Row r = selected.get();
+    JdbcWorkRow r = selected.get();
     String token = UUID.randomUUID().toString();
     Instant until = now.plus(duration);
     jdbc.update(
@@ -244,7 +235,7 @@ public final class JdbcWorkStore implements WorkStore {
 
   private void completeInternal(WorkLease lease, SyncState s, Instant nextAt, Instant now) {
     tx();
-    Row r = currentToken(lease);
+    JdbcWorkRow r = currentToken(lease);
     int updated =
         jdbc.update(
             "update MS_STATE set"
@@ -286,7 +277,7 @@ public final class JdbcWorkStore implements WorkStore {
   public void reschedule(
       WorkLease lease, Instant nextAt, String code, boolean failure, int maxAttempts, Instant now) {
     tx();
-    Row r = currentToken(lease);
+    JdbcWorkRow r = currentToken(lease);
     boolean pending = r.generation() != lease.generation();
     int attempts = pending ? 0 : r.attempts() + (failure ? 1 : 0);
     String status = attempts >= maxAttempts ? "DEAD" : "WAITING";
@@ -301,10 +292,10 @@ public final class JdbcWorkStore implements WorkStore {
         lease.key().storageId());
   }
 
-  private Row currentToken(WorkLease lease) {
-    Row r = locked(lease.key().storageId()).orElseThrow(SyncExceptions.LeaseLost::new);
+  private JdbcWorkRow currentToken(WorkLease lease) {
+    JdbcWorkRow r = locked(lease.key().storageId()).orElseThrow(LeaseLost::new);
     if (!r.status().equals("LEASED") || !Objects.equals(r.token(), lease.token()))
-      throw new SyncExceptions.LeaseLost();
+      throw new LeaseLost();
     return r;
   }
 }

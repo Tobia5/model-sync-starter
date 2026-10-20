@@ -1,4 +1,7 @@
 package io.modelsync.reactor;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
 import java.time.Duration;
@@ -48,7 +51,7 @@ public final class ReactorSyncWorker implements SmartLifecycle {
                         if (plan.isEmpty()) return Mono.just(true);
                         PreparedSync<?> p = plan.get();
                         return fetch(p)
-                            .switchIfEmpty(Mono.error(new SyncExceptions.Permanent("NULL_FETCH")))
+                            .switchIfEmpty(Mono.error(new Permanent("NULL_FETCH")))
                             .timeout(coordinator.options().fetchTimeout())
                             .flatMap(
                                 result ->

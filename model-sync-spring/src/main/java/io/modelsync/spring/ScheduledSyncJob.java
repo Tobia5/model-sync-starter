@@ -1,6 +1,9 @@
 package io.modelsync.spring;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
-import io.modelsync.core.SyncJob;
+import io.modelsync.core.application.SyncJob;
+import io.modelsync.core.SyncJobResult;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.util.Objects;
@@ -39,7 +42,7 @@ public final class ScheduledSyncJob implements SmartLifecycle {
     try {
       var scheduled = created.schedule(() -> {
         try {
-          SyncJob.Result result = job.run(maxItems, maxDuration);
+          SyncJobResult result = job.run(maxItems, maxDuration);
           LOG.log(System.Logger.Level.DEBUG, "Model Sync job attempted={0}, stop={1}", result.attempted(), result.stopReason());
         } catch (RuntimeException failure) {
           // Do not log payloads, tenant IDs, HTTP response bodies or exception messages.

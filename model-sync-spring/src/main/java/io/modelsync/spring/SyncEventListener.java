@@ -1,7 +1,9 @@
 package io.modelsync.spring;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.SyncRequested;
-import io.modelsync.core.SyncTriggers;
+import io.modelsync.core.application.SyncTriggers;
 import java.util.Objects;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.PayloadApplicationEvent;

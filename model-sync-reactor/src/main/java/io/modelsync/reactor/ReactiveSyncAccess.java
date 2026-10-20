@@ -1,8 +1,10 @@
 package io.modelsync.reactor;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
-import io.modelsync.core.SyncAccess;
+import io.modelsync.core.application.SyncAccess;
 import io.modelsync.core.SyncRequested;
-import io.modelsync.core.SyncTriggers;
+import io.modelsync.core.application.SyncTriggers;
 import io.modelsync.core.VisitPolicy;
 import io.modelsync.core.VisitResult;
 import java.util.Objects;
