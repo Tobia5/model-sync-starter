@@ -1,10 +1,47 @@
 # Model Sync quality evidence
 
-Interim local evidence for tested source `dcc2fa4c05b81cace006f24a87a4e39fe2fa915f` (tree `a03f42a4d936d8cd5468487257f2e91883427dc3`), recorded 2026-10-20. A later documentation-only update will record the final source check.
+Generated: 2026-10-20T10:41:08.936236+00:00
+Tested source commit: `408fc3db5b4033f088fc9c9c8763860bb12afeed`; tree: `1bdb589c6a8e4f425c20157e8573c8776c10e2b8`.
+Working tree dirty at report generation: false.
+Environment: openjdk version "21.0.12.1" 2026-08-18 LTS; Apache Maven 3.9.9 (8e8579a9e76f7d015ee5ec7bfcdc97d260186937); Python 3.12.10.
 
-| Attempt | Result |
-|---|---|
-| `./mvnw -B -ntp clean verify` | BLOCKED, exit 1 at Reactor dependency resolution (module 8/15). Earlier modules reported 30 JUnit tests, 0 failed/skipped. |
-| `python scripts/full-preflight.py` | BLOCKED, exit 2; disposable Oracle environment inputs absent. Full `clean verify` NOT_RUN. |
+## Commands and outcome
 
-The configured Nexus host `kubernetes-dev` was unresolved. PIT, Gatling, Oracle and the complete compiled-output architecture scan are NOT_RUN or BLOCKED. No release qualification or package publication is claimed.
+| Lane | Exact command | Exit | Status |
+|---|---|---:|---|
+| default | `./mvnw -B -ntp clean verify` | 1 | BLOCKED |
+| full | `python scripts/full-preflight.py` | 2 | BLOCKED |
+
+## Measured evidence
+
+Surefire: 30 tests, 0 failures, 0 errors, 0 skipped across 7 XML files.
+Failsafe: 0 tests, 0 failures, 0 errors, 0 skipped across 0 XML files.
+PIT: NOT_RUN.
+Gatling: NOT_RUN; no latency percentiles or completed-throughput measurement.
+Oracle scale: NOT_RUN.
+
+## Baseline and other checks
+
+The checkout began clean at local main `a36b3ab88ef5200fb51bd2b55956c302ae5a0392`, two commits ahead of observed `origin/main` `a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6`. Those local commits already contained the job/event/visit extension, ON_DEMAND recurrence, arc42, handbook, TODOs and snapshot packaging. No `files/` cumulative bundle was available, so no cumulative or older arc42 patch was applied. `CHECKSUMS.sha256` is a historical archive manifest, not a hash of this refactor.
+
+The baseline Maven build initially failed H2 check constraints; commit `150a526` repaired the test schemas and Windows offline scripts. The next baseline full reactor stopped at the same configured Nexus DNS blocker. The current default attempt reached seven successful modules before Reactor dependency resolution failed. The 30 Surefire tests include 15 JDBC/H2 adapter tests. The report audit counted 44 default Maven plugin goal executions with no PIT, Gatling or Failsafe goal.
+
+Against the tested Java tree, `bash scripts/test-triggers.sh` passed 77 core and 41 trigger contracts; `java scripts/SourceSyntaxCheck.java .` parsed 161 files with zero syntax errors. The default build ran the source/module architecture guard, documentation guard, effective profile audit and 23 Python guard tests. The ArchUnit negative fixtures passed in a separate focused one-test run; the complete compiled-output ArchUnit rule was blocked by missing later module outputs and is not counted as PASS.
+
+Configured platform versions: Java 21, Spring Boot BOM 4.1.1, Maven Wrapper 3.9.9 with SHA-256 pinned distribution, Surefire/Failsafe 3.5.3, ArchUnit 1.5.0, PIT 1.25.9 with JUnit plugin 1.2.3, Gatling 3.13.1 with Maven plugin 4.11.0. The cached Boot BOM resolved JUnit Jupiter 6.0.3 for the passing subset. PIT compatibility with that JUnit Platform and the complete Reactor/Spring integration remain unverified.
+
+The declared PIT targets are freshness and selected application orchestration classes in `model-sync-testkit/pom.xml`; DTOs, generated code, demo and framework internals are outside scope. The required score is 85% killed divided by all generated mutations; no mutation XML exists, so killed/survived/no-coverage/timeout/run-error counts are NOT_RUN. No survivor was reviewed or excused.
+
+The six Gatling Java simulations and the 100,000-row Oracle admission probe are configured but NOT_RUN. The local harness declares 40 fresh visits, 100 hot visits, 20 unsafe visits, one event/job interaction, one cooldown/recovery flow, and 200 concurrent lease job requests over a 200-row synthetic ledger. These are local test-store scenarios; there are no measured owner rate/latency, p50/p95/p99, error rate, completion throughput, reconciliation lag, Oracle resource, warmup/drain or large-data capacity results. No HTTP 202 was counted as a completed sync.
+
+Local raw evidence is in `target/qm/default-build.log`, `target/qm/full-preflight.log`, `target/qm/evidence.json`, and current module Surefire XML. The separate workflow files are source only: no Actions run, uploaded artifact, full report link, package release or remote review outcome is claimed here.
+
+## Scope and blockers
+
+A default PASS does not qualify full release behavior. Full requires nonzero Oracle migration/concurrency/scale suites, selected PIT scope at 85% killed/generated, and all six Gatling reports. See `scripts/check-full-reports.py`.
+The local Gatling harness uses an in-memory test store; its data is not Oracle capacity evidence.
+No package publication or production deployment is authorized by this report.
+
+- Default reactor stopped at module 8/15: configured Nexus host kubernetes-dev could not resolve reactor-core/reactor-test 3.8.7. No alternate credential or repository was used.
+- Full clean verify was NOT_RUN because the fast build is blocked and no authorized disposable Oracle inputs are configured; preflight exit 2.
+- ArchUnit full compiled-output scan, PIT, Gatling, Oracle migration/concurrency/scale, and JUnit Platform 6 compatibility remain unverified.
