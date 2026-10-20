@@ -11,3 +11,11 @@
 | See original design and historical validation | [Architecture](ARCHITECTURE.md), [original validation](VALIDATION.md) |
 
 The trigger extension documents are current for this patch. Original documents retain historical claims/counts and prior design detail; use REVIEW.md for current evidence and USER-HANDBOOK.md for the new API. Schema migration and production qualification remain explicit gates, not completed facts.
+
+## Qualification and distribution
+
+- [Production-readiness rating](PRODUCTION-READINESS.md)
+- [Production TODO acceptance gates](../TODO.md)
+- [Maven packaging and GitHub workflows](PACKAGING.md)
+- [Native Spring comparison](SPRING-COMPARISON.md)
+- [Prepared Codex task](CODEX-HANDOFF.md)

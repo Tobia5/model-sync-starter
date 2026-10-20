@@ -7,10 +7,26 @@
   <packaging>pom</packaging>
   <name>Model Sync</name>
   <description>Explicit model bindings and durable reconciliation for Spring Boot</description>
+  <url>https://github.com/Tobia5/model-sync-starter</url>
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <connection>scm:git:https://github.com/Tobia5/model-sync-starter.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/Tobia5/model-sync-starter.git</developerConnection>
+    <url>https://github.com/Tobia5/model-sync-starter</url>
+    <tag>HEAD</tag>
+  </scm>
   <properties>
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <spring-boot.version>4.1.1</spring-boot.version>
+    <!-- CI overrides this with the reviewed commit timestamp. -->
+    <project.build.outputTimestamp>2026-10-20T00:00:00Z</project.build.outputTimestamp>
   </properties>
   <modules>
     <module>model-sync-core</module>
@@ -64,4 +80,65 @@
       </plugin>
     </plugins>
   </build>
+  <profiles>
+    <profile>
+      <id>library-artifacts</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>3.3.1</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <phase>package</phase>
+                <goals><goal>jar-no-fork</goal></goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.11.2</version>
+            <configuration>
+              <failOnError>true</failOnError>
+              <notimestamp>true</notimestamp>
+            </configuration>
+            <executions>
+              <execution>
+                <id>attach-javadoc</id>
+                <phase>package</phase>
+                <goals><goal>jar</goal></goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>github-packages</id>
+      <!-- SNAPSHOT publishing only. Stable release infrastructure is not qualified. -->
+      <distributionManagement>
+        <snapshotRepository>
+          <id>github</id>
+          <name>Model Sync development snapshots</name>
+          <url>https://maven.pkg.github.com/tobia5/model-sync-starter</url>
+        </snapshotRepository>
+      </distributionManagement>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <version>3.1.4</version>
+            <configuration>
+              <!-- Defers publication; does NOT make a remote multi-module upload atomic. -->
+              <deployAtEnd>true</deployAtEnd>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

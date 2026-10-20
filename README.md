@@ -182,3 +182,9 @@ IBM MDM identity resolution, external boundary enumeration, Vista, and DWH have 
 ## Reading order
 
 [Architecture](docs/ARCHITECTURE.md) · [AOP and transaction design](docs/AOP.md) · [Integration examples](docs/INTEGRATION.md) · [Oracle operations and limitations](docs/OPERATIONS.md) · [Validation](docs/VALIDATION.md) · [Official references](docs/SOURCES.md).
+
+## Production qualification and package distribution
+
+This repository is not yet production-qualified. Read the [readiness assessment](docs/PRODUCTION-READINESS.md) and [prioritized TODO acceptance gates](TODO.md). The update supplies a full-build workflow plus [manual development SNAPSHOT publishing](docs/PACKAGING.md), not a stable release approval.
+
+See [Spring-native alternatives and reuse boundaries](docs/SPRING-COMPARISON.md) and the [prepared Codex implementation task](docs/CODEX-HANDOFF.md). Generated configuration and passing offline checks are not evidence that GitHub Actions, Oracle or package consumption have executed.

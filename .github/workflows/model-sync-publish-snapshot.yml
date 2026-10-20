@@ -1,0 +1,65 @@
+name: Publish Model Sync development snapshot
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: 'Type PUBLISH_SNAPSHOT. This does not approve a production release.'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: model-sync-snapshot-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'Tobia5/model-sync-starter' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # Configure required reviewers / deployment restrictions before the first run.
+    environment: model-sync-snapshots
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+      - name: Check approved snapshot coordinates
+        env:
+          SNAPSHOT_CONFIRMATION: ${{ inputs.confirmation }}
+        run: python3 scripts/check-snapshot-publication.py
+      - name: Verify without a publication credential in the build environment
+        run: |
+          bash scripts/test-triggers.sh
+          python3 scripts/check-architecture.py
+          python3 scripts/check-docs.py
+          python3 -m unittest discover -s scripts/tests -p 'test_*.py'
+          java scripts/SourceSyntaxCheck.java .
+          mvn -B -ntp -Plibrary-artifacts \
+            -Dproject.build.outputTimestamp="$(git log -1 --format=%cI)" clean verify
+          python3 scripts/check-test-reports.py
+      - name: Deploy development snapshot reactor (tests remain enabled)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mvn -B -ntp -Plibrary-artifacts,github-packages \
+            -Dproject.build.outputTimestamp="$(git log -1 --format=%cI)" deploy
+      - name: Preserve publication build test reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: model-sync-publication-reports-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            **/target/surefire-reports/*
+            **/target/failsafe-reports/*
+          if-no-files-found: warn
+          retention-days: 14

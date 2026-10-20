@@ -7,6 +7,10 @@
     <version>0.1.0-SNAPSHOT</version>
   </parent>
   <artifactId>model-sync-sample</artifactId>
+  <properties>
+    <!-- Build/test the demo, but do not distribute it as a reusable library. -->
+    <maven.deploy.skip>true</maven.deploy.skip>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>io.modelsync</groupId>

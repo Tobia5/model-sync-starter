@@ -1,0 +1,65 @@
+{
+  "review_date": "2026-10-20",
+  "repository": "Tobia5/model-sync-starter",
+  "remote_baseline": "a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6",
+  "workspace": "Supplied archive + verified touched-file baselines; not a complete fresh clone",
+  "ratings": {
+    "architecture": 7,
+    "scoped_usefulness": 8,
+    "production_readiness": 4,
+    "scale": 10
+  },
+  "production_decision": "NOT_QUALIFIED",
+  "executed": {
+    "dependency_free_core_contracts": {
+      "passed": 77,
+      "failed": 0
+    },
+    "dependency_free_trigger_contracts": {
+      "passed": 41,
+      "failed": 0
+    },
+    "python_publication_and_report_guards": {
+      "passed": 18,
+      "failed": 0
+    },
+    "java_syntax": {
+      "files": 100,
+      "errors": 0,
+      "framework_linking": false
+    },
+    "architecture": {
+      "modules": 13,
+      "cycles": 0,
+      "core_isolated": true
+    },
+    "documentation": {
+      "markdown_files_checked_by_existing_script": 16,
+      "local_links": "PASS",
+      "arc42_sections": 12
+    },
+    "configuration_syntax": {
+      "pom_xml": "PASS",
+      "workflow_yaml": "PASS",
+      "action_sha_pins": "PASS"
+    }
+  },
+  "not_executed": [
+    "Full Maven reactor (mvn not installed; invocation returned 127)",
+    "Spring/H2/JPA/Reactor integration tests",
+    "Oracle concurrency and migration tests",
+    "Million-record load/failure tests",
+    "Dependency security and SBOM qualification",
+    "GitHub workflow execution",
+    "Maven package deployment and clean external-consumer test"
+  ],
+  "remote_actions": {
+    "branch_creation": "HTTP403",
+    "issue_creation": "HTTP403",
+    "remote_commit_created": false,
+    "pull_request_created": false,
+    "codex_worker_launched": false,
+    "package_published": false
+  },
+  "security_note": "Snapshot guards are not a replacement for branch and environment protection."
+}

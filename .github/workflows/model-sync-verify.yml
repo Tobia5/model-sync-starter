@@ -12,9 +12,9 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
-      # Official v4 refs resolved via GitHub on 2026-10-20; pinned, not floating tags.
+      # Official v4 refs verified through GitHub on 2026-10-20; pins are deliberate.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
@@ -28,16 +28,29 @@ jobs:
           bash scripts/test-triggers.sh
           python3 scripts/check-architecture.py
           python3 scripts/check-docs.py
+          python3 -m unittest discover -s scripts/tests -p 'test_*.py'
           java scripts/SourceSyntaxCheck.java .
-      - name: Maven framework and H2 lane
-        run: mvn -B -ntp verify
-      - name: Preserve test reports
+      - name: Complete Maven build including library attachments
+        run: |
+          mvn -B -ntp -Plibrary-artifacts \
+            -Dproject.build.outputTimestamp="$(git log -1 --format=%cI)" clean verify
+          python3 scripts/check-test-reports.py
+      - name: Preserve reports on success or failure
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: model-sync-test-reports
+          name: model-sync-test-reports-${{ github.sha }}
           path: |
             **/target/surefire-reports/*
             **/target/failsafe-reports/*
           if-no-files-found: warn
           retention-days: 14
+      - name: Preserve built jars for inspection (not a Maven registry)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: model-sync-jars-${{ github.sha }}
+          path: '**/target/*.jar'
+          if-no-files-found: error
+          retention-days: 14
+      - name: Qualification boundary
+        run: echo 'This job does not qualify Oracle, migrations, broker delivery, or production scale.'

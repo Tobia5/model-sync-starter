@@ -78,3 +78,7 @@ The deliverable is a baseline-checked patch and file overlay. Apply it in a clea
 ## 7. Approval recommendation
 
 Accept this as a reviewable implementation/documentation change, subject to a full repository build and code review. Do not approve production release until the gates in [PRODUCTION.md](PRODUCTION.md) have actual evidence and owners. In particular, validate Oracle migration/locking and the application's transactional, identity and authorization boundaries rather than inferring them from pure-Java test success.
+
+## 8. Subsequent readiness/packaging review
+
+The cumulative follow-up adds TODO acceptance gates, production-readiness scoring, Spring-native comparison, a prepared cloud-worker task, CI/report guards, source/Javadoc packaging and manual SNAPSHOT deployment configuration. The remote baseline remains unchanged. Both branch and issue creation were denied by the integration; no remote publication or cloud task was started. See [readiness](PRODUCTION-READINESS.md) and [new validation evidence](../validation/readiness/summary.json) for the follow-up scope. Earlier logs above remain historical evidence, not a claim of a new full build.
