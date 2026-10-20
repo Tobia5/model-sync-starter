@@ -26,10 +26,13 @@ def command(*args: str) -> str:
     return (result.stdout or result.stderr).strip().splitlines()[0] if result.returncode == 0 else 'UNAVAILABLE'
 
 
-def xml_suites(directory: Path) -> dict:
+def xml_suites(directory: Path, started: float | None) -> dict:
     result = Counter()
     files = 0
     for path in directory.glob('TEST-*.xml'):
+        if started is not None and path.stat().st_mtime < started:
+            result['stale_files'] += 1
+            continue
         try:
             doc = ET.parse(path).getroot()
             suites = [doc] if doc.tag == 'testsuite' else list(doc.iter('testsuite'))
@@ -44,12 +47,14 @@ def xml_suites(directory: Path) -> dict:
 
 def collect() -> dict:
     modules = {}
+    marker = ROOT / 'target/qm/build-start.txt'
+    started = float(marker.read_text(encoding='utf-8')) if marker.is_file() else None
     for module in sorted(ROOT.glob('model-sync-*')):
         if not (module / 'pom.xml').is_file():
             continue
         modules[module.name] = {
-            'surefire': xml_suites(module / 'target/surefire-reports'),
-            'failsafe': xml_suites(module / 'target/failsafe-reports'),
+            'surefire': xml_suites(module / 'target/surefire-reports', started),
+            'failsafe': xml_suites(module / 'target/failsafe-reports', started),
         }
     mutation = {'status': 'NOT_RUN'}
     pit = ROOT / 'model-sync-testkit/target/pit-reports/mutations.xml'
