@@ -12,6 +12,14 @@ import tools.jackson.databind.json.JsonMapper;
 final class OracleMeasurements {
   private OracleMeasurements() {}
 
+  static List<Map<String, Object>> population(JdbcTemplate jdbc, String binding, long now) {
+    // Oracle does not consider two positional binds the same GROUP BY expression, even when
+    // their values agree. Compute the bucket once, then group its derived column.
+    return jdbc.queryForList("select work_status,schedule,count(*) rows_count from"
+        + " (select work_status,case when next_at_ms<=? then 'DUE' else 'FUTURE' end schedule"
+        + " from MS_WORK where binding_id=?) group by work_status,schedule", now, binding);
+  }
+
   static Map<String, Long> statistics(JdbcTemplate jdbc) {
     Map<String, Long> result = new LinkedHashMap<>();
     jdbc.query("select n.name,sum(s.value) value from v$sesstat s join v$statname n"

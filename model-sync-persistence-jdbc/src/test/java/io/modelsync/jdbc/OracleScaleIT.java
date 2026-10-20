@@ -93,9 +93,7 @@ class OracleScaleIT {
           }
           measured.put("table_statistics", jdbc.queryForList("select table_name,num_rows,blocks,last_analyzed,stale_stats from user_tab_statistics where table_name='MS_WORK'"));
           long now = System.currentTimeMillis();
-          measured.put("population", jdbc.queryForList("select work_status,case when next_at_ms<=? then 'DUE' else 'FUTURE' end schedule,"
-              + "count(*) rows_count from MS_WORK where binding_id=? group by work_status,case when next_at_ms<=? then 'DUE' else 'FUTURE' end",
-              now, binding, now));
+          measured.put("population", OracleMeasurements.population(jdbc, binding, now));
           measured.put("waiting_due_rows", jdbc.queryForObject("select count(*) from MS_WORK where binding_id=? and work_status='WAITING' and next_at_ms<=?", Long.class, binding, now));
           measured.put("future_waiting_rows", jdbc.queryForObject("select count(*) from MS_WORK where binding_id=? and work_status='WAITING' and next_at_ms>?", Long.class, binding, now));
           measured.put("expired_lease_rows", jdbc.queryForObject("select count(*) from MS_WORK where binding_id=? and work_status='LEASED' and lease_until_ms<=?", Long.class, binding, now));
