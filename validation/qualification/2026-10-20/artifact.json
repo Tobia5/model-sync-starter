@@ -1,0 +1,11 @@
+{
+  "file": "raw-evidence.zip",
+  "size_bytes": 1928952,
+  "sha256": "ab7ff892a1d8ceafab878deb977d1eacb7becf53bdca5f3dab71ef06eebbf92c",
+  "raw_and_metadata_files": 400,
+  "scan_flags": 0,
+  "runs": 7,
+  "source_sha": "4f440807f20c568a2240ed5ce32f1aab8e9558b0",
+  "source_tree": "02faa6e6b9b5b8a28af6234d2b1de699a736b735",
+  "full_run_id": "3177a6c3-3b64-4e5b-b40b-dc18bf1c7884"
+}
