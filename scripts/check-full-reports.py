@@ -6,6 +6,7 @@ import json
 import sys
 import xml.etree.ElementTree as ET
 from run_evidence import current, fresh
+from gatling_evidence import measured as gatling_measured
 
 ROOT=Path(__file__).resolve().parents[1]
 SIMULATIONS={'fresh','hot','unsafe','event','cooldown','leases'}
@@ -37,11 +38,12 @@ def check(root=ROOT):
     spec.loader.exec_module(report_module)
     modules,tests=report_module.check(root)
     if tests<=0 or modules<=0: raise ValueError('Default suites absent')
-    performance_test=root/'model-sync-performance/target/surefire-reports/TEST-io.modelsync.performance.PerformanceArchitectureTest.xml'
-    fresh(performance_test,root)
-    performance_suite=ET.parse(performance_test).getroot()
-    if int(performance_suite.get('tests','0'))<1 or any(int(performance_suite.get(k,'0')) for k in ('errors','failures','skipped')):
-        raise ValueError('Full-only compiled architecture test absent, failed or skipped')
+    for name in ('PerformanceArchitectureTest','LocalLoadHostTest'):
+        performance_test=root/'model-sync-performance/target/surefire-reports'/f'TEST-io.modelsync.performance.{name}.xml'
+        fresh(performance_test,root)
+        performance_suite=ET.parse(performance_test).getroot()
+        if int(performance_suite.get('tests','0'))<1 or any(int(performance_suite.get(k,'0')) for k in ('errors','failures','skipped')):
+            raise ValueError(f'Full-only {name} absent, failed or skipped')
     found=set()
     for report in (root/'model-sync-persistence-jdbc/target/failsafe-reports').glob('TEST-*.xml'):
         fresh(report,root)
@@ -60,13 +62,16 @@ def check(root=ROOT):
         data=json.loads(path.read_text(encoding='utf-8'))
         if data.get('scenario')!=mode or data.get('status')!='PASS':
             raise ValueError(f'Gatling scenario did not pass: {mode}')
+        http=gatling_measured(root,mode)
+        if not http or http['status']!='PASS':
+            raise ValueError(f'Gatling HTTP/assertion evidence did not pass: {mode}; {http}')
         directory=root/'model-sync-performance/target/gatling'
         reports=[p for p in directory.glob(f'*{mode}*') if (p/'index.html').is_file() and (p/'simulation.log').is_file()]
         if not reports: raise ValueError(f'Gatling raw HTML/log absent: {mode}')
         for report in reports:
             fresh(report/'index.html',root)
             fresh(report/'simulation.log',root)
-        load[mode]=data
+        load[mode]={**data,'http':http}
     if load['leases'].get('ledger_rows',0)<100 or load['leases'].get('completed_rows',0)<1:
         raise ValueError('Multi-worker local lease evidence absent')
     scale=root/'model-sync-persistence-jdbc/target/qm/oracle-scale.json'

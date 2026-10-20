@@ -130,6 +130,64 @@ class QualityGateTests(unittest.TestCase):
             self.assertEqual(2, suite['tests'])
             self.assertEqual(1, suite['failures'])
 
+    def gatling_fixture(self, root):
+        (root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"/>')
+        begin(root)
+        report = root / 'model-sync-performance/target/gatling/freshvisitssimulation-current'
+        (report / 'js').mkdir(parents=True)
+        (report / 'index.html').write_text('<html/>')
+        (report / 'simulation.log').write_bytes(b'raw Gatling fixture')
+        stats = {'stats': {'numberOfRequests': {'total': 40, 'ok': 17, 'ko': 23},
+                           'percentiles1': {'total': 10}, 'percentiles3': {'total': 20},
+                           'percentiles4': {'total': 30}}}
+        (report / 'js/stats.json').write_text(json.dumps(stats))
+        (report / 'js/assertions.xml').write_text('<testsuite tests="1" failures="1" errors="0"/>')
+        harness = root / 'model-sync-performance/target/qm/load-fresh.json'
+        harness.parent.mkdir(parents=True)
+        harness.write_text('{"scenario":"fresh","status":"PASS"}')
+        return report
+
+    def test_failed_gatling_retains_http_counts_despite_passing_harness(self):
+        spec = spec_from_file_location('qm_report_gatling', ROOT / 'scripts/qm-report.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            self.gatling_fixture(root)
+            result = module.collect(True, root)['gatling']
+            self.assertEqual('FAILED', result['fresh']['status'])
+            self.assertEqual('PASS', result['fresh']['harness_status'])
+            self.assertEqual({'total': 40, 'ok': 17, 'ko': 23}, result['fresh']['http']['requests'])
+            self.assertEqual(1, result['fresh']['http']['assertions']['failures'])
+            self.assertEqual('NOT_RUN', result['hot']['status'])
+
+    def test_gatling_rejects_stale_assertions_and_malformed_statistics(self):
+        from gatling_evidence import measured
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            report = self.gatling_fixture(root)
+            assertions = report / 'js/assertions.xml'
+            old = time.time() - 60
+            os.utime(assertions, (old, old))
+            with self.assertRaisesRegex(ValueError, 'Stale'):
+                measured(root, 'fresh')
+            assertions.write_text('<testsuite tests="1" failures="0" errors="0"/>')
+            (report / 'js/stats.json').write_text('{"stats":{}}')
+            with self.assertRaisesRegex(ValueError, 'Malformed'):
+                measured(root, 'fresh')
+
+    def test_gatling_http_failures_fail_even_when_assertion_xml_passes(self):
+        from gatling_evidence import measured
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            report = self.gatling_fixture(root)
+            (report / 'js/assertions.xml').write_text('<testsuite tests="1" failures="0" errors="0"/>')
+            self.assertEqual('FAILED', measured(root, 'fresh')['status'])
+            stats = json.loads((report / 'js/stats.json').read_text())
+            stats['stats']['numberOfRequests'] = {'total': 40, 'ok': 40, 'ko': 0}
+            (report / 'js/stats.json').write_text(json.dumps(stats))
+            self.assertEqual('PASS', measured(root, 'fresh')['status'])
+
     def test_executed_pit_and_oracle_without_reports_are_failed(self):
         spec = spec_from_file_location('qm_report_no_xml', ROOT / 'scripts/qm-report.py')
         module = module_from_spec(spec)

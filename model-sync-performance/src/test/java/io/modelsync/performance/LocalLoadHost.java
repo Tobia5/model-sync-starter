@@ -64,7 +64,8 @@ public final class LocalLoadHost implements AutoCloseable {
       }
     }
     try {
-      server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 18088), 16);
+      // The largest declared at-once burst is 200. Bound the accept queue above that burst.
+      server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 18088), 256);
       executor = Executors.newFixedThreadPool(8);
       server.setExecutor(executor);
       server.createContext("/visit", this::visit);

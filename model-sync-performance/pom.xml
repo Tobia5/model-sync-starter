@@ -20,6 +20,7 @@
       </execution></executions>
     </plugin>
     <plugin><groupId>io.gatling</groupId><artifactId>gatling-maven-plugin</artifactId><version>4.11.0</version>
+      <configuration><workingDirectory>${project.basedir}</workingDirectory></configuration>
       <executions>
         <execution><id>fresh-visits</id><phase>integration-test</phase><goals><goal>test</goal></goals><configuration><simulationClass>io.modelsync.performance.FreshVisitsSimulation</simulationClass></configuration></execution>
         <execution><id>hot-key</id><phase>integration-test</phase><goals><goal>test</goal></goals><configuration><simulationClass>io.modelsync.performance.HotKeySimulation</simulationClass></configuration></execution>

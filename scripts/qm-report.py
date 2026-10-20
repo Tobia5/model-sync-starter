@@ -14,6 +14,7 @@ import re
 import subprocess
 import xml.etree.ElementTree as ET
 from run_evidence import current, fresh, reactor_modules
+from gatling_evidence import measured as gatling_measured
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -134,8 +135,27 @@ def collect(full: bool, root: Path = ROOT) -> dict:
         executions = {'fresh-visits': 'fresh', 'hot-key': 'hot', 'unsafe-values': 'unsafe',
                       'event-job-visit': 'event', 'cooldown-recovery': 'cooldown', 'leases-ledger': 'leases'}
         for execution, name in executions.items():
-            if name not in load and re.search(r'---\s+gatling:[^\s]+:test\s+\(' + execution + r'\)', log):
-                load[name] = {'status': 'FAILED', 'reason': 'Gatling goal executed without JSON report'}
+            try:
+                http = gatling_measured(root, name)
+                if http is not None:
+                    harness = load.get(name)
+                    if harness and harness['status'] == 'REJECTED':
+                        harness['http'] = http
+                    else:
+                        load[name] = {**(harness or {}), 'http': http,
+                                      'harness_status': harness['status'] if harness else 'NOT_RUN',
+                                      'status': 'PASS' if harness and harness['status'] == 'PASS'
+                                      and http['status'] == 'PASS' else 'FAILED'}
+                        if not harness:
+                            load[name]['reason'] = 'Gatling ran without harness JSON in the required module directory'
+                elif name in load and load[name]['status'] != 'REJECTED':
+                    load[name].update(status='FAILED', reason='Gatling HTTP/assertion reports absent')
+            except ValueError as error:
+                load[name] = {'status': 'REJECTED', 'reason': str(error)}
+            if name not in load:
+                executed = re.search(r'---\s+gatling:[^\s]+:test\s+\(' + execution + r'\)', log)
+                load[name] = ({'status': 'FAILED', 'reason': 'Gatling goal executed without reports'}
+                              if executed else {'status': 'NOT_RUN'})
     oracle_scale = root / 'model-sync-persistence-jdbc/target/qm/oracle-scale.json'
     try:
         scale = None
@@ -219,6 +239,9 @@ def markdown(data: dict) -> str:
     pit = evidence['mutation']
     lines.append('PIT: ' + (f"{pit['status']}; {pit['generated']} mutations; {pit['counts']}; killed/generated {pit['killed_over_generated_percent']}%." if 'generated' in pit else pit['status'] + '.'))
     lines.append('Gatling: ' + (', '.join(f"{name}={item['status']}" for name, item in sorted(evidence['gatling'].items())) + ' in-memory semantic scenarios.' if evidence['gatling'] else 'NOT_RUN; no latency percentiles or completed-throughput measurement.'))
+    for name, item in sorted(evidence['gatling'].items()):
+        if 'http' in item:
+            lines.append(f'Gatling HTTP {name}: ' + json.dumps(item['http'], sort_keys=True))
     lines.append('Oracle scale: ' + (json.dumps(evidence['oracle_scale'], sort_keys=True) if evidence['oracle_scale'] else 'NOT_RUN.'))
     lines.append('Oracle reconciliation workload: ' + (json.dumps(evidence['oracle_workload'], sort_keys=True) if evidence['oracle_workload'] else 'NOT_RUN.'))
     for module_name, module in evidence['modules'].items():

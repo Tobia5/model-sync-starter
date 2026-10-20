@@ -1,5 +1,7 @@
 # Verification profiles
 
+The full-only local HTTP harness has eight handler threads and a bounded accept backlog of 256 for the largest declared 200-user burst. A 200-socket regression checks connection refusal without running Gatling. The Gatling fork explicitly uses the performance module as its working directory, placing harness JSON beside that module's reports. Qualification checks both harness outcomes and fresh Gatling request counts/assertion XML; HTTP failures cannot be hidden by passing owner/ledger assertions. Failed-run QM retains request counts and response-time percentiles separately from completed synchronizations.
+
 | Command | Required work | Excluded work |
 |---|---|---|
 | `./mvnw -B -ntp clean verify` | Compile all default reactor modules; JUnit unit/contract and bounded H2 tests; compiled-output ArchUnit; source/POM/docs/report guards | PIT, Gatling, Docker, real Oracle, long soak and external providers |
