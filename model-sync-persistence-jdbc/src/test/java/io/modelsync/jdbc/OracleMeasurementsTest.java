@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.sql.Timestamp;
 import java.util.Map;
 import java.util.UUID;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import tools.jackson.databind.json.JsonMapper;
@@ -14,6 +15,24 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 class OracleMeasurementsTest {
+  @Test void cursorReloadMayReuseSqlAndChildNumbersWithResetCounters() {
+    Map<String, Object> old = Map.of("SQL_ID", "claim", "CHILD_NUMBER", 0, "CHILD_ADDRESS", "A0",
+        "LAST_LOAD_TIME", "2026-10-20/22:14:00", "LOADS", 1, "EXECUTIONS", 15);
+    Map<String, Object> reloaded = Map.of("SQL_ID", "claim", "CHILD_NUMBER", 0, "CHILD_ADDRESS", "B0",
+        "LAST_LOAD_TIME", "2026-10-20/22:17:00", "LOADS", 1, "EXECUTIONS", 3);
+    var fresh = OracleMeasurements.executedCursors(List.of(old), List.of(reloaded));
+    assertEquals(1, fresh.size());
+    assertEquals(3L, fresh.getFirst().get("window_executions"));
+    assertTrue(OracleMeasurements.executedCursors(List.of(old), List.of(old)).isEmpty());
+    var invalid = new java.util.LinkedHashMap<>(old);
+    invalid.put("EXECUTIONS", 3);
+    assertThrows(IllegalStateException.class,
+        () -> OracleMeasurements.executedCursors(List.of(old), List.of(invalid)));
+    var advanced = new java.util.LinkedHashMap<>(old);
+    advanced.put("EXECUTIONS", 18);
+    assertEquals(3L, OracleMeasurements.executedCursors(List.of(old), List.of(advanced)).getFirst().get("window_executions"));
+  }
+
   @Test void populationBucketsIncludeEqualityAndExcludeOtherBindings() {
     var jdbc = new JdbcTemplate(new DriverManagerDataSource("jdbc:h2:mem:" + UUID.randomUUID()
         + ";DB_CLOSE_DELAY=-1", "sa", ""));

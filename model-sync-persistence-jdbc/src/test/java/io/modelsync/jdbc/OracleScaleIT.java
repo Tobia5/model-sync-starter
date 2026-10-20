@@ -68,9 +68,9 @@ class OracleScaleIT {
         report.put("seed_work", OracleMeasurements.difference(seedBefore, OracleMeasurements.snapshot(jdbc)));
         jdbc.execute("alter session set statistics_level=all");
         report.put("statistics_level", "ALL");
-        report.put("table_statistics", jdbc.queryForList("select table_name,num_rows,blocks,last_analyzed,stale_stats"
+        report.put("table_statistics", jdbc.queryForList("select table_name,num_rows,blocks,to_char(last_analyzed,'YYYY-MM-DD\"T\"HH24:MI:SS') last_analyzed_db_local,stale_stats"
             + " from user_tab_statistics where table_name='MS_WORK'"));
-        report.put("index_statistics", jdbc.queryForList("select index_name,num_rows,leaf_blocks,clustering_factor,last_analyzed"
+        report.put("index_statistics", jdbc.queryForList("select index_name,num_rows,leaf_blocks,clustering_factor,to_char(last_analyzed,'YYYY-MM-DD\"T\"HH24:MI:SS') last_analyzed_db_local"
             + " from user_indexes where table_name='MS_WORK' order by index_name"));
         var store = new JdbcWorkStore(jdbc);
         store.verifySchema();
@@ -91,7 +91,7 @@ class OracleScaleIT {
             measured.put("gather_statistics_ms", (System.nanoTime() - statsStarted) / 1_000_000);
             measured.put("gather_statistics_work", OracleMeasurements.difference(statsBefore, OracleMeasurements.snapshot(jdbc)));
           }
-          measured.put("table_statistics", jdbc.queryForList("select table_name,num_rows,blocks,last_analyzed,stale_stats from user_tab_statistics where table_name='MS_WORK'"));
+          measured.put("table_statistics", jdbc.queryForList("select table_name,num_rows,blocks,to_char(last_analyzed,'YYYY-MM-DD\"T\"HH24:MI:SS') last_analyzed_db_local,stale_stats from user_tab_statistics where table_name='MS_WORK'"));
           long now = System.currentTimeMillis();
           measured.put("population", OracleMeasurements.population(jdbc, binding, now));
           measured.put("waiting_due_rows", jdbc.queryForObject("select count(*) from MS_WORK where binding_id=? and work_status='WAITING' and next_at_ms<=?", Long.class, binding, now));

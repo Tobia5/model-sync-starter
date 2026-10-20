@@ -155,8 +155,8 @@ class OracleCapacityIT {
         phases.put("measurement_work", OracleMeasurements.difference(measurementBefore, OracleMeasurements.snapshot(jdbc)));
         @SuppressWarnings("unchecked") var previousSql = (List<Map<String, Object>>) measurementBefore.get("sql_cursors");
         phases.put("claim_plans", OracleMeasurements.claimPlans(jdbc, previousSql));
-        phases.put("table_statistics", jdbc.queryForList("select table_name,num_rows,blocks,last_analyzed,stale_stats from user_tab_statistics where table_name='MS_WORK'"));
-        phases.put("index_statistics", jdbc.queryForList("select index_name,num_rows,leaf_blocks,clustering_factor,last_analyzed from user_indexes where table_name='MS_WORK' order by index_name"));
+        phases.put("table_statistics", jdbc.queryForList("select table_name,num_rows,blocks,to_char(last_analyzed,'YYYY-MM-DD\"T\"HH24:MI:SS') last_analyzed_db_local,stale_stats from user_tab_statistics where table_name='MS_WORK'"));
+        phases.put("index_statistics", jdbc.queryForList("select index_name,num_rows,leaf_blocks,clustering_factor,to_char(last_analyzed,'YYYY-MM-DD\"T\"HH24:MI:SS') last_analyzed_db_local from user_indexes where table_name='MS_WORK' order by index_name"));
         long measuredGrants = measuredQuota.granted.get() - grantsBefore;
         long measuredDenials = measuredQuota.denied.get() - denialsBefore;
         phases.put("measurement_ms", elapsedMs);

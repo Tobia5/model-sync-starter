@@ -330,14 +330,18 @@ class QualityGateTests(unittest.TestCase):
 
     def test_queue_evidence_rejects_estimated_plans_and_combined_or_regressed_counters(self):
         from queue_evidence import plans, counters
+        cursor = {'SQL_ID': 'fixture', 'EXECUTIONS': 1, 'CHILD_ADDRESS': 'A0',
+                  'LAST_LOAD_TIME': '2026-10-20/00:00:00', 'LOADS': 1, 'window_executions': 1}
         with self.assertRaisesRegex(ValueError, 'actual row-source'):
-            plans([{'SQL_ID': 'fixture', 'EXECUTIONS': 1, 'actual_plan': ['EXPLAIN PLAN estimates only']}])
+            plans([{**cursor, 'actual_plan': ['EXPLAIN PLAN estimates only']}])
         with self.assertRaisesRegex(ValueError, 'Separate Oracle counters'):
             counters({'db_session_work': 100})
         with self.assertRaisesRegex(ValueError, 'regressed'):
             counters({'db block gets': 1, 'consistent gets': -1, 'physical reads': 0,
                       'execute count': 2, 'redo size': 1})
-        plans([{'SQL_ID': 'fixture', 'EXECUTIONS': 1, 'actual_plan': ['| Starts | A-Rows | Buffers |']}])
+        plans([{**cursor, 'actual_plan': ['| Starts | A-Rows | Buffers |']}])
+        with self.assertRaisesRegex(ValueError, 'loaded-cursor'):
+            plans([{**cursor, 'window_executions': 0, 'actual_plan': ['| A-Rows |']}])
 
     def test_container_uses_selected_project_settings_and_keeps_full_goals(self):
         spec = spec_from_file_location('oracle_container_maven', ROOT / 'scripts/full-oracle-container.py')
@@ -350,6 +354,65 @@ class QualityGateTests(unittest.TestCase):
         with patch.dict(os.environ, {'MODELSYNC_MAVEN_SETTINGS': '../unreviewed.xml'}):
             with self.assertRaisesRegex(ValueError, 'reviewed project Maven settings'):
                 module.maven_command()
+
+    def test_diagnostics_select_full_preflight_but_cannot_substitute_full_verify(self):
+        spec = spec_from_file_location('oracle_diagnostic_prepare', ROOT / 'scripts/full-oracle-container.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with patch.dict(os.environ, {'MODELSYNC_MAVEN_SETTINGS': module.PROJECT_SETTINGS}):
+            self.assertEqual(['-Pfull', 'clean', 'verify'], module.maven_command()[-3:])
+            self.assertEqual(['-Pfull', '-N', 'initialize'], module.maven_command(True)[-3:])
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            with self.assertRaisesRegex(ValueError, 'marker absent'):
+                module.diagnostic_command(root)
+
+    def test_diagnostic_launcher_requires_fresh_default_reports_and_compiled_output(self):
+        spec = spec_from_file_location('oracle_diagnostic_command', ROOT / 'scripts/full-oracle-container.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            begin(root)
+            log = root / 'target/qm/default-build.log'
+            log.write_text('[INFO] BUILD SUCCESS')
+            report = root / 'model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.JpaCompletionAtomicityTest.xml'
+            report.parent.mkdir(parents=True)
+            report.write_text('<testsuite><properties><property name="java.class.path" value="missing-launcher"/></properties></testsuite>')
+            success = subprocess.CompletedProcess([], 0, stdout='default guard PASS')
+            original_run = subprocess.run
+            guard_calls = []
+            def run_guard(command, *args, **kwargs):
+                if command[0] == sys.executable:
+                    guard_calls.append(command)
+                    return success
+                return original_run(command, *args, **kwargs)
+            with patch.object(module.subprocess, 'run', side_effect=run_guard):
+                with self.assertRaisesRegex(ValueError, 'launcher classpath absent'):
+                    module.diagnostic_command(root)
+            report.write_text('<testsuite><properties><property name="java.class.path" value="junit-platform-launcher-6.0.3.jar"/></properties></testsuite>')
+            for name in ('model-sync-sample/target/test-classes/io/modelsync/sample/OracleDiagnosticRunner.class',
+                         'model-sync-persistence-jdbc/target/test-classes/io/modelsync/jdbc/OracleScaleIT.class'):
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b'fixture')
+            java = root / 'target/jdk/bin' / ('java.exe' if os.name == 'nt' else 'java')
+            java.parent.mkdir(parents=True)
+            java.write_bytes(b'fixture')
+            guard_calls.clear()
+            with patch.dict(os.environ, {'JAVA_HOME': str(root / 'target/jdk')}), patch.object(module.subprocess, 'run', side_effect=run_guard):
+                command = module.diagnostic_command(root)
+                self.assertEqual('io.modelsync.sample.OracleDiagnosticRunner', command[-1])
+                self.assertIn(str(root / 'model-sync-persistence-jdbc/target/test-classes'), command[-2])
+                self.assertEqual(2, len(guard_calls))
+                log.write_text('[INFO] BUILD FAILURE')
+                with self.assertRaisesRegex(ValueError, 'successful.*default build log'):
+                    module.diagnostic_command(root)
+                log.write_text('[INFO] BUILD SUCCESS')
+                old = time.time() - 60
+                os.utime(report, (old, old))
+                with self.assertRaisesRegex(ValueError, 'Stale'):
+                    module.diagnostic_command(root)
 
     def test_container_preflight_uses_supported_docker_info_field(self):
         spec = spec_from_file_location('oracle_container_docker_info', ROOT / 'scripts/full-oracle-container.py')

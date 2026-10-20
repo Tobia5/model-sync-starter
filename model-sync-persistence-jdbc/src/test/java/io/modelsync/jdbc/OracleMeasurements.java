@@ -3,6 +3,7 @@ package io.modelsync.jdbc;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -53,7 +54,8 @@ final class OracleMeasurements {
   }
 
   static List<Map<String, Object>> sql(JdbcTemplate jdbc) {
-    return jdbc.queryForList("select sql_id,child_number,plan_hash_value,executions,fetches,rows_processed,"
+    return jdbc.queryForList("select sql_id,child_number,rawtohex(child_address) child_address,last_load_time,loads,"
+        + "plan_hash_value,executions,fetches,rows_processed,"
         + "buffer_gets,disk_reads,elapsed_time,cpu_time,application_wait_time,concurrency_wait_time,"
         + "user_io_wait_time,sql_text from v$sql where parsing_schema_name=user and ("
         + "sql_text like 'select * from MS_WORK where priority=%' or sql_text like 'update MS_WORK set%'"
@@ -79,7 +81,7 @@ final class OracleMeasurements {
       @SuppressWarnings("unchecked") var last = (Map<String, Long>) after.get(key);
       result.put(key, delta(first, last));
     }
-    // Keep cursor identities and all raw values; consumers subtract by (SQL_ID, CHILD_NUMBER).
+    // Keep loaded-cursor identities and raw values, including reloads that reset execution counts.
     result.put("sql_cursors_before", before.get("sql_cursors"));
     result.put("sql_cursors_after", after.get("sql_cursors"));
     result.put("observation_scope", "all runtime-user sessions; stable pool; includes snapshot query overhead");
@@ -87,14 +89,10 @@ final class OracleMeasurements {
   }
 
   static List<Map<String, Object>> claimPlans(JdbcTemplate jdbc, List<Map<String, Object>> before) {
-    Map<String, Long> previous = new LinkedHashMap<>();
-    for (var cursor : before) previous.put(cursor.get("SQL_ID") + ":" + cursor.get("CHILD_NUMBER"),
-        ((Number) cursor.get("EXECUTIONS")).longValue());
-    List<Map<String, Object>> cursors = jdbc.queryForList("select sql_id,child_number,plan_hash_value,"
+    var current = jdbc.queryForList("select sql_id,child_number,rawtohex(child_address) child_address,last_load_time,loads,plan_hash_value,"
         + "executions,buffer_gets,disk_reads,rows_processed from v$sql where parsing_schema_name=user"
-        + " and sql_text like 'select * from MS_WORK where priority=%' order by sql_id,child_number").stream()
-        .filter(cursor -> ((Number) cursor.get("EXECUTIONS")).longValue() > previous.getOrDefault(
-            cursor.get("SQL_ID") + ":" + cursor.get("CHILD_NUMBER"), 0L)).toList();
+        + " and sql_text like 'select * from MS_WORK where priority=%' order by sql_id,child_number");
+    List<Map<String, Object>> cursors = executedCursors(before, current);
     if (cursors.isEmpty()) throw new IllegalStateException("Actual production claim cursor absent");
     for (var cursor : cursors) {
       var plan = jdbc.queryForList("select plan_table_output from table(dbms_xplan.display_cursor(?,?,'ALLSTATS LAST +PREDICATE +IOSTATS'))",
@@ -105,6 +103,24 @@ final class OracleMeasurements {
       cursor.put("actual_plan", plan);
     }
     return cursors;
+  }
+
+  static List<Map<String, Object>> executedCursors(
+      List<Map<String, Object>> before, List<Map<String, Object>> after) {
+    Map<OracleCursorIdentity, Long> previous = new LinkedHashMap<>();
+    for (var row : before) previous.put(OracleCursorIdentity.from(row), ((Number) row.get("EXECUTIONS")).longValue());
+    List<Map<String, Object>> result = new ArrayList<>();
+    for (var row : after) {
+      long oldCount = previous.getOrDefault(OracleCursorIdentity.from(row), 0L);
+      long count = ((Number) row.get("EXECUTIONS")).longValue();
+      if (count < oldCount) throw new IllegalStateException("Oracle cursor executions regressed without a new load identity");
+      if (count > oldCount) {
+        Map<String, Object> measured = new LinkedHashMap<>(row);
+        measured.put("window_executions", count - oldCount);
+        result.add(measured);
+      }
+    }
+    return result;
   }
 
   static void write(Path path, Object value) throws Exception {

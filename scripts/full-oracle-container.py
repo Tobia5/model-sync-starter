@@ -18,7 +18,10 @@ import sys
 import tempfile
 import time
 import uuid
-from run_evidence import current, identity, invalidate
+import shutil
+import argparse
+import xml.etree.ElementTree as ET
+from run_evidence import current, identity, invalidate, fresh
 
 ROOT = Path(__file__).resolve().parents[1]
 IMAGE = ('ghcr.io/gvenzl/oracle-free:23.26.3-slim@'
@@ -42,7 +45,7 @@ def write_infrastructure(record: dict) -> None:
     destination.write_text(json.dumps(record, sort_keys=True) + '\n', encoding='utf-8')
 
 
-def maven_command() -> list[str]:
+def maven_command(diagnostic: bool = False) -> list[str]:
     wrapper = str(ROOT / ('mvnw.cmd' if os.name == 'nt' else 'mvnw'))
     command = [wrapper, '-B', '-ntp']
     selected = os.environ.get('MODELSYNC_MAVEN_SETTINGS')
@@ -53,7 +56,42 @@ def maven_command() -> list[str]:
         if not path.is_file():
             raise ValueError('Reviewed project Maven settings file is absent')
         command.extend(('-s', str(path)))
-    return [*command, '-Pfull', 'clean', 'verify']
+    return ([*command, '-Pfull', '-N', 'initialize'] if diagnostic
+            else [*command, '-Pfull', 'clean', 'verify'])
+
+
+def diagnostic_command(root: Path = ROOT) -> list[str]:
+    """Use only the current successful default build's compiled tests and resolved classpath."""
+    current(root)
+    for script in ('check-test-reports.py', 'check-default-log.py'):
+        args = [sys.executable, str(root / 'scripts' / script)]
+        if script == 'check-default-log.py':
+            log = root / 'target/qm/default-build.log'
+            fresh(log, root)
+            raw = log.read_bytes()
+            text = raw.decode('utf-16' if raw.startswith((b'\xff\xfe', b'\xfe\xff')) else 'utf-8')
+            if '[INFO] BUILD SUCCESS' not in text or '[INFO] BUILD FAILURE' in text:
+                raise ValueError('A successful current-source default build log is required before diagnostics')
+            args.append(str(log))
+        result = subprocess.run(args, cwd=root, capture_output=True, text=True, check=False)
+        if result.returncode:
+            raise ValueError('A successful current-source default build is required before diagnostics')
+    report = root / 'model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.JpaCompletionAtomicityTest.xml'
+    fresh(report, root)
+    properties = {p.get('name'): p.get('value') for p in ET.parse(report).getroot().findall('properties/property')}
+    classpath = properties.get('java.class.path', '')
+    if not classpath or 'junit-platform-launcher-' not in classpath:
+        raise ValueError('Resolved JUnit launcher classpath absent from the current default report')
+    compiled = root / 'model-sync-sample/target/test-classes/io/modelsync/sample/OracleDiagnosticRunner.class'
+    fresh(compiled, root)
+    jdbc_tests = root / 'model-sync-persistence-jdbc/target/test-classes'
+    fresh(jdbc_tests / 'io/modelsync/jdbc/OracleScaleIT.class', root)
+    java_home = os.environ.get('JAVA_HOME')
+    java = str(Path(java_home) / 'bin' / ('java.exe' if os.name == 'nt' else 'java')) if java_home else shutil.which('java')
+    if not java or not Path(java).is_file():
+        raise ValueError('The build JDK is unavailable for diagnostics')
+    return [java, f'-Dmodelsync.repository.root={root}', '-cp',
+            str(jdbc_tests) + os.pathsep + classpath, 'io.modelsync.sample.OracleDiagnosticRunner']
 
 
 def apply_schema_script(container: str, script: str, passwords: tuple[str, ...]) -> None:
@@ -119,17 +157,21 @@ def preflight() -> None:
     docker('info', '--format', '{{.ServerVersion}}')
 
 
-def main() -> int:
-    invalidate(ROOT)
+def main(diagnostic: bool = False) -> int:
     attempt = {'attempt_id': str(uuid.uuid4()), **identity(ROOT), 'image': IMAGE,
-               'runtime_schema': 'MS_TEST_RUNTIME', 'migration_schema': 'MS_TEST_MIGRATION'}
+               'runtime_schema': 'MS_TEST_RUNTIME', 'migration_schema': 'MS_TEST_MIGRATION',
+               'mode': 'diagnostic' if diagnostic else 'full',
+               'full_qualification': 'NOT_RUN' if diagnostic else 'REQUIRES_FULL_EVIDENCE'}
     selected = os.environ.get('MODELSYNC_MAVEN_SETTINGS')
     attempt['maven_settings'] = selected or 'USER_DEFAULT'
     if selected == PROJECT_SETTINGS and (ROOT / selected).is_file():
         attempt['maven_settings_sha256'] = hashlib.sha256((ROOT / selected).read_bytes()).hexdigest()
     try:
+        launcher = diagnostic_command() if diagnostic else None
+        invalidate(ROOT)
         preflight()
-    except (ValueError, OSError, subprocess.CalledProcessError) as error:
+    except (ValueError, OSError, ET.ParseError, subprocess.CalledProcessError) as error:
+        invalidate(ROOT)
         detail = error_detail(error)
         print(f'BLOCKED full preflight: disposable Docker lane unavailable: {detail}', file=sys.stderr)
         if os.environ.get('MODELSYNC_ORACLE_CONTAINER') == 'EXPLICIT_DISPOSABLE':
@@ -147,6 +189,7 @@ def main() -> int:
     started = time.monotonic()
     result_code = 2
     maven_exit = None
+    diagnostic_exit = None
     cleanup_verified = False
     container_created = False
     volume_created = False
@@ -209,10 +252,16 @@ def main() -> int:
                 MODELSYNC_ORACLE_TEST_SCHEMA_ACK='DEDICATED_TEST_SCHEMA',
                 MODELSYNC_ORACLE_MIGRATION_SCHEMA_ACK='DEDICATED_MIGRATION_SCHEMA')
             phase = 'full Maven verification'
-            result = subprocess.run(maven_command(),
+            result = subprocess.run(maven_command(diagnostic),
                                     cwd=ROOT, env=build_env, check=False)
             maven_exit = result.returncode
             result_code = maven_exit
+            if diagnostic and maven_exit == 0:
+                phase = 'selected Oracle diagnostics (not full qualification)'
+                result = subprocess.run(launcher, cwd=ROOT / 'model-sync-persistence-jdbc',
+                                        env=build_env, check=False)
+                diagnostic_exit = result.returncode
+                result_code = diagnostic_exit
         except (OSError, subprocess.CalledProcessError, RuntimeError) as error:
             detail = error_detail(error)
             print(f'BLOCKED full preflight: {phase}: {detail}', file=sys.stderr)
@@ -252,9 +301,13 @@ def main() -> int:
                                   'cleanup_verified': cleanup_verified,
                                   'phase': phase, 'error': blocker_detail,
                                   'maven_exit': maven_exit, 'wrapper_exit': result_code,
+                                  'diagnostic_exit': diagnostic_exit,
                                   'status': 'PASS' if result_code == 0 else 'FAILED' if run_id else 'BLOCKED'})
     return result_code
 
 
 if __name__ == '__main__':
-    raise SystemExit(main())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--diagnostic', action='store_true',
+                        help='Run the current default build\'s Oracle atomicity and 100k diagnostics; never qualifies full')
+    raise SystemExit(main(parser.parse_args().diagnostic))

@@ -21,6 +21,9 @@ def plans(value):
     for cursor in value:
         if not isinstance(cursor, dict) or not cursor.get('SQL_ID') or cursor.get('EXECUTIONS', 0) < 1:
             raise ValueError('Oracle cursor identity/execution absent')
+        if (not cursor.get('CHILD_ADDRESS') or not cursor.get('LAST_LOAD_TIME')
+                or cursor.get('LOADS', 0) < 1 or cursor.get('window_executions', 0) < 1):
+            raise ValueError('Oracle loaded-cursor identity/window execution absent')
         plan = cursor.get('actual_plan')
         if not isinstance(plan, list) or not any('A-Rows' in str(line) for line in plan):
             raise ValueError('Oracle actual row-source statistics absent')
