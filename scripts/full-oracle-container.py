@@ -3,7 +3,7 @@
 
 No existing container, user schema or host database is modified. Passwords are
 generated for this invocation, kept out of command arguments and reports, and
-the uniquely named container is stopped in all exit paths.
+the uniquely named container and newly created labelled data volume are removed on exit.
 """
 from __future__ import annotations
 
@@ -72,6 +72,41 @@ def container_absent(result: subprocess.CompletedProcess) -> bool:
         for message in ('no such object', 'no such container'))
 
 
+def volume_absent(result: subprocess.CompletedProcess) -> bool:
+    return result.returncode != 0 and 'no such volume' in result.stderr.lower()
+
+
+def create_session_volume(name: str, attempt_id: str) -> None:
+    existing = docker('volume', 'inspect', name, check=False)
+    if existing.returncode == 0:
+        raise RuntimeError('Session volume already exists; refusing to reuse database storage')
+    if not volume_absent(existing):
+        raise RuntimeError('Cannot verify that session volume is absent: ' + existing.stderr.strip()[-1000:])
+    docker('volume', 'create', '--label', f'io.modelsync.qualification.attempt={attempt_id}', name)
+    try:
+        labels = json.loads(docker('volume', 'inspect', '--format', '{{json .Labels}}', name).stdout)
+    except json.JSONDecodeError as error:
+        raise RuntimeError('Session volume ownership metadata was malformed') from error
+    if not isinstance(labels, dict) or labels.get('io.modelsync.qualification.attempt') != attempt_id:
+        raise RuntimeError('Session volume ownership did not match; refusing to mount it')
+
+
+def remove_session_volume(name: str, attempt_id: str) -> bool:
+    inspected = docker('volume', 'inspect', '--format', '{{json .Labels}}', name, check=False)
+    if volume_absent(inspected):
+        return True
+    if inspected.returncode:
+        return False
+    try:
+        labels = json.loads(inspected.stdout)
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(labels, dict) or labels.get('io.modelsync.qualification.attempt') != attempt_id:
+        return False
+    docker('volume', 'rm', name, check=False)
+    return volume_absent(docker('volume', 'inspect', name, check=False))
+
+
 def preflight() -> None:
     if os.environ.get('MODELSYNC_ORACLE_CONTAINER') != 'EXPLICIT_DISPOSABLE':
         raise ValueError('MODELSYNC_ORACLE_CONTAINER=EXPLICIT_DISPOSABLE is required')
@@ -100,17 +135,21 @@ def main() -> int:
         if os.environ.get('MODELSYNC_ORACLE_CONTAINER') == 'EXPLICIT_DISPOSABLE':
             write_infrastructure({**attempt, 'status': 'BLOCKED', 'phase': 'Docker preflight',
                                   'error': detail, 'container_created': False,
-                                  'cleanup_verified': True, 'run_id': None})
+                                  'cleanup_verified': True, 'run_id': None,
+                                  'maven_exit': None, 'wrapper_exit': 2})
         return 2
     name = 'msq-' + uuid.uuid4().hex[:12]
+    volume_name = name + '-data'
     admin = secrets.token_hex(24)
     runtime = secrets.token_hex(24)
     migration = secrets.token_hex(24)
     schema = (ROOT / 'model-sync-persistence-jdbc/src/main/resources/model-sync/schema/oracle-v2.sql').read_text(encoding='utf-8')
     started = time.monotonic()
     result_code = 2
+    maven_exit = None
     cleanup_verified = False
     container_created = False
+    volume_created = False
     with tempfile.TemporaryDirectory(prefix='modelsync-oracle-') as directory:
         setup = Path(directory) / '001-test-schemas.sql'
         setup.write_text('whenever sqlerror exit failure rollback\n'
@@ -128,11 +167,15 @@ def main() -> int:
             f'connect MS_TEST_RUNTIME/{runtime}@//localhost:1521/FREEPDB1\n'
             + schema + '\ncommit;\nexit\n', encoding='utf-8')
         environment = dict(os.environ, ORACLE_PASSWORD=admin)
-        phase = 'Oracle image pull/container start'
+        phase = 'Oracle session data volume creation'
         blocker_detail = None
         try:
+            create_session_volume(volume_name, attempt['attempt_id'])
+            volume_created = True
+            phase = 'Oracle image pull/container start'
             run = docker('run', '--rm', '-d', '--name', name, '--platform', 'linux/amd64',
                          '--label', f'io.modelsync.qualification.attempt={attempt["attempt_id"]}',
+                         '--mount', f'type=volume,source={volume_name},target=/opt/oracle/oradata',
                          '--cpus', '4', '--memory', '6g', '-p', '127.0.0.1::1521',
                          '--health-cmd', 'healthcheck.sh', '--health-interval', '10s',
                          '--health-timeout', '5s', '--health-retries', '60',
@@ -164,7 +207,8 @@ def main() -> int:
             phase = 'full Maven verification'
             result = subprocess.run(maven_command(),
                                     cwd=ROOT, env=build_env, check=False)
-            result_code = result.returncode
+            maven_exit = result.returncode
+            result_code = maven_exit
         except (OSError, subprocess.CalledProcessError, RuntimeError) as error:
             detail = error_detail(error)
             print(f'BLOCKED full preflight: {phase}: {detail}', file=sys.stderr)
@@ -184,8 +228,11 @@ def main() -> int:
                     cleanup_verified = container_absent(docker('inspect', name, check=False))
             else:
                 cleanup_verified = container_absent(observed)
+            container_cleanup_verified = cleanup_verified
+            volume_cleanup_verified = remove_session_volume(volume_name, attempt['attempt_id'])
+            cleanup_verified = container_cleanup_verified and volume_cleanup_verified
             if not cleanup_verified:
-                print('BLOCKED cleanup: disposable Oracle container was not removed', file=sys.stderr)
+                print('BLOCKED cleanup: session container or data volume removal could not be verified', file=sys.stderr)
                 if result_code == 0:
                     result_code = 2
             try:
@@ -195,8 +242,12 @@ def main() -> int:
             write_infrastructure({**attempt, 'run_id': run_id, 'container_name': name,
                                   'elapsed_seconds': round(time.monotonic() - started, 2),
                                   'container_created': container_created,
+                                  'volume_name': volume_name, 'volume_created': volume_created,
+                                  'container_cleanup_verified': container_cleanup_verified,
+                                  'volume_cleanup_verified': volume_cleanup_verified,
                                   'cleanup_verified': cleanup_verified,
                                   'phase': phase, 'error': blocker_detail,
+                                  'maven_exit': maven_exit, 'wrapper_exit': result_code,
                                   'status': 'PASS' if result_code == 0 else 'FAILED' if run_id else 'BLOCKED'})
     return result_code
 

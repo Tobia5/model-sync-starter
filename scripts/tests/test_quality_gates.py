@@ -74,6 +74,26 @@ class QualityGateTests(unittest.TestCase):
             self.assertEqual('NOT_RUN', result['mutation']['status'])
             self.assertEqual({}, result['modules'])
 
+    def test_run_identity_rejects_changed_contents_of_an_already_dirty_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            source = root / 'tracked.txt'
+            source.write_text('first dirty contents', encoding='utf-8')
+            begin(root)
+            source.write_text('different dirty contents', encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'source identity mismatch'):
+                current(root)
+
+    def test_run_identity_rejects_changed_untracked_contents(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            source = root / 'new-source.txt'
+            source.write_text('first contents', encoding='utf-8')
+            begin(root)
+            source.write_text('different contents', encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'source identity mismatch'):
+                current(root)
+
     def test_failed_pit_run_retains_fresh_measured_counts(self):
         spec = spec_from_file_location('qm_report_pit', ROOT / 'scripts/qm-report.py')
         module = module_from_spec(spec)
@@ -127,6 +147,37 @@ class QualityGateTests(unittest.TestCase):
             self.assertEqual('FAILED', suite['status'])
             self.assertEqual('OracleSmokeIT', suite['suites'][0]['name'])
             self.assertEqual(0, suite['suites'][0]['tests'])
+
+    def test_utf16_failed_build_log_keeps_executed_full_goals_failed(self):
+        spec = spec_from_file_location('qm_report_utf16', ROOT / 'scripts/qm-report.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            (root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"><modules><module>model-sync-persistence-jdbc</module></modules></project>', encoding='utf-8')
+            begin(root)
+            (root / 'target/qm/full-build.log').write_text(
+                '[INFO] --- pitest:1.25.9:mutationCoverage (behavioral-mutations) @ model-sync-testkit ---\n'
+                '[INFO] Running io.modelsync.jdbc.OracleScaleIT\n'
+                '[INFO] --- gatling:4.11.0:test (fresh-visits) @ model-sync-performance ---\n', encoding='utf-16')
+            result = module.collect(True, root)
+            self.assertEqual('FAILED', result['mutation']['status'])
+            self.assertEqual('FAILED', result['oracle_scale']['status'])
+            self.assertEqual('FAILED', result['gatling']['fresh']['status'])
+
+    def test_failed_oracle_xml_proves_execution_without_a_build_log(self):
+        spec = spec_from_file_location('qm_report_xml_execution', ROOT / 'scripts/qm-report.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            (root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"><modules><module>model-sync-persistence-jdbc</module></modules></project>', encoding='utf-8')
+            begin(root)
+            report = root / 'model-sync-persistence-jdbc/target/failsafe-reports/TEST-OracleScaleIT.xml'
+            report.parent.mkdir(parents=True)
+            report.write_text('<testsuite name="io.modelsync.jdbc.OracleScaleIT" tests="1" errors="1" failures="0" skipped="0"/>', encoding='utf-8')
+            result = module.collect(True, root)
+            self.assertEqual('FAILED', result['oracle_scale']['status'])
 
     def test_collector_rejects_stale_and_malformed_reports(self):
         spec = spec_from_file_location('qm_report_reject', ROOT / 'scripts/qm-report.py')
@@ -233,6 +284,34 @@ class QualityGateTests(unittest.TestCase):
         spec.loader.exec_module(module)
         self.assertTrue(module.container_absent(subprocess.CompletedProcess([], 1, stderr='error: no such object: msq-fixture')))
         self.assertFalse(module.container_absent(subprocess.CompletedProcess([], 1, stderr='daemon unavailable')))
+
+    def test_session_volume_refuses_existing_storage(self):
+        spec = spec_from_file_location('oracle_volume_existing', ROOT / 'scripts/full-oracle-container.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with patch.object(module, 'docker', return_value=subprocess.CompletedProcess([], 0, stdout='existing')) as command:
+            with self.assertRaisesRegex(RuntimeError, 'refusing to reuse'):
+                module.create_session_volume('msq-fixture-data', 'attempt-fixture')
+        self.assertEqual(1, command.call_count)
+
+    def test_session_volume_cleanup_refuses_another_owner(self):
+        spec = spec_from_file_location('oracle_volume_owner', ROOT / 'scripts/full-oracle-container.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        other = subprocess.CompletedProcess([], 0, stdout='{"io.modelsync.qualification.attempt":"another-attempt"}')
+        with patch.object(module, 'docker', return_value=other) as command:
+            self.assertFalse(module.remove_session_volume('msq-fixture-data', 'attempt-fixture'))
+        self.assertEqual(1, command.call_count)
+
+    def test_session_volume_cleanup_verifies_removal(self):
+        spec = spec_from_file_location('oracle_volume_cleanup', ROOT / 'scripts/full-oracle-container.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        results = [subprocess.CompletedProcess([], 0, stdout='{"io.modelsync.qualification.attempt":"attempt-fixture"}'),
+                   subprocess.CompletedProcess([], 0, stdout='msq-fixture-data'),
+                   subprocess.CompletedProcess([], 1, stderr='error: no such volume: msq-fixture-data')]
+        with patch.object(module, 'docker', side_effect=results):
+            self.assertTrue(module.remove_session_volume('msq-fixture-data', 'attempt-fixture'))
 
     def test_full_report_rejects_missing_raw_evidence(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -16,10 +16,20 @@ def git(root: Path, *args: str) -> str:
 
 
 def identity(root: Path) -> dict:
+    digest = hashlib.sha256()
+    diff = subprocess.check_output(['git', 'diff', '--binary', 'HEAD', '--'], cwd=root)
+    if diff:
+        digest.update(b'TRACKED\0' + len(diff).to_bytes(8, 'big') + diff)
+    names = subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard', '-z'], cwd=root)
+    for name in sorted(n for n in names.split(b'\0') if n):
+        path = root / name.decode('utf-8', errors='surrogateescape')
+        content = str(path.readlink()).encode() if path.is_symlink() else path.read_bytes()
+        digest.update(b'UNTRACKED\0' + len(name).to_bytes(8, 'big') + name
+                      + len(content).to_bytes(8, 'big') + content)
     return {
         'source_sha': git(root, 'rev-parse', 'HEAD'),
         'source_tree': git(root, 'rev-parse', 'HEAD^{tree}'),
-        'source_change_digest': hashlib.sha256(git(root, 'status', '--porcelain', '--untracked-files=normal').encode()).hexdigest(),
+        'source_change_digest': digest.hexdigest(),
     }
 
 

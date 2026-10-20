@@ -77,7 +77,8 @@ def collect(full: bool, root: Path = ROOT) -> dict:
     if log_path.is_file():
         try:
             fresh(log_path, root)
-            log = log_path.read_text(encoding='utf-8', errors='replace')
+            raw = log_path.read_bytes()
+            log = raw.decode('utf-16' if raw.startswith((b'\xff\xfe', b'\xfe\xff')) else 'utf-8', errors='replace')
         except (OSError, ValueError) as error:
             log_rejected.append(str(error))
     modules = {}
@@ -86,11 +87,15 @@ def collect(full: bool, root: Path = ROOT) -> dict:
             'surefire': xml_suites(module / 'target/surefire-reports', root),
             'failsafe': xml_suites(module / 'target/failsafe-reports', root) if full else {'status': 'NOT_RUN', 'files': 0},
         }
-    if full and log and 'model-sync-persistence-jdbc' in modules:
+    executed_oracle = set()
+    if full and 'model-sync-persistence-jdbc' in modules:
         oracle = modules['model-sync-persistence-jdbc']['failsafe']
         reported = {suite['name'].rsplit('.', 1)[-1] for suite in oracle['suites']}
+        executed_oracle.update(suite['name'].rsplit('.', 1)[-1] for suite in oracle['suites'] if suite['tests'] > 0)
         for name in ('OracleSmokeIT', 'OracleConcurrencyIT', 'OracleMigrationIT', 'OracleScaleIT', 'OracleCapacityIT'):
-            if name not in reported and re.search(r'\bRunning\s+(?:[\w.]+\.)?' + name + r'\b', log):
+            if re.search(r'\bRunning\s+(?:[\w.]+\.)?' + name + r'\b', log):
+                executed_oracle.add(name)
+            if name not in reported and name in executed_oracle:
                 oracle['suites'].append({'name': name, 'tests': 0, 'failures': 0, 'errors': 0,
                                          'skipped': 0, 'status': 'FAILED', 'reason': 'executed without XML report'})
                 oracle['status'] = 'FAILED'
@@ -141,7 +146,7 @@ def collect(full: bool, root: Path = ROOT) -> dict:
                 raise ValueError('Malformed Oracle scale evidence')
     except (OSError, json.JSONDecodeError, ValueError) as error:
         scale = {'status': 'REJECTED', 'reason': str(error)}
-    if scale is None and full and re.search(r'\bRunning\s+(?:[\w.]+\.)?OracleScaleIT\b', log):
+    if scale is None and full and 'OracleScaleIT' in executed_oracle:
         scale = {'status': 'FAILED', 'reason': 'OracleScaleIT executed without JSON report'}
     oracle_workload = root / 'model-sync-persistence-jdbc/target/qm/oracle-workload.json'
     measured = None
@@ -153,7 +158,7 @@ def collect(full: bool, root: Path = ROOT) -> dict:
                 raise ValueError('Malformed or mismatched Oracle workload evidence')
         except (OSError, json.JSONDecodeError, ValueError) as error:
             measured = {'status': 'REJECTED', 'reason': str(error)}
-    if measured is None and full and re.search(r'\bRunning\s+(?:[\w.]+\.)?OracleCapacityIT\b', log):
+    if measured is None and full and 'OracleCapacityIT' in executed_oracle:
         measured = {'status': 'FAILED', 'reason': 'OracleCapacityIT executed without JSON report'}
     return {'modules': modules, 'mutation': mutation, 'gatling': load, 'oracle_scale': scale,
             'oracle_workload': measured, 'rejected': log_rejected + [reason for module in modules.values()

@@ -22,7 +22,7 @@ class OracleScaleIT {
   private static final String SESSION_WORK = "select sum(s.value) from v$mystat s join v$statname n"
       + " on n.statistic#=s.statistic# where n.name in ('db block gets','consistent gets','physical reads')";
 
-  @Test void dueLedgerAdmissionHasMeasuredDatabaseWork() throws Exception {
+  @Test void dueLedgerClaimHasMeasuredDatabaseWork() throws Exception {
     assertEquals("DEDICATED_TEST_SCHEMA", System.getenv("MODELSYNC_ORACLE_TEST_SCHEMA_ACK"));
     String url = System.getenv("MODELSYNC_ORACLE_URL");
     String user = System.getenv("MODELSYNC_ORACLE_USER");
@@ -42,6 +42,7 @@ class OracleScaleIT {
       oracleVersion = connection.getMetaData().getDatabaseProductVersion();
     }
     try {
+      long seedStarted = System.nanoTime();
       String insert = "insert into MS_WORK"
           + " (work_id,binding_id,tenant_id,subject_id,priority,generation,attempts,force_refresh,work_status,next_at_ms,requested_at_ms)"
           + " values (?,?,?,?,?,1,0,0,'WAITING',0,0)";
@@ -50,9 +51,10 @@ class OracleScaleIT {
         var key = new io.modelsync.core.domain.WorkKey(binding,
             new io.modelsync.core.domain.SubjectKey("synthetic", Integer.toString(i)));
         batch.add(new Object[] {key.storageId(), binding, "synthetic", key.subject().id(), Priority.NORMAL.ordinal()});
-        if (batch.size() == 1000) { jdbc.batchUpdate(insert, batch); batch.clear(); }
+        if (batch.size() == 1000) { tx.executeWithoutResult(status -> jdbc.batchUpdate(insert, batch)); batch.clear(); }
       }
-      if (!batch.isEmpty()) jdbc.batchUpdate(insert, batch);
+      if (!batch.isEmpty()) tx.executeWithoutResult(status -> jdbc.batchUpdate(insert, batch));
+      long seedElapsedMs = (System.nanoTime() - seedStarted) / 1_000_000;
       int actual = jdbc.queryForObject("select count(*) from MS_WORK where binding_id=?", Integer.class, binding);
       assertEquals(ROWS, actual);
       JdbcWorkStore store = new JdbcWorkStore(jdbc);
@@ -80,6 +82,7 @@ class OracleScaleIT {
       Path report = Path.of("target", "qm", "oracle-scale.json");
       Files.createDirectories(report.getParent());
       Files.writeString(report, "{\"rows\":" + actual
+          + ",\"seed_ms\":" + seedElapsedMs
           + ",\"due_rows\":" + actual + ",\"ledger_claims\":1"
           + ",\"db_work_per_ledger_claim\":" + blocks
           + ",\"work_unit\":" + json("Oracle session block gets + consistent gets + physical reads")

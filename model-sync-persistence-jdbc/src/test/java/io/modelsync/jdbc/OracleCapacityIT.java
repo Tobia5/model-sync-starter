@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /** A bounded, multi-worker Oracle reconciliation workload with one million durable intents. */
 class OracleCapacityIT {
@@ -47,6 +48,8 @@ class OracleCapacityIT {
     config.setJdbcUrl(url); config.setUsername(user); config.setPassword(password);
     config.setDriverClassName("oracle.jdbc.OracleDriver");
     config.setMaximumPoolSize(8); config.setMinimumIdle(8);
+    // Keep this bounded measurement's session-counter population stable; close all eight at test exit.
+    config.setMaxLifetime(0);
     config.setPoolName("modelsync-capacity");
     try (HikariDataSource source = new HikariDataSource(config)) {
       JdbcTemplate jdbc = new JdbcTemplate(source);
@@ -67,7 +70,9 @@ class OracleCapacityIT {
           + " primary key (tenant_id,subject_id))");
       try {
         long requestedAt = System.currentTimeMillis();
+        long seedStarted = System.nanoTime();
         seed(jdbc, binding, requestedAt);
+        long seedElapsedMs = (System.nanoTime() - seedStarted) / 1_000_000;
         assertEquals(ROWS, jdbc.queryForObject("select count(*) from MS_WORK where binding_id=?", Integer.class, binding));
         assertEquals(DUE, jdbc.queryForObject("select count(*) from MS_WORK where binding_id=? and next_at_ms=0", Integer.class, binding));
         var manager = new DataSourceTransactionManager(source);
@@ -103,7 +108,9 @@ class OracleCapacityIT {
         var coordinator = new SyncCoordinator(registry, store, tx, quota, Clock.systemUTC(),
             SyncOptions.defaults(), WeightedPriorities.defaults(), () -> 0.5);
         // Warm the pool and JIT with bounded real work; measurement starts afterwards.
+        long warmupStarted = System.nanoTime();
         for (int i = 0; i < 10; i++) coordinator.runOne();
+        long warmupElapsedMs = (System.nanoTime() - warmupStarted) / 1_000_000;
         long warmupCalls = ownerCalls.get();
         long warmupCompleted = jdbc.queryForObject("select count(*) from MS_STATE s join MS_WORK w on w.work_id=s.work_id where w.binding_id=? and s.outcome in ('MATCH','APPLIED')", Long.class, binding);
         long beforeWork = jdbc.queryForObject(SESSION_WORK, Long.class);
@@ -132,6 +139,30 @@ class OracleCapacityIT {
         long projectionRows = jdbc.queryForObject("select count(*) from MS_TEST_PROJECTION", Long.class);
         List<Long> lag = jdbc.query("select s.reconciled_at_ms-w.requested_at_ms from MS_STATE s join MS_WORK w on w.work_id=s.work_id where w.binding_id=? and s.outcome in ('MATCH','APPLIED')",
             (r, n) -> r.getLong(1), binding);
+        Path report = Path.of("target", "qm", "oracle-workload.json");
+        Files.createDirectories(report.getParent());
+        Files.writeString(report, "{\"scope\":\"oracle-backed-reconciliation\",\"rows\":" + ROWS
+            + ",\"seeded_rows\":" + ROWS + ",\"seed_ms\":" + seedElapsedMs
+            + ",\"due_rows\":" + DUE + ",\"hot_requests\":100,\"workers\":" + WORKERS
+            + ",\"owner_spacing_ms\":20,\"owner_latency_ms\":{\"ordinary\":5,\"slow\":25}"
+            + ",\"warmup_owner_calls\":" + warmupCalls + ",\"warmup_completed_syncs\":" + warmupCompleted
+            + ",\"warmup_ms\":" + warmupElapsedMs
+            + ",\"measured_owner_calls\":" + measuredOwnerCalls
+            + ",\"physical_owner_calls\":" + ownerCalls.get() + ",\"provider_429\":" + limited.get()
+            + ",\"synthetic_timeouts\":" + timedOut.get() + ",\"ledger_attempts\":" + attempts.get()
+            + ",\"completed_syncs\":" + completed + ",\"measured_completed_syncs\":" + measuredCompleted
+            + ",\"owner_calls_per_second\":" + (1000.0 * measuredOwnerCalls / Math.max(1, elapsedMs))
+            + ",\"completed_syncs_per_second\":" + (1000.0 * measuredCompleted / Math.max(1, elapsedMs))
+            + ",\"owner_failure_rate\":" + (ownerCalls.get() == 0 ? "null" : Double.toString((double) (limited.get()+timedOut.get()) / ownerCalls.get()))
+            + ",\"projection_rows\":" + projectionRows
+            + ",\"db_session_work\":" + dbWork + ",\"db_work_per_measured_owner_call\":"
+            + (measuredOwnerCalls == 0 ? "null" : Double.toString((double) dbWork / measuredOwnerCalls))
+            + ",\"run_one_latency_ms\":" + percentiles(latencies)
+            + ",\"reconciliation_lag_ms\":" + percentiles(lag)
+            + ",\"measurement_ms\":" + elapsedMs + ",\"jvm_max_heap_bytes\":" + Runtime.getRuntime().maxMemory()
+            + ",\"jvm_used_heap_bytes\":" + (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())
+            + ",\"available_processors\":" + Runtime.getRuntime().availableProcessors()
+            + ",\"pool_max_connections\":8,\"pool_max_lifetime_ms\":0,\"oracle_version\":" + quote(oracleVersion) + "}\n");
         assertTrue(ownerCalls.get() >= OWNER_CALL_TARGET, "Owner-call target not reached before bounded deadline");
         assertTrue(completed >= 150, "Too few completed reconciliations for the declared workload");
         assertEquals(completed, projectionRows, "Accepted work is not a completed projection");
@@ -139,28 +170,6 @@ class OracleCapacityIT {
         assertTrue(dbWork >= 0);
         assertTrue(measuredCompleted > 0 && measuredOwnerCalls > 0);
         assertTrue(limited.get() > 0 && timedOut.get() > 0, "Failure injection was not exercised");
-        Path report = Path.of("target", "qm", "oracle-workload.json");
-        Files.createDirectories(report.getParent());
-        Files.writeString(report, "{\"scope\":\"oracle-backed-reconciliation\",\"rows\":" + ROWS
-            + ",\"due_rows\":" + DUE + ",\"hot_requests\":100,\"workers\":" + WORKERS
-            + ",\"owner_spacing_ms\":20,\"owner_latency_ms\":{\"ordinary\":5,\"slow\":25}"
-            + ",\"warmup_owner_calls\":" + warmupCalls + ",\"warmup_completed_syncs\":" + warmupCompleted
-            + ",\"measured_owner_calls\":" + measuredOwnerCalls
-            + ",\"physical_owner_calls\":" + ownerCalls.get() + ",\"provider_429\":" + limited.get()
-            + ",\"synthetic_timeouts\":" + timedOut.get() + ",\"ledger_attempts\":" + attempts.get()
-            + ",\"completed_syncs\":" + completed + ",\"measured_completed_syncs\":" + measuredCompleted
-            + ",\"owner_calls_per_second\":" + (1000.0 * measuredOwnerCalls / Math.max(1, elapsedMs))
-            + ",\"completed_syncs_per_second\":" + (1000.0 * measuredCompleted / Math.max(1, elapsedMs))
-            + ",\"owner_failure_rate\":" + ((double) (limited.get()+timedOut.get()) / ownerCalls.get())
-            + ",\"projection_rows\":" + projectionRows
-            + ",\"db_session_work\":" + dbWork + ",\"db_work_per_measured_owner_call\":"
-            + (double) dbWork / measuredOwnerCalls
-            + ",\"run_one_latency_ms\":" + percentiles(latencies)
-            + ",\"reconciliation_lag_ms\":" + percentiles(lag)
-            + ",\"measurement_ms\":" + elapsedMs + ",\"jvm_max_heap_bytes\":" + Runtime.getRuntime().maxMemory()
-            + ",\"jvm_used_heap_bytes\":" + (Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())
-            + ",\"available_processors\":" + Runtime.getRuntime().availableProcessors()
-            + ",\"pool_max_connections\":8,\"oracle_version\":" + quote(oracleVersion) + "}\n");
       } finally {
         jdbc.update("delete from MS_STATE where work_id in (select work_id from MS_WORK where binding_id=?)", binding);
         jdbc.update("delete from MS_WORK where binding_id=?", binding);
@@ -171,15 +180,20 @@ class OracleCapacityIT {
   }
 
   private static void seed(JdbcTemplate jdbc, String binding, long requestedAt) {
+    var seedTx = new TransactionTemplate(new DataSourceTransactionManager(jdbc.getDataSource()));
     String sql = "insert into MS_WORK (work_id,binding_id,tenant_id,subject_id,priority,generation,attempts,force_refresh,work_status,next_at_ms,requested_at_ms) values (?,?,?,?,?,1,0,0,'WAITING',?,?)";
     List<Object[]> batch = new ArrayList<>(2000);
     for (int i = 1; i <= ROWS; i++) {
       WorkKey key = new WorkKey(binding, new SubjectKey("synthetic", Integer.toString(i)));
       batch.add(new Object[] {key.storageId(), binding, "synthetic", key.subject().id(),
           Priority.NORMAL.ordinal(), i <= DUE ? 0L : requestedAt + Duration.ofDays(1).toMillis(), requestedAt});
-      if (batch.size() == 2000) { jdbc.batchUpdate(sql, batch); batch.clear(); }
+      if (batch.size() == 2000) {
+        seedTx.executeWithoutResult(status -> jdbc.batchUpdate(sql, batch));
+        batch.clear();
+        if (i % 100_000 == 0) System.out.println("Oracle capacity fixture seeded " + i + " rows");
+      }
     }
-    if (!batch.isEmpty()) jdbc.batchUpdate(sql, batch);
+    if (!batch.isEmpty()) seedTx.executeWithoutResult(status -> jdbc.batchUpdate(sql, batch));
   }
 
   private static String percentiles(List<Long> values) {
