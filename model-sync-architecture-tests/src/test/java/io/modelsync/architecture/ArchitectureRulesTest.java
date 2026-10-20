@@ -32,7 +32,9 @@ class ArchitectureRulesTest {
   void compiledReactorObeysLayerAndTypeRules() throws IOException {
     Path root = Path.of("..").toAbsolutePath().normalize();
     String pom = Files.readString(root.resolve("pom.xml"));
-    Matcher names = Pattern.compile("<module>([^<]+)</module>").matcher(pom);
+    Matcher declared = Pattern.compile("<modules>(.*?)</modules>", Pattern.DOTALL).matcher(pom);
+    assertTrue(declared.find(), "Default reactor module list absent");
+    Matcher names = Pattern.compile("<module>([^<]+)</module>").matcher(declared.group(1));
     List<Path> compiled = new ArrayList<>();
     List<String> missing = new ArrayList<>();
     int sourceModules = 0;
