@@ -174,13 +174,15 @@ public final class JdbcWorkStore implements WorkStore {
     JdbcWorkRow r = selected.get();
     String token = UUID.randomUUID().toString();
     Instant until = now.plus(duration);
-    jdbc.update(
+    int updated = jdbc.update(
         "update MS_WORK set"
             + " work_status='LEASED',lease_token=?,lease_until_ms=?,leased_generation=generation"
             + " where work_id=?",
         token,
         until.toEpochMilli(),
         r.key().storageId());
+    if (updated != 1)
+      throw new IllegalStateException("Ledger claim changed " + updated + " rows for " + r.key().storageId());
     return Optional.of(
         new WorkLease(r.key(), token, r.generation(), r.attempts(), r.force(), priority, until));
   }
