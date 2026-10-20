@@ -23,11 +23,11 @@ for path in files:
         target = (path.parent / relative).resolve()
         if not target.is_relative_to(root) or not target.exists():
             errors.append(f'{path.relative_to(root)}: invalid local link {url}')
-arc = (root / 'docs/ARC42.md').read_text()
+    arc = (root / 'docs/ARC42.md').read_text(encoding='utf-8')
 sections = re.findall(r'^## (\d+)\. ', arc, re.M)
 if sections != [str(n) for n in range(1, 13)]:
     errors.append(f'arc42 requires sections 1 through 12 in order, got {sections}')
-handbook = (root / 'docs/USER-HANDBOOK.md').read_text()
+handbook = (root / 'docs/USER-HANDBOOK.md').read_text(encoding='utf-8')
 for term in ['ON_DEMAND', 'PERIODIC', 'events-enabled', 'max-items', 'max-duration',
              'STALE_WHILE_REVALIDATE', 'REQUIRE_FRESH', 'DEAD', 'schema', 'WebFlux']:
     if term not in handbook:

@@ -26,10 +26,10 @@ def visit(module):
     visiting.remove(module);visited.add(module)
 for module in modules:visit(module)
 for path in (root/'model-sync-core/src/main/java').rglob('*.java'):
-    for name in re.findall(r'^import\s+(?:static\s+)?([\w.]+)',path.read_text(),re.M):
+    for name in re.findall(r'^import\s+(?:static\s+)?([\w.]+)',path.read_text(encoding='utf-8'),re.M):
         assert name.startswith(('java.','javax.','io.modelsync.core.')), f'Framework leak: {name}'
 imports=root/'model-sync-autoconfigure/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports'
-for name in imports.read_text().splitlines():
+for name in imports.read_text(encoding='utf-8').splitlines():
     if not name or name.startswith('#'):continue
     assert (root/'model-sync-autoconfigure/src/main/java'/Path(name.replace('.','/')+'.java')).exists(),name
 print(f'ARCHITECTURE: {len(modules)} Maven modules, acyclic dependency graph, core imports isolated, auto-configuration imports resolve.')
