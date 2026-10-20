@@ -15,6 +15,14 @@ def plugins(node):
             result.append((artifact, goal.text))
     return result
 
+
+def compiled_failsafe_classpath(node, expected):
+    """A repackaged Boot JAR is not a conventional Java test classpath entry."""
+    plugin = node.find("m:build/m:plugins/m:plugin[m:artifactId='maven-failsafe-plugin']", NS)
+    value = None if plugin is None else plugin.findtext('m:configuration/m:classesDirectory', namespaces=NS)
+    if value != str(expected):
+        raise ValueError(f'Failsafe must load compiled application classes: expected {expected}, got {value}')
+
 def check(root=ROOT):
     pom = ET.parse(root / 'pom.xml').getroot()
     base = plugins(pom)
@@ -22,6 +30,7 @@ def check(root=ROOT):
     if 'full' not in profiles:
         raise ValueError('Missing explicit full profile')
     full = profiles['full']
+    compiled_failsafe_classpath(full, '${project.build.outputDirectory}')
     if full.find('m:activation', NS) is not None:
         raise ValueError('Full profile must be explicitly selected, never activated implicitly')
     for item in base:

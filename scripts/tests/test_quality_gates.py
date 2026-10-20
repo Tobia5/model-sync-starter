@@ -236,6 +236,42 @@ class QualityGateTests(unittest.TestCase):
             self.assertEqual('OracleSmokeIT', suite['suites'][0]['name'])
             self.assertEqual(0, suite['suites'][0]['tests'])
 
+    def test_stale_expensive_reports_do_not_imply_execution_in_later_failed_run(self):
+        spec = spec_from_file_location('qm_stale_execution', ROOT / 'scripts/qm-report.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            (root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"><modules/></project>')
+            pit = root / 'model-sync-testkit/target/pit-reports/mutations.xml'
+            load = root / 'model-sync-performance/target/qm/load-fresh.json'
+            for path, content in ((pit, '<mutations><mutation status="KILLED"/></mutations>'),
+                                  (load, '{"scenario":"fresh","status":"PASS"}')):
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content)
+                old = time.time() - 60
+                os.utime(path, (old, old))
+            begin(root)
+            result = module.collect(True, root)
+            for suite in (result['mutation'], result['gatling']['fresh']):
+                self.assertEqual('NOT_RUN', suite['status'])
+                self.assertEqual('REJECTED', suite['evidence_status'])
+                self.assertIn('Stale', suite['reason'])
+            (root / 'target/qm/full-build.log').write_text(
+                '[INFO] --- pitest:1.25.9:mutationCoverage (behavioral-mutations) ---\n'
+                '[INFO] --- gatling:4.11.0:test (fresh-visits) ---\n')
+            result = module.collect(True, root)
+            for suite in (result['mutation'], result['gatling']['fresh']):
+                self.assertEqual('FAILED', suite['status'])
+                self.assertEqual('REJECTED', suite['evidence_status'])
+            (root / 'target/qm/full-build.log').write_text('')
+            pit.write_text('<malformed')
+            load.write_text('{')
+            result = module.collect(True, root)
+            for suite in (result['mutation'], result['gatling']['fresh']):
+                self.assertEqual('FAILED', suite['status'])
+                self.assertEqual('REJECTED', suite['evidence_status'])
+
     def test_utf16_failed_build_log_keeps_executed_full_goals_failed(self):
         spec = spec_from_file_location('qm_report_utf16', ROOT / 'scripts/qm-report.py')
         module = module_from_spec(spec)
@@ -504,6 +540,20 @@ class QualityGateTests(unittest.TestCase):
         base, full = module.check(ROOT)
         self.assertNotIn('pitest-maven', [plugin for plugin, _ in base])
         self.assertIn('pitest-maven', [plugin for plugin, _ in full])
+
+    def test_repackaged_jar_cannot_replace_compiled_failsafe_classpath(self):
+        spec = spec_from_file_location('packaged_classpath', ROOT / 'scripts/check-profiles.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        import xml.etree.ElementTree as ET
+        def configuration(value):
+            return ET.fromstring('<project xmlns="http://maven.apache.org/POM/4.0.0"><build><plugins>'
+                '<plugin><artifactId>maven-failsafe-plugin</artifactId><configuration>' + value +
+                '</configuration></plugin></plugins></build></project>')
+        module.compiled_failsafe_classpath(configuration('<classesDirectory>target/classes</classesDirectory>'), 'target/classes')
+        for value in ('', '<classesDirectory>target/demo.jar</classesDirectory>'):
+            with self.assertRaisesRegex(ValueError, 'compiled application classes'):
+                module.compiled_failsafe_classpath(configuration(value), 'target/classes')
 
 
 if __name__ == '__main__':

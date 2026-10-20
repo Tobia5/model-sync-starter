@@ -123,7 +123,11 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId><artifactId>maven-failsafe-plugin</artifactId><version>3.5.3</version>
           <executions><execution><id>full-oracle-integration</id><goals><goal>integration-test</goal><goal>verify</goal></goals></execution></executions>
-          <configuration><includes><include>**/*IT.java</include></includes><failIfNoTests>false</failIfNoTests></configuration>
+          <configuration>
+            <!-- Boot executable JARs keep application classes under BOOT-INF/classes. -->
+            <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+            <includes><include>**/*IT.java</include></includes><failIfNoTests>false</failIfNoTests>
+          </configuration>
         </plugin>
       </plugins></build>
     </profile>

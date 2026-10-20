@@ -125,6 +125,10 @@ def collect(full: bool, root: Path = ROOT) -> dict:
             mutation = {'status': 'REJECTED', 'reason': str(error)}
     elif full and re.search(r'---\s+pitest:[^\s]+:mutationCoverage\b', log):
         mutation = {'status': 'FAILED', 'reason': 'PIT goal executed without XML report'}
+    if full and mutation['status'] == 'REJECTED':
+        executed = re.search(r'---\s+pitest:[^\s]+:mutationCoverage\b', log)
+        stale = str(mutation.get('reason', '')).startswith('Stale or absent report')
+        mutation.update(status='NOT_RUN' if stale and not executed else 'FAILED', evidence_status='REJECTED')
     load = {}
     for path in ((root / 'model-sync-performance/target/qm').glob('load-*.json') if full else ()):
         try:
@@ -161,6 +165,11 @@ def collect(full: bool, root: Path = ROOT) -> dict:
                 executed = re.search(r'---\s+gatling:[^\s]+:test\s+\(' + execution + r'\)', log)
                 load[name] = ({'status': 'FAILED', 'reason': 'Gatling goal executed without reports'}
                               if executed else {'status': 'NOT_RUN'})
+            elif load[name]['status'] == 'REJECTED':
+                executed = load[name].get('http') is not None or re.search(
+                    r'---\s+gatling:[^\s]+:test\s+\(' + execution + r'\)', log)
+                stale = str(load[name].get('reason', '')).startswith('Stale or absent report')
+                load[name].update(status='NOT_RUN' if stale and not executed else 'FAILED', evidence_status='REJECTED')
     oracle_scale = root / 'model-sync-persistence-jdbc/target/qm/oracle-scale.json'
     try:
         scale = None
