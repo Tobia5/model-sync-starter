@@ -56,6 +56,22 @@ def maven_command() -> list[str]:
     return [*command, '-Pfull', 'clean', 'verify']
 
 
+def apply_schema_script(container: str, script: str, passwords: tuple[str, ...]) -> None:
+    result = subprocess.run(['docker', 'exec', '-i', container, 'sqlplus', '-s', '/', 'as', 'sysdba'],
+                            input='set echo off\nset feedback off\n' + script,
+                            capture_output=True, text=True, check=False)
+    if result.returncode:
+        detail = (result.stdout + result.stderr)[-4000:]
+        for password in passwords:
+            detail = detail.replace(password, '[REDACTED]')
+        raise RuntimeError(f'Oracle isolated schema setup failed: {detail.strip()}')
+
+
+def container_absent(result: subprocess.CompletedProcess) -> bool:
+    return result.returncode != 0 and any(message in result.stderr.lower()
+        for message in ('no such object', 'no such container'))
+
+
 def preflight() -> None:
     if os.environ.get('MODELSYNC_ORACLE_CONTAINER') != 'EXPLICIT_DISPOSABLE':
         raise ValueError('MODELSYNC_ORACLE_CONTAINER=EXPLICIT_DISPOSABLE is required')
@@ -116,10 +132,10 @@ def main() -> int:
         blocker_detail = None
         try:
             run = docker('run', '--rm', '-d', '--name', name, '--platform', 'linux/amd64',
+                         '--label', f'io.modelsync.qualification.attempt={attempt["attempt_id"]}',
                          '--cpus', '4', '--memory', '6g', '-p', '127.0.0.1::1521',
                          '--health-cmd', 'healthcheck.sh', '--health-interval', '10s',
                          '--health-timeout', '5s', '--health-retries', '60',
-                         '-v', f'{setup.resolve()}:/container-entrypoint-initdb.d/001-test-schemas.sql:ro',
                          '-e', 'ORACLE_PASSWORD', IMAGE, env=environment)
             container_created = bool(run.stdout.strip())
             phase = 'Oracle database startup/health'
@@ -131,6 +147,8 @@ def main() -> int:
                 time.sleep(10)
             else:
                 raise RuntimeError('Oracle container startup exceeded 900 seconds')
+            phase = 'Oracle isolated schema setup'
+            apply_schema_script(name, setup.read_text(encoding='utf-8'), (admin, runtime, migration))
             port_output = docker('port', name, '1521/tcp').stdout.strip()
             match = re.search(r'127\.0\.0\.1:(\d+)', port_output)
             if not match: raise RuntimeError('Loopback Oracle port unavailable')
@@ -153,15 +171,23 @@ def main() -> int:
             blocker_detail = detail
             result_code = 2
         finally:
-            if container_created:
-                docker('stop', name, check=False)
-                inspected = docker('inspect', name, check=False)
-                cleanup_verified = inspected.returncode != 0 and (
-                    'No such object' in inspected.stderr or 'No such container' in inspected.stderr)
-                if not cleanup_verified:
-                    print('BLOCKED cleanup: disposable Oracle container was not removed', file=sys.stderr)
-                    if result_code == 0:
-                        result_code = 2
+            observed = docker('inspect', '--format',
+                              '{{.State.Running}}|{{index .Config.Labels "io.modelsync.qualification.attempt"}}',
+                              name, check=False)
+            if observed.returncode == 0:
+                running, _, owner = observed.stdout.strip().partition('|')
+                if owner == attempt['attempt_id']:
+                    container_created = True
+                    if running == 'true':
+                        docker('stop', name, check=False)
+                    docker('rm', name, check=False)
+                    cleanup_verified = container_absent(docker('inspect', name, check=False))
+            else:
+                cleanup_verified = container_absent(observed)
+            if not cleanup_verified:
+                print('BLOCKED cleanup: disposable Oracle container was not removed', file=sys.stderr)
+                if result_code == 0:
+                    result_code = 2
             try:
                 run_id = current(ROOT)['run_id']
             except ValueError:
@@ -169,7 +195,7 @@ def main() -> int:
             write_infrastructure({**attempt, 'run_id': run_id, 'container_name': name,
                                   'elapsed_seconds': round(time.monotonic() - started, 2),
                                   'container_created': container_created,
-                                  'cleanup_verified': cleanup_verified if container_created else True,
+                                  'cleanup_verified': cleanup_verified,
                                   'phase': phase, 'error': blocker_detail,
                                   'status': 'PASS' if result_code == 0 else 'FAILED' if run_id else 'BLOCKED'})
     return result_code

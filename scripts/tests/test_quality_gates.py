@@ -212,6 +212,28 @@ class QualityGateTests(unittest.TestCase):
             module.preflight()
         command.assert_called_once_with('info', '--format', '{{.ServerVersion}}')
 
+    def test_schema_setup_streams_sql_without_password_arguments_and_redacts_errors(self):
+        spec = spec_from_file_location('oracle_container_sql', ROOT / 'scripts/full-oracle-container.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        password = 'generated-fixture-password'
+        script = f'create user MS_TEST_RUNTIME identified by "{password}";\n'
+        failure = subprocess.CompletedProcess([], 1, stdout=script, stderr='setup failed')
+        with patch.object(module.subprocess, 'run', return_value=failure) as command:
+            with self.assertRaises(RuntimeError) as raised:
+                module.apply_schema_script('msq-fixture', script, (password,))
+        self.assertNotIn(password, str(raised.exception))
+        self.assertIn('[REDACTED]', str(raised.exception))
+        self.assertNotIn(password, ' '.join(command.call_args.args[0]))
+        self.assertIn(script, command.call_args.kwargs['input'])
+
+    def test_cleanup_accepts_docker29_absence_but_rejects_daemon_errors(self):
+        spec = spec_from_file_location('oracle_container_cleanup', ROOT / 'scripts/full-oracle-container.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        self.assertTrue(module.container_absent(subprocess.CompletedProcess([], 1, stderr='error: no such object: msq-fixture')))
+        self.assertFalse(module.container_absent(subprocess.CompletedProcess([], 1, stderr='daemon unavailable')))
+
     def test_full_report_rejects_missing_raw_evidence(self):
         with tempfile.TemporaryDirectory() as directory:
             script = ROOT / 'scripts/check-full-reports.py'
