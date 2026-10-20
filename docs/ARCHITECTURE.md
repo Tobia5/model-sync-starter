@@ -206,13 +206,13 @@ Without that capability, this starter can reconcile known IDs but cannot establi
 
 ## 13. Vista and DWH: dataset reconciliation, not record fan-out
 
-The analytical seam operates on a `DatasetPort.Slice`: dataset, tenant, snapshot, partition, mapping version and record grain. A manifest contains that actual slice identity, row count, unresolved-record count, business totals and a deterministic content digest.
+The analytical seam operates on a `DatasetSlice`: dataset, tenant, snapshot, partition, mapping version and record grain. A manifest contains that actual slice identity, row count, unresolved-record count, business totals and a deterministic content digest.
 
 The default comparison returns `INCOMPARABLE` for a different slice, `INCOMPLETE` for unresolved coverage or missing digests, `DIFFERENT` for unequal content/counts/totals, and `MATCH` only when the comparable evidence agrees. Numeric totals use value comparison, not BigDecimal scale equality.
 
 `JdbcDatasetReader` reads a reviewed parameterized manifest query and checks the identity actually returned from the database; it does not label any returned result with the requested snapshot and pretend it matches. Null count fields are rejected. Users supply schema-specific SQL.
 
-`VistaPort` and `DwhPort` are typed reader interfaces. Vendor HTTP protocols, warehouse loading, durable dispatch, partition-digest generation and drill-down orchestration are not implemented. `DatasetPort.Sink` describes a delivery seam with distinct accepted/applied/verified receipts; the starter does not claim a completed outbox implementation.
+`VistaPort` and `DwhPort` are typed reader interfaces. Vendor HTTP protocols, warehouse loading, durable dispatch, partition-digest generation and drill-down orchestration are not implemented. `DatasetSink` describes a delivery seam with distinct accepted/applied/verified receipts; the starter does not claim a completed outbox implementation.
 
 MDM uniqueness depends on the dataset grain. One row per transaction may legitimately repeat customer IDs. Compare like-for-like snapshots and preserve unresolved/excluded coverage rather than dropping failed subjects and declaring the reduced dataset reconciled.
 

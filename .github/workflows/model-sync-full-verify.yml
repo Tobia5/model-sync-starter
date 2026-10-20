@@ -1,0 +1,71 @@
+name: Model Sync full verification
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: model-sync-full-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  qualify:
+    if: github.repository == 'Tobia5/model-sync-starter'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    environment: model-sync-full-nonproduction
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Full Maven qualification on disposable infrastructure
+        id: build
+        shell: bash
+        env:
+          MODELSYNC_ORACLE_URL: ${{ secrets.MODELSYNC_ORACLE_URL }}
+          MODELSYNC_ORACLE_USER: ${{ secrets.MODELSYNC_ORACLE_USER }}
+          MODELSYNC_ORACLE_PASSWORD: ${{ secrets.MODELSYNC_ORACLE_PASSWORD }}
+          MODELSYNC_ORACLE_MIGRATION_URL: ${{ secrets.MODELSYNC_ORACLE_MIGRATION_URL }}
+          MODELSYNC_ORACLE_MIGRATION_USER: ${{ secrets.MODELSYNC_ORACLE_MIGRATION_USER }}
+          MODELSYNC_ORACLE_MIGRATION_PASSWORD: ${{ secrets.MODELSYNC_ORACLE_MIGRATION_PASSWORD }}
+          MODELSYNC_ORACLE_TEST_SCHEMA_ACK: ${{ vars.MODELSYNC_ORACLE_TEST_SCHEMA_ACK }}
+          MODELSYNC_ORACLE_MIGRATION_SCHEMA_ACK: ${{ vars.MODELSYNC_ORACLE_MIGRATION_SCHEMA_ACK }}
+          MODELSYNC_FULL_ENV_ACK: ${{ vars.MODELSYNC_FULL_ENV_ACK }}
+        run: |
+          set +e
+          set -o pipefail
+          ./mvnw -B -ntp -Pfull clean verify 2>&1 | tee "$RUNNER_TEMP/model-sync-full.log"
+          code=${PIPESTATUS[0]}
+          echo "exit=$code" >> "$GITHUB_OUTPUT"
+          exit "$code"
+      - name: Record full quality evidence
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p target/qm
+          if [ -f "$RUNNER_TEMP/model-sync-full.log" ]; then cp "$RUNNER_TEMP/model-sync-full.log" target/qm/full-build.log; fi
+          status=NOT_RUN
+          if [ '${{ steps.build.outcome }}' = success ]; then status=PASS; fi
+          if [ '${{ steps.build.outcome }}' = failure ]; then status=FAILED; fi
+          if grep -q 'BLOCKED full preflight' target/qm/full-build.log 2>/dev/null; then status=BLOCKED; fi
+          args=(--full-command './mvnw -B -ntp -Pfull clean verify' --full-status "$status")
+          if [ -n '${{ steps.build.outputs.exit }}' ]; then args+=(--full-exit '${{ steps.build.outputs.exit }}'); fi
+          python3 scripts/qm-report.py "${args[@]}"
+      - name: Upload run-scoped raw evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: model-sync-full-qm-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            target/qm/*
+            **/target/surefire-reports/*
+            **/target/failsafe-reports/*
+            model-sync-testkit/target/pit-reports/**
+            model-sync-performance/target/gatling/**
+            model-sync-performance/target/qm/*
+            model-sync-persistence-jdbc/target/qm/*
+          if-no-files-found: error
+          retention-days: 30

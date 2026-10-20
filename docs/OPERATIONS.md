@@ -109,7 +109,7 @@ export MODELSYNC_ORACLE_TEST_SCHEMA_ACK=DEDICATED_TEST_SCHEMA
 export MODELSYNC_ORACLE_URL='jdbc:oracle:thin:@//test-host:1521/test-service'
 export MODELSYNC_ORACLE_USER='dedicated_test_user'
 # Inject MODELSYNC_ORACLE_PASSWORD through your approved secret mechanism.
-mvn -B -ntp -pl model-sync-persistence-jdbc -am -Poracle-it verify
+./mvnw -B -ntp -Pfull clean verify
 ```
 
 The test refuses to run without the acknowledgment or with preexisting work. It removes only its own exact work/state key. Do not supply production credentials. It does not apply DDL automatically.

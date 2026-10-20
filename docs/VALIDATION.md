@@ -3,7 +3,7 @@
 > **Trigger-extension update:** for job/event/visit APIs, on-demand recurrence and current validation boundaries, use the [handbook](USER-HANDBOOK.md), [arc42 architecture](ARC42.md), [production runbook](PRODUCTION.md) and [review report](REVIEW.md). This document retains the original design/history; original test counts and schema-v1 examples are not the new release evidence.
 
 
-Artifact: Model Sync `0.1.0-SNAPSHOT` · prepared 2026-10-19.
+Artifact: Model Sync `0.2.0-SNAPSHOT` · prepared 2026-10-19.
 
 ## Executed in the generation environment
 
@@ -45,12 +45,12 @@ python3 scripts/check-architecture.py
 java scripts/SourceSyntaxCheck.java .
 mvn -B -ntp verify
 mvn -B -ntp install
-java -jar model-sync-sample/target/model-sync-sample-0.1.0-SNAPSHOT.jar
+java -jar model-sync-sample/target/model-sync-sample-0.2.0-SNAPSHOT.jar
 ```
 
 The first three commands reproduce the local checks without downloading Java libraries. The Maven/sample commands require external dependencies and are deployment gates, not historical evidence. Windows has `scripts/test-core.ps1` for the first check.
 
-For Oracle, follow `OPERATIONS.md` and run the opt-in `oracle-it` profile only with a reviewed dedicated test schema. That smoke test is not enough for production acceptance: add multi-process contention, crash, rate-window, outage and large-data tests.
+For Oracle, follow `OPERATIONS.md` and run the explicit `full` profile only with a reviewed dedicated test schema. That smoke test is not enough for production acceptance: add multi-process contention, crash, rate-window, outage and large-data tests.
 
 ## Acceptance criteria before production
 

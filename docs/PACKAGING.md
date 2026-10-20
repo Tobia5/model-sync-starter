@@ -33,7 +33,7 @@ Deploy the parent POM and **all referenced library modules**, including runtime/
 
 `.github/workflows/model-sync-verify.yml` runs on PRs, main pushes and manual dispatch. It uses pinned official actions, a bounded run timeout, no persisted checkout credential and read-only repository permissions. It runs core/trigger contracts, architecture/docs checks, Python guard tests, Java syntax and a full Maven library-artifact build. The report gate requires executed, unskipped unit suites; report and JAR artifacts are retained for inspection.
 
-This default lane deliberately does not claim Oracle integration coverage. The `oracle-it` profile and a dedicated schema are separate. See R02/R03 in TODO.
+This default lane deliberately does not claim Oracle integration coverage. The `full` profile and a dedicated schema are separate. See R02/R03 in TODO.
 
 ## 4. Manually approved development publication
 
@@ -66,7 +66,7 @@ Consuming POM:
   <dependency>
     <groupId>io.modelsync</groupId>
     <artifactId>model-sync-spring-boot-starter-oracle-jpa</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
   </dependency>
 </dependencies>
 ```

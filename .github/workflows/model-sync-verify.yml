@@ -1,4 +1,4 @@
-name: Model Sync verification
+name: Model Sync default verification
 on:
   pull_request:
   push:
@@ -7,14 +7,13 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: model-sync-${{ github.workflow }}-${{ github.ref }}
+  group: model-sync-default-${{ github.ref }}
   cancel-in-progress: true
 jobs:
   verify:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
-      # Official v4 refs verified through GitHub on 2026-10-20; pins are deliberate.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
@@ -23,34 +22,50 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - name: Offline contracts and static boundaries
+      - name: Offline contracts and syntax
         run: |
           bash scripts/test-triggers.sh
-          python3 scripts/check-architecture.py
-          python3 scripts/check-docs.py
-          python3 -m unittest discover -s scripts/tests -p 'test_*.py'
           java scripts/SourceSyntaxCheck.java .
-      - name: Complete Maven build including library attachments
+      - name: Default Maven contract
+        id: build
+        shell: bash
         run: |
-          mvn -B -ntp -Plibrary-artifacts \
-            -Dproject.build.outputTimestamp="$(git log -1 --format=%cI)" clean verify
-          python3 scripts/check-test-reports.py
-      - name: Preserve reports on success or failure
+          set +e
+          set -o pipefail
+          ./mvnw -B -ntp clean verify 2>&1 | tee "$RUNNER_TEMP/model-sync-default.log"
+          code=${PIPESTATUS[0]}
+          python3 scripts/check-default-log.py "$RUNNER_TEMP/model-sync-default.log"
+          audit=$?
+          echo "exit=$code" >> "$GITHUB_OUTPUT"
+          if [ "$audit" -ne 0 ]; then exit "$audit"; fi
+          exit "$code"
+      - name: Record quality evidence
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p target/qm
+          if [ -f "$RUNNER_TEMP/model-sync-default.log" ]; then cp "$RUNNER_TEMP/model-sync-default.log" target/qm/default-build.log; fi
+          status=NOT_RUN
+          if [ '${{ steps.build.outcome }}' = success ]; then status=PASS; fi
+          if [ '${{ steps.build.outcome }}' = failure ]; then status=FAILED; fi
+          args=(--default-command './mvnw -B -ntp clean verify' --default-status "$status")
+          if [ -n '${{ steps.build.outputs.exit }}' ]; then args+=(--default-exit '${{ steps.build.outputs.exit }}'); fi
+          python3 scripts/qm-report.py "${args[@]}"
+      - name: Upload run-scoped quality evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: model-sync-test-reports-${{ github.sha }}
+          name: model-sync-default-qm-${{ github.sha }}-${{ github.run_attempt }}
           path: |
+            target/qm/*
             **/target/surefire-reports/*
-            **/target/failsafe-reports/*
-          if-no-files-found: warn
-          retention-days: 14
-      - name: Preserve built jars for inspection (not a Maven registry)
+          if-no-files-found: error
+          retention-days: 30
+      - name: Preserve built jars for inspection
+        if: success()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: model-sync-jars-${{ github.sha }}
+          name: model-sync-jars-${{ github.sha }}-${{ github.run_attempt }}
           path: '**/target/*.jar'
           if-no-files-found: error
           retention-days: 14
-      - name: Qualification boundary
-        run: echo 'This job does not qualify Oracle, migrations, broker delivery, or production scale.'

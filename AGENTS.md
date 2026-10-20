@@ -1,16 +1,14 @@
 # Model Sync contribution rules
 
-Read `docs/PRODUCTION-READINESS.md`, `TODO.md`, `docs/ARC42.md`, and `docs/USER-HANDBOOK.md` before changing behavior.
+Read `docs/PRODUCTION-READINESS.md`, `TODO.md`, `docs/ARC42.md`, `docs/USER-HANDBOOK.md`, and `docs/quality/TEST-PROFILES.md` before changing behavior. Work on a review branch, preserve unrelated changes, and do not force-push or merge main.
 
-- Work on a review branch. Preserve unrelated user changes. Do not force-push or auto-merge main.
-- Keep core dependency-free. Preserve owner authority, tenant isolation, version checks, lease fencing and local atomicity.
-- No owner HTTP while holding database transactions, no managed JPA entities across asynchronous execution lanes, and no hidden owner calls from entity loading.
-- Passive visits must not reset source age, bypass cooldown/backoff, create repeated generations under a lease, or revive DEAD work.
-- One invocation is not necessarily one physical HTTP call. Test budget enforcement on retries, MDM resolution and bulk lookups explicitly.
-- Keep triggers, executors and recurrence independent. Schema changes require versioned migrations and actual Oracle verification.
-- Run `bash scripts/test-triggers.sh`, architecture/docs checks, Python guard tests and the complete Maven build. Report exactly which checks ran; syntax parsing is not dependency-linked compilation.
-- Oracle, broker and load tests require disposable authorized environments. Never apply test DDL or purge operations to production data.
-- Never disable tests or weaken security checks to make CI green. Record blockers and evidence instead.
-- Never print credentials or place real subject/tenant identifiers in metric labels. Do not commit connection secrets.
-- Do not publish packages without an explicit approved publishing task. The supplied workflow publishes development snapshots only, not stable/production releases.
-- Return commits/PR links only after they exist remotely. A local commit, generated patch or task prompt is not a remote commit or launched worker.
+- Keep core free of framework dependencies. Preserve owner authority, tenant isolation, local revision checks, lease fencing, quota accounting, and local transaction atomicity.
+- Never call an owner while holding a database transaction or lock. Do not move managed JPA entities across asynchronous lanes or hide owner calls in entity loading.
+- Passive visits must preserve source age, retry backoff, cooldown, leased generations, and DEAD quarantine. A logical invocation may involve multiple physical HTTP calls; count retries, MDM resolution, and bulk lookups.
+- Keep trigger, execution, and recurrence choices independent. Schema changes need versioned migrations and real Oracle verification in a disposable authorized schema.
+- Keep every hand-written named class, record, interface, enum, and annotation in its own Java source file, including tests and testkit. Do not use anonymous/local classes or JUnit `@Nested`.
+- Run `bash scripts/test-triggers.sh`, `python scripts/check-architecture.py`, `python scripts/check-docs.py`, `python -m unittest discover -s scripts/tests -p 'test_*.py'`, and `./mvnw -B -ntp clean verify`. Syntax parsing is not dependency-linked compilation.
+- The explicit release qualification is `./mvnw -B -ntp -Pfull clean verify` in an approved disposable environment. It adds PIT, Oracle migration/concurrency/scale, and Gatling. Missing infrastructure is BLOCKED, not PASS. Never skip required tests or weaken the score gate.
+- Never apply test DDL or purge operations to production data. Do not print credentials, include real tenant/subject identifiers in metric labels, or commit connection secrets.
+- Do not publish packages without an explicit approved task. Development snapshot workflows are not stable release workflows.
+- Record actual commands, source SHA/tree, exit codes, reports, and blockers in `QM.md`. A local commit or patch is not a remote commit or PR.

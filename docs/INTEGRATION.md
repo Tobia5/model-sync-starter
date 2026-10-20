@@ -104,12 +104,12 @@ The initial package does not contain a checkpoint table or importer. Design an i
 
 ## 8. Vista/DWH manifest reader
 
-`VistaPort` and `DwhPort` extend `DatasetPort.Reader`; register your implementation as a bean. A database-backed manifest view can use the supplied `JdbcDatasetReader`:
+`VistaPort` and `DwhPort` extend `DatasetReader`; register your implementation as a bean. A database-backed manifest view can use the supplied `JdbcDatasetReader`:
 
 ```java
 @Bean
 DwhPort dwhManifestReader(NamedParameterJdbcTemplate dwhJdbc) {
-    DatasetPort.Reader delegate = new JdbcDatasetReader(
+    DatasetReader delegate = new JdbcDatasetReader(
         dwhJdbc,
         """
         select dataset_id, tenant_id, snapshot_id, partition_id,
@@ -131,7 +131,7 @@ DwhPort dwhManifestReader(NamedParameterJdbcTemplate dwhJdbc) {
 This SQL is a template for an application-owned manifest view, not a shipped table. Bind data values; never accept SQL text/table/column identifiers from end users. Use a read-only database credential and finite query deadlines appropriate to the warehouse.
 
 ```java
-DatasetPort.Comparison result = DatasetPort.compare(
+DatasetComparison result = DatasetPort.compare(
     expectedReader.inspect(slice), dwhReader.inspect(slice));
 ```
 

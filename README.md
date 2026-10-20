@@ -2,9 +2,9 @@
 
 **Explicit model bindings, durable priority work, external authority, and bounded-staleness local projections.**
 
-Version: `0.1.0-SNAPSHOT` · Java 21 · Spring Boot BOM `4.1.1` · Oracle-first ledger · JPA business projections · optional WebClient.
+Version: `0.2.0-SNAPSHOT` · Java 21 · Spring Boot BOM `4.1.1` · Oracle-first ledger · JPA business projections · optional WebClient.
 
-> **Review status:** this extension adds explicit job, event and age-on-visit APIs, plus optional on-demand recurrence. The offline lane passes **77 existing + 41 new contracts**. Full Maven/Spring/H2 and Oracle qualification remain unexecuted locally. Start with the [user handbook](docs/USER-HANDBOOK.md), [complete arc42 architecture](docs/ARC42.md), [production runbook](docs/PRODUCTION.md) and [review/evidence report](docs/REVIEW.md). This is not a production-certified release.
+> **Review status:** job, event, age-on-visit and on-demand APIs are present in this checkout. Current verification and blockers are recorded in [QM.md](QM.md). Start with the [user handbook](docs/USER-HANDBOOK.md), [arc42 architecture](docs/ARC42.md) and [production runbook](docs/PRODUCTION.md).
 
 ## Job, event and age-on-visit synchronization
 
@@ -17,7 +17,7 @@ VisitResult<Customer> view = triggers.model("customer", Customer.class)
     .visit(tenant, sourceId, VisitPolicy.STALE_WHILE_REVALIDATE);
 
 // Bounded job: drains due work; does not enumerate the external population.
-SyncJob.Result run = job.run(100, Duration.ofSeconds(30));
+SyncJobResult run = job.run(100, Duration.ofSeconds(30));
 ```
 
 Choose `.refreshMode(RefreshMode.ON_DEMAND)` on a binding to leave it IDLE after completion instead of polling unvisited records. PERIODIC remains the default. Schema v2 is required for JDBC on-demand mode. Events/visits still need an enabled worker or job to execute their work. Passive visits preserve cooldown/backoff and never revive DEAD work.
@@ -58,7 +58,7 @@ java scripts/SourceSyntaxCheck.java .
 # Required in a dependency-enabled environment; not run in the generation environment:
 mvn -B -ntp verify
 mvn -B -ntp install
-java -jar model-sync-sample/target/model-sync-sample-0.1.0-SNAPSHOT.jar
+java -jar model-sync-sample/target/model-sync-sample-0.2.0-SNAPSHOT.jar
 ```
 
 Windows core check: `powershell -ExecutionPolicy Bypass -File scripts/test-core.ps1`.
@@ -73,7 +73,7 @@ The project is not published to Maven Central. `mvn install` installs the snapsh
 <dependency>
   <groupId>io.modelsync</groupId>
   <artifactId>model-sync-spring-boot-starter-oracle-jpa</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
 </dependency>
 ```
 

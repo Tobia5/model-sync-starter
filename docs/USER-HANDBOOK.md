@@ -39,7 +39,7 @@ Application dependency:
 <dependency>
   <groupId>io.modelsync</groupId>
   <artifactId>model-sync-spring-boot-starter-oracle-jpa</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.2.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -163,7 +163,7 @@ Enabling both the built-in continuous worker and built-in cron runner in one app
 Inject `SyncJob`, keep both built-in executors disabled, and invoke outside any caller database transaction:
 
 ```java
-SyncJob.Result result = job.run(500, Duration.ofMinutes(1));
+SyncJobResult result = job.run(500, Duration.ofMinutes(1));
 // Inspect result.attempted() and result.stopReason().
 ```
 
@@ -338,7 +338,7 @@ The [runbook](PRODUCTION.md) gives SQL diagnostics and recovery discipline. Do n
 | `model-sync.triggers.job.zone` | `UTC` | Explicit cron timezone |
 | `model-sync.triggers.job.max-items` | 100 | Maximum claimed attempts in one run |
 | `model-sync.triggers.job.max-duration` | 30 seconds | Budget checked between attempts |
-| `ModelBinding.Builder.refreshMode(...)` | PERIODIC | Recurring background due time or on-demand IDLE |
+| `ModelBindingBuilder.refreshMode(...)` | PERIODIC | Recurring background due time or on-demand IDLE |
 | `SyncAccess.visit(..., policy)` priority | HIGH | Passive request promotion; not force or retry bypass |
 | `SyncRequested.changed(...)` | HIGH, force=true | Source-change hint requires owner validation |
 

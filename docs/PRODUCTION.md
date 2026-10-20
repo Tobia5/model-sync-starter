@@ -145,7 +145,7 @@ Use an empty, dedicated test ledger schema, never production. The existing smoke
 export MODELSYNC_ORACLE_TEST_SCHEMA_ACK=DEDICATED_TEST_SCHEMA
 # Supply MODELSYNC_ORACLE_URL, MODELSYNC_ORACLE_USER and MODELSYNC_ORACLE_PASSWORD
 # through the approved local/CI secret mechanism; do not commit them.
-mvn -B -ntp -pl model-sync-persistence-jdbc -am -Poracle-it verify
+./mvnw -B -ntp -Pfull clean verify
 ```
 
 The existing `OracleSmokeIT` is only a basic claim/completion/fencing smoke test. It does not by itself test the new migration, IDLE transitions, simultaneous claims, query plans or JPA enlistment. Extend the isolated Oracle lane with those scenarios before sign-off. H2 success does not waive that requirement.
