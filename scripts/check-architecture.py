@@ -28,6 +28,9 @@ def visit(module):
 for module in modules:visit(module)
 test_only={'model-sync-testkit','model-sync-sample','model-sync-architecture-tests','model-sync-performance'}
 adapters={'model-sync-persistence-jdbc','model-sync-persistence-jpa','model-sync-rest','model-sync-webclient','model-sync-reactor','model-sync-spring'}
+core_contracts=set('BoundaryModelDescriptor BoundaryPage DatasetComparison DatasetManifest DatasetPort DatasetReceipt DatasetReceiptStage DatasetSlice FetchResult FetchStatus IdentityResolution IdentityResolutionStatus LeaseLost LocalModelView LocalRole Permanent Priority QuotaAdmission RateLimited RateLimitedAfter ReadRequest RefreshMode RetryLater SyncJobResult SyncJobStopReason SyncOptions SyncRequested VisitPolicy VisitResult WeightedPriorities WorkLease'.split())
+production_packages=set('io.modelsync.autoconfigure io.modelsync.jdbc io.modelsync.jpa io.modelsync.reactor io.modelsync.rest io.modelsync.spring io.modelsync.webclient io.modelsync.sample io.modelsync.testkit'.split())
+core_layers=set('io.modelsync.core.application io.modelsync.core.domain io.modelsync.core.port io.modelsync.core.http'.split())
 for module in modules:
     tree=ET.parse(root/module/'pom.xml')
     for d in tree.findall('m:dependencies/m:dependency',ns):
@@ -46,11 +49,21 @@ for path in (root/'model-sync-core/src/main/java').rglob('*.java'):
         if '/port/' in path.as_posix():
             assert not name.startswith(('io.modelsync.core.application.','org.springframework.','jakarta.persistence.')), f'Port depends outward: {path.name} -> {name}'
 for module in modules:
+    for path in (root/module/'src/main/java').rglob('*.java'):
+        source=path.read_text(encoding='utf-8')
+        package=re.search(r'^package\s+([\w.]+)\s*;',source,re.M)
+        assert package, f'Unclassified production source without package: {path}'
+        name=package.group(1)
+        if name=='io.modelsync.core':
+            assert path.stem in core_contracts, f'Unclassified generic core contract: {path}'
+        else:
+            assert name in core_layers or name in production_packages, f'Unclassified production package: {path}: {name}'
+for module in modules:
     for path in (root/module/'src').rglob('*.java'):
         if not any(part in ('main','test') for part in path.parts): continue
         source=path.read_text(encoding='utf-8')
         assert not re.search(r'@Nested\b',source), f'JUnit nested fixture: {path}'
-        assert not re.search(r'\bnew\s+[\w.<>?, ]+\([^;{}]*\)\s*\{',source), f'Anonymous type: {path}'
+        assert not re.search(r'\bnew\s+[\w.<>?, ]+\([^;{}()]*\)\s*\{',source), f'Anonymous type: {path}'
         assert not re.search(r'^\s{2,}(?:(?:public|private|protected|static|final|abstract|sealed|non-sealed)\s+)*(?:class|record|enum|interface|@interface)\s+\w+',source,re.M), f'Nested/local type: {path}'
 imports=root/'model-sync-autoconfigure/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports'
 for name in imports.read_text(encoding='utf-8').splitlines():

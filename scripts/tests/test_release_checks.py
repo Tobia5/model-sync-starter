@@ -4,6 +4,8 @@ import importlib.util
 import shutil
 import tempfile
 import unittest
+import subprocess
+from run_evidence import begin
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -69,10 +71,17 @@ class ReportChecks(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(); self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
+        (self.root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"><modules><module>model-sync-core</module></modules></project>')
         src = self.root / 'model-sync-core/src/test/java/io/modelsync/ExampleTest.java'
         src.parent.mkdir(parents=True); src.write_text('class ExampleTest {}')
         self.target = self.root / 'model-sync-core/target/surefire-reports/TEST-io.modelsync.ExampleTest.xml'
         self.target.parent.mkdir(parents=True)
+        (self.root / '.gitignore').write_text('**/target/\ntarget/\n')
+        subprocess.run(['git', 'init', '-q', str(self.root)], check=True)
+        subprocess.run(['git', '-C', str(self.root), 'add', '.'], check=True)
+        subprocess.run(['git', '-C', str(self.root), '-c', 'user.name=Fixture', '-c',
+                        'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture'], check=True)
+        begin(self.root)
 
     def write(self, tests=1, skipped=0, errors=0, failures=0, name='ExampleTest'):
         self.target.write_text(f'<testsuite name="io.modelsync.{name}" tests="{tests}" skipped="{skipped}" errors="{errors}" failures="{failures}"/>')

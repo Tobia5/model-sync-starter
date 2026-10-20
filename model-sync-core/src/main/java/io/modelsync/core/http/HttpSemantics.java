@@ -1,7 +1,4 @@
 package io.modelsync.core.http;
-import io.modelsync.core.application.*;
-import io.modelsync.core.domain.*;
-
 import io.modelsync.core.RateLimitedAfter;
 import io.modelsync.core.RateLimited;
 import io.modelsync.core.Permanent;

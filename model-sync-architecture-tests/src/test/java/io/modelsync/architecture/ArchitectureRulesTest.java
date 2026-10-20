@@ -24,6 +24,20 @@ import org.junit.jupiter.api.Test;
 /** Imports bytecode from every source-bearing reactor module, including test bytecode. */
 class ArchitectureRulesTest {
   private static final String CORE = "io.modelsync.core.";
+  // These public boundary values remain on the existing classpath; each is explicitly
+  // reviewed as a contract. A new generic core type must be assigned a layer first.
+  private static final Set<String> CORE_CONTRACTS = Set.of(
+      "BoundaryModelDescriptor", "BoundaryPage", "DatasetComparison", "DatasetManifest",
+      "DatasetPort", "DatasetReceipt", "DatasetReceiptStage", "DatasetSlice", "FetchResult",
+      "FetchStatus", "IdentityResolution", "IdentityResolutionStatus", "LeaseLost",
+      "LocalModelView", "LocalRole", "Permanent", "Priority", "QuotaAdmission",
+      "RateLimited", "RateLimitedAfter", "ReadRequest", "RefreshMode", "RetryLater",
+      "SyncJobResult", "SyncJobStopReason", "SyncOptions", "SyncRequested", "VisitPolicy",
+      "VisitResult", "WeightedPriorities", "WorkLease");
+  private static final Set<String> PRODUCTION_PACKAGES = Set.of(
+      "io.modelsync.autoconfigure", "io.modelsync.jdbc", "io.modelsync.jpa",
+      "io.modelsync.reactor", "io.modelsync.rest", "io.modelsync.spring",
+      "io.modelsync.webclient");
   private static final Set<String> FIELD_INJECTION = Set.of(
       "org.springframework.beans.factory.annotation.Autowired",
       "jakarta.inject.Inject", "jakarta.annotation.Resource");
@@ -88,6 +102,7 @@ class ArchitectureRulesTest {
         io.modelsync.core.contractleak.EntityLeak.class);
     assertViolation("Package cycle", io.modelsync.core.cyclea.CycleA.class,
         io.modelsync.core.cycleb.CycleB.class);
+    assertViolation("Unclassified production package", io.modelsync.core.unclassified.UnknownLayer.class);
   }
 
   private static void assertViolation(String expected, Class<?>... fixtures) {
@@ -101,6 +116,7 @@ class ArchitectureRulesTest {
     for (JavaClass owner : classes) {
       String from = owner.getPackageName();
       if (!owner.getName().startsWith("io.modelsync.")) continue;
+      if (!classified(owner)) errors.add("Unclassified production package: " + owner.getName());
       if (owner.getName().contains("$")) errors.add("Nested type: " + owner.getName());
       for (JavaField field : owner.getFields())
         for (JavaAnnotation<JavaField> annotation : field.getAnnotations())
@@ -118,6 +134,14 @@ class ArchitectureRulesTest {
         if (from.startsWith(CORE + "port") &&
             (target.startsWith(CORE + "application") || isAdapter(target)))
           errors.add("Port depends outward: " + owner.getName() + " -> " + target);
+        if (from.equals("io.modelsync.core") &&
+            (target.startsWith(CORE + "application") || target.startsWith(CORE + "port")
+                || isAdapter(target) || target.startsWith("io.modelsync.autoconfigure")))
+          errors.add("Core contract depends outward: " + owner.getName() + " -> " + target);
+        if (from.equals("io.modelsync.core.http") &&
+            (target.startsWith(CORE + "application") || target.startsWith(CORE + "port")
+                || isAdapter(target)))
+          errors.add("HTTP utility depends outward: " + owner.getName() + " -> " + target);
         if (from.startsWith(CORE + "application") && isAdapter(target))
           errors.add("Application depends on adapter: " + owner.getName() + " -> " + target);
         if (isAdapter(from) && isAdapter(target) && !adapter(from).equals(adapter(target)))
@@ -146,6 +170,15 @@ class ArchitectureRulesTest {
   private static boolean isAdapter(String name) {
     return name.startsWith("io.modelsync.") && Set.of("jdbc", "jpa", "rest", "webclient", "reactor", "spring")
         .contains(adapter(name));
+  }
+
+  private static boolean classified(JavaClass owner) {
+    String name = owner.getPackageName();
+    if (name.equals("io.modelsync.core")) return CORE_CONTRACTS.contains(owner.getSimpleName());
+    if (name.equals("io.modelsync.core.application") || name.equals("io.modelsync.core.domain")
+        || name.equals("io.modelsync.core.port") || name.equals("io.modelsync.core.http")) return true;
+    return PRODUCTION_PACKAGES.contains(name) || name.equals("io.modelsync.testkit")
+        || name.equals("io.modelsync.sample");
   }
 
   private static String adapter(String name) {

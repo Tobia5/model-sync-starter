@@ -8,6 +8,8 @@
     <dependency><groupId>io.modelsync</groupId><artifactId>model-sync-core</artifactId><version>${project.version}</version><scope>test</scope></dependency>
     <dependency><groupId>io.modelsync</groupId><artifactId>model-sync-testkit</artifactId><version>${project.version}</version><scope>test</scope></dependency>
     <dependency><groupId>io.gatling.highcharts</groupId><artifactId>gatling-charts-highcharts</artifactId><version>3.13.1</version><scope>test</scope></dependency>
+    <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit</artifactId><version>1.5.0</version><scope>test</scope></dependency>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
   </dependencies>
   <profiles><profile><id>full</id><build><plugins>
     <plugin><groupId>org.codehaus.mojo</groupId><artifactId>exec-maven-plugin</artifactId><version>3.5.0</version>

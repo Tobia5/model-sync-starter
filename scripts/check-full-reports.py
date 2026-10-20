@@ -5,15 +5,11 @@ from pathlib import Path
 import json
 import sys
 import xml.etree.ElementTree as ET
+from run_evidence import current, fresh
 
 ROOT=Path(__file__).resolve().parents[1]
 SIMULATIONS={'fresh','hot','unsafe','event','cooldown','leases'}
-ORACLE={'OracleSmokeIT','OracleConcurrencyIT','OracleMigrationIT','OracleScaleIT'}
-
-def fresh(path,root):
-    marker=root/'target/qm/build-start.txt'
-    if not marker.is_file() or path.stat().st_mtime < float(marker.read_text(encoding='utf-8')):
-        raise ValueError(f'Stale or untracked full report: {path}')
+ORACLE={'OracleSmokeIT','OracleConcurrencyIT','OracleMigrationIT','OracleScaleIT','OracleCapacityIT'}
 
 def pit_counts(root=ROOT):
     path=root/'model-sync-testkit/target/pit-reports/mutations.xml'
@@ -29,9 +25,11 @@ def pit_counts(root=ROOT):
         raise ValueError(f'PIT timeout/run error/unknown results need investigation: {dict(counts)}')
     if not (root/'model-sync-testkit/target/pit-reports/index.html').is_file():
         raise ValueError('PIT HTML absent')
+    fresh(root/'model-sync-testkit/target/pit-reports/index.html',root)
     return counts,score
 
 def check(root=ROOT):
+    current(root)
     sys.path.insert(0,str(root/'scripts'))
     from importlib.util import module_from_spec, spec_from_file_location
     spec=spec_from_file_location('model_sync_test_reports',Path(__file__).resolve().parent/'check-test-reports.py')
@@ -39,6 +37,11 @@ def check(root=ROOT):
     spec.loader.exec_module(report_module)
     modules,tests=report_module.check(root)
     if tests<=0 or modules<=0: raise ValueError('Default suites absent')
+    performance_test=root/'model-sync-performance/target/surefire-reports/TEST-io.modelsync.performance.PerformanceArchitectureTest.xml'
+    fresh(performance_test,root)
+    performance_suite=ET.parse(performance_test).getroot()
+    if int(performance_suite.get('tests','0'))<1 or any(int(performance_suite.get(k,'0')) for k in ('errors','failures','skipped')):
+        raise ValueError('Full-only compiled architecture test absent, failed or skipped')
     found=set()
     for report in (root/'model-sync-persistence-jdbc/target/failsafe-reports').glob('TEST-*.xml'):
         fresh(report,root)
@@ -70,10 +73,21 @@ def check(root=ROOT):
     if not scale.is_file(): raise ValueError('Oracle scale and database-work evidence absent')
     fresh(scale,root)
     capacity=json.loads(scale.read_text(encoding='utf-8'))
-    if capacity.get('rows',0)<100_000 or capacity.get('db_work_per_admitted_call') is None:
+    if capacity.get('rows',0)<100_000 or capacity.get('ledger_claims') != 1 or capacity.get('db_work_per_ledger_claim') is None:
         raise ValueError('Oracle scale report lacks required dataset/work measurements')
+    workload=root/'model-sync-persistence-jdbc/target/qm/oracle-workload.json'
+    if not workload.is_file(): raise ValueError('Oracle-backed million-record reconciliation evidence absent')
+    fresh(workload,root)
+    measured=json.loads(workload.read_text(encoding='utf-8'))
+    if (measured.get('scope')!='oracle-backed-reconciliation' or measured.get('rows',0)<1_000_000
+            or measured.get('workers',0)<2 or measured.get('completed_syncs',0)<150
+            or measured.get('completed_syncs')!=measured.get('projection_rows')
+            or measured.get('physical_owner_calls',0)<230 or measured.get('db_session_work') is None
+            or not isinstance(measured.get('run_one_latency_ms'),dict)
+            or not isinstance(measured.get('reconciliation_lag_ms'),dict)):
+        raise ValueError('Oracle capacity report lacks completed projections, owner calls, lag or database work')
     return {'junit_tests':tests,'oracle_suites':sorted(found),'pit_counts':dict(counts),
-            'pit_score':score,'gatling':load,'oracle_scale':capacity}
+            'pit_score':score,'gatling':load,'oracle_scale':capacity,'oracle_workload':measured}
 
 if __name__=='__main__':
     try: result=check()

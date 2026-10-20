@@ -9,14 +9,14 @@ from pathlib import Path
 import re
 import sys
 import xml.etree.ElementTree as ET
+from run_evidence import current, fresh, reactor_modules
 
 PATTERN = re.compile(r'(?:Test.*|.*Test|.*Tests|.*TestCase)\.java$')
 
 def check(root: Path) -> tuple[int, int]:
     count = modules = 0
-    marker = root / 'target/qm/build-start.txt'
-    started = float(marker.read_text(encoding='utf-8')) if marker.is_file() else None
-    for module in sorted(root.glob('model-sync-*')):
+    current(root)
+    for module in reactor_modules(root):
         sources = module / 'src/test/java'
         expected = {p.stem for p in sources.rglob('*.java') if PATTERN.fullmatch(p.name)}
         if not expected:
@@ -27,8 +27,7 @@ def check(root: Path) -> tuple[int, int]:
         seen: set[str] = set()
         module_count = 0
         for report in reports:
-            if started is not None and report.stat().st_mtime < started:
-                raise ValueError(f'Stale Surefire report: {report.relative_to(root)}')
+            fresh(report, root)
             document = ET.parse(report).getroot()
             suites = [document] if document.tag == 'testsuite' else list(document.iter('testsuite'))
             for suite in suites:

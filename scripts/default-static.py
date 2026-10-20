@@ -3,7 +3,7 @@
 from pathlib import Path
 import subprocess
 import sys
-import time
+from run_evidence import begin
 
 ROOT = Path(__file__).resolve().parents[1]
 COMMANDS = [
@@ -18,5 +18,4 @@ for command in COMMANDS:
     result = subprocess.run(command, cwd=ROOT, check=False)
     if result.returncode:
         raise SystemExit(result.returncode)
-(ROOT / 'target/qm').mkdir(parents=True, exist_ok=True)
-(ROOT / 'target/qm/build-start.txt').write_text(str(time.time()), encoding='utf-8')
+begin(ROOT)
