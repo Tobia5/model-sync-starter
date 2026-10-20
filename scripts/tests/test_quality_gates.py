@@ -147,6 +147,36 @@ class QualityGateTests(unittest.TestCase):
         harness.write_text('{"scenario":"fresh","status":"PASS"}')
         return report
 
+    def test_oracle_atomicity_is_required_and_partial_failures_are_collected(self):
+        gate_spec = spec_from_file_location('atomicity_gate', ROOT / 'scripts/check-full-reports.py')
+        gate = module_from_spec(gate_spec)
+        gate_spec.loader.exec_module(gate)
+        qm_spec = spec_from_file_location('atomicity_qm', ROOT / 'scripts/qm-report.py')
+        qm = module_from_spec(qm_spec)
+        qm_spec.loader.exec_module(qm)
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            (root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"><modules>'
+                '<module>model-sync-persistence-jdbc</module><module>model-sync-sample</module></modules></project>')
+            begin(root)
+            for name in gate.ORACLE:
+                report = root / 'model-sync-persistence-jdbc/target/failsafe-reports' / f'TEST-{name}.xml'
+                report.parent.mkdir(parents=True, exist_ok=True)
+                report.write_text(f'<testsuite name="{name}" tests="1" failures="0" errors="0" skipped="0"/>')
+            with self.assertRaisesRegex(ValueError, 'OracleAtomicityIT'):
+                gate.oracle_suites(root)
+            report = root / 'model-sync-sample/target/failsafe-reports/TEST-OracleAtomicityIT.xml'
+            report.parent.mkdir(parents=True)
+            report.write_text('<testsuite name="OracleAtomicityIT" tests="7" failures="1" errors="0" skipped="0"/>')
+            with self.assertRaisesRegex(ValueError, 'OracleAtomicityIT'):
+                gate.oracle_suites(root)
+            collected = qm.collect(True, root)['modules']['model-sync-sample']['failsafe']
+            self.assertEqual('FAILED', collected['status'])
+            self.assertEqual(7, collected['tests'])
+            self.assertEqual(1, collected['failures'])
+            report.write_text('<testsuite name="OracleAtomicityIT" tests="7" failures="0" errors="0" skipped="0"/>')
+            self.assertIn('OracleAtomicityIT', gate.oracle_suites(root))
+
     def test_failed_gatling_retains_http_counts_despite_passing_harness(self):
         spec = spec_from_file_location('qm_report_gatling', ROOT / 'scripts/qm-report.py')
         module = module_from_spec(spec)

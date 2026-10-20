@@ -89,11 +89,16 @@ def collect(full: bool, root: Path = ROOT) -> dict:
             'failsafe': xml_suites(module / 'target/failsafe-reports', root) if full else {'status': 'NOT_RUN', 'files': 0},
         }
     executed_oracle = set()
-    if full and 'model-sync-persistence-jdbc' in modules:
-        oracle = modules['model-sync-persistence-jdbc']['failsafe']
+    oracle_modules = {'model-sync-persistence-jdbc': ('OracleSmokeIT', 'OracleConcurrencyIT',
+                      'OracleMigrationIT', 'OracleScaleIT', 'OracleCapacityIT'),
+                      'model-sync-sample': ('OracleAtomicityIT',)}
+    for module, names in (oracle_modules.items() if full else ()):
+        if module not in modules:
+            continue
+        oracle = modules[module]['failsafe']
         reported = {suite['name'].rsplit('.', 1)[-1] for suite in oracle['suites']}
         executed_oracle.update(suite['name'].rsplit('.', 1)[-1] for suite in oracle['suites'] if suite['tests'] > 0)
-        for name in ('OracleSmokeIT', 'OracleConcurrencyIT', 'OracleMigrationIT', 'OracleScaleIT', 'OracleCapacityIT'):
+        for name in names:
             if re.search(r'\bRunning\s+(?:[\w.]+\.)?' + name + r'\b', log):
                 executed_oracle.add(name)
             if name not in reported and name in executed_oracle:

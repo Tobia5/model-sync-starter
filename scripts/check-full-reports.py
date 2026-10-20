@@ -11,6 +11,22 @@ from gatling_evidence import measured as gatling_measured
 ROOT=Path(__file__).resolve().parents[1]
 SIMULATIONS={'fresh','hot','unsafe','event','cooldown','leases'}
 ORACLE={'OracleSmokeIT','OracleConcurrencyIT','OracleMigrationIT','OracleScaleIT','OracleCapacityIT'}
+ORACLE_MODULES={'model-sync-persistence-jdbc':ORACLE, 'model-sync-sample':{'OracleAtomicityIT'}}
+
+def oracle_suites(root=ROOT):
+    found=set()
+    for module,names in ORACLE_MODULES.items():
+        for report in (root/module/'target/failsafe-reports').glob('TEST-*.xml'):
+            fresh(report,root)
+            suite=ET.parse(report).getroot()
+            name=(suite.get('name') or '').rsplit('.',1)[-1]
+            minimum=7 if name=='OracleAtomicityIT' else 1
+            total=int(suite.get('tests','0'))
+            bad=sum(int(suite.get(x,'0')) for x in ('errors','failures','skipped'))
+            if name in names and total>=minimum and bad==0: found.add(name)
+        if names-found:
+            raise ValueError(f'Oracle suites missing, empty, failed or skipped in {module}: {sorted(names-found)}')
+    return found
 
 def pit_counts(root=ROOT):
     path=root/'model-sync-testkit/target/pit-reports/mutations.xml'
@@ -44,15 +60,7 @@ def check(root=ROOT):
         performance_suite=ET.parse(performance_test).getroot()
         if int(performance_suite.get('tests','0'))<1 or any(int(performance_suite.get(k,'0')) for k in ('errors','failures','skipped')):
             raise ValueError(f'Full-only {name} absent, failed or skipped')
-    found=set()
-    for report in (root/'model-sync-persistence-jdbc/target/failsafe-reports').glob('TEST-*.xml'):
-        fresh(report,root)
-        suite=ET.parse(report).getroot()
-        name=(suite.get('name') or '').rsplit('.',1)[-1]
-        total=int(suite.get('tests','0'))
-        bad=sum(int(suite.get(x,'0')) for x in ('errors','failures','skipped'))
-        if total and bad==0: found.add(name)
-    if ORACLE-found: raise ValueError(f'Oracle suites missing, empty, failed or skipped: {sorted(ORACLE-found)}')
+    found=oracle_suites(root)
     counts,score=pit_counts(root)
     load={}
     for mode in SIMULATIONS:
