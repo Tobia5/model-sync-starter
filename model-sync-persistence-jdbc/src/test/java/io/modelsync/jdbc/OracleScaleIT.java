@@ -35,7 +35,7 @@ class OracleScaleIT {
     // One physical connection retains the same session population for seed/claim/cleanup deltas.
     try (var connection = source.getConnection()) {
       assertEquals(user.toUpperCase(), connection.getSchema().toUpperCase());
-      var jdbc = new JdbcTemplate(new SingleConnectionDataSource(connection, true));
+      var jdbc = new SelectorJdbcTemplate(new SingleConnectionDataSource(connection, true));
       var tx = new TransactionTemplate(new DataSourceTransactionManager(jdbc.getDataSource()));
       assertEquals(0, jdbc.queryForObject("select count(*) from MS_WORK", Integer.class),
           "Scale fixture requires an empty disposable ledger");
@@ -100,11 +100,36 @@ class OracleScaleIT {
           List<Map<String, Object>> claims = new ArrayList<>();
           measured.put("samples", claims);
           distributions.add(measured);
+          // Same population/session/index catalog: rollback-only legacy probes separate the
+          // selector change from table history, statistics and cross-run cache differences.
+          var legacy = new LegacyOracleWorkStore(jdbc, store);
+          var legacyCursorBefore = OracleMeasurements.sql(jdbc);
+          List<Map<String, Object>> legacySamples = new ArrayList<>();
+          measured.put("legacy_samples", legacySamples);
+          for (int sample = 0; sample < 3; sample++) {
+            Map<String, Object> claim = new LinkedHashMap<>();
+            var before = OracleMeasurements.snapshot(jdbc);
+            long queriesBefore = jdbc.selectorQueries.get();
+            tx.executeWithoutResult(status -> {
+              long started = System.nanoTime();
+              var lease = legacy.claim(Priority.NORMAL, Instant.now(), Duration.ofSeconds(60));
+              claim.put("claim_only_elapsed_ms", (System.nanoTime() - started) / 1_000_000);
+              claim.put("claim_work", OracleMeasurements.difference(before, OracleMeasurements.snapshot(jdbc)));
+              claim.put("ledger_claims", lease.isPresent() ? 1 : 0);
+              assertEquals(!distribution.startsWith("all-future"), lease.isPresent());
+              status.setRollbackOnly();
+            });
+            claim.put("selector_queries", jdbc.selectorQueries.get() - queriesBefore);
+            legacySamples.add(claim);
+          }
+          measured.put("legacy_claim_plans", OracleMeasurements.claimPlans(jdbc, legacyCursorBefore));
+          measured.put("comparison_order", "three rollback-only legacy probes, then three selected probes; first selected all-due lease alone commits");
           var cursorBefore = OracleMeasurements.sql(jdbc);
           for (int sample = 0; sample < 3; sample++) {
             Map<String, Object> claim = new LinkedHashMap<>();
             var before = OracleMeasurements.snapshot(jdbc);
             long started = System.nanoTime();
+            long queriesBefore = jdbc.selectorQueries.get();
             final boolean commitLease = distribution.equals("all-due") && sample == 0;
             tx.executeWithoutResult(status -> {
               long claimStarted = System.nanoTime();
@@ -122,6 +147,7 @@ class OracleScaleIT {
               });
               if (!commitLease) status.setRollbackOnly();
             });
+            claim.put("selector_queries", jdbc.selectorQueries.get() - queriesBefore);
             claim.put("claim_elapsed_ms", (System.nanoTime() - started) / 1_000_000);
             claim.put("committed_lease", commitLease);
             claims.add(claim);

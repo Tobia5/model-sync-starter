@@ -209,4 +209,22 @@ class AdmissionHintsTest {
     assertTrue(c.runOne());
     assertEquals(0,f.calls.get());assertEquals(0,f.gate.grants());
   }
+
+  @Test void oneProviderAwaitingPreparationDoesNotReserveAnotherProvider() {
+    var f=new CoreFixture();f.force();
+    f.gate.register("other-quota",Duration.ofMillis(1));
+    var calls=new AtomicInteger();
+    var other=ModelBinding.builder("other",String.class).boundary("hint-check")
+        .owner("other-owner",r->{calls.incrementAndGet();return FetchResult.found("other",null);})
+        .replica(f.projection).repairFromOwner().fingerprint(Digests::sha256Fields).quota("other-quota").build();
+    var registry=new ModelRegistry(List.of(f.binding,other));
+    var gateway=new SyncGateway(registry,f.store,f.tx,f.clock);
+    gateway.request("other","tenant-a","other-key",Priority.BACKGROUND,true);
+    var c=coordinator(f,registry,new SchedulingQuotaGate(f.gate,g->Optional.of(Instant.EPOCH)));
+    var awaiting=c.claim().orElseThrow();
+    assertEquals("customer",awaiting.key().binding());
+    assertTrue(c.runOne(),"The unselected provider's local slot must be released immediately");
+    assertEquals(1,calls.get());assertEquals(0,f.calls.get());
+    c.failed(awaiting,new IllegalStateException("test cleanup"));
+  }
 }

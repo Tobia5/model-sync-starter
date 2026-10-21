@@ -43,8 +43,10 @@ def selected_plans(value):
             raise ValueError('Selected Oracle selector SQL/row sources absent')
         if any(str(row.get('OPERATION', '')).upper() == 'SORT' for row in sources):
             raise ValueError('Selected Oracle selector still sorts the eligible population')
+        expected = ('MS_WORK_BIND_READY_IX' if 'MS_WORK_BIND_READY_IX' in text else
+                    'MS_WORK_RECOVER_IX' if 'MS_WORK_RECOVER_IX' in text else 'MS_WORK_READY_IX')
         if not any(row.get('OPERATION') == 'INDEX' and row.get('OPTIONS') == 'RANGE SCAN'
-                   and row.get('OBJECT_NAME') in {'MS_WORK_READY_IX', 'MS_WORK_RECOVER_IX', 'MS_WORK_BIND_READY_IX'}
+                   and row.get('OBJECT_NAME') == expected
                    for row in sources):
             raise ValueError('Selected Oracle ordered index range scan absent')
 
@@ -55,6 +57,14 @@ def check(root: Path, scale: dict, workload: dict):
         raise ValueError('Required due/future/expired Oracle distributions absent')
     for distribution in distributions:
         selected_plans(distribution.get('claim_plans'))
+        plans(distribution.get('legacy_claim_plans'))
+        legacy = distribution.get('legacy_samples')
+        if not isinstance(legacy, list) or len(legacy) != 3:
+            raise ValueError('Same-population legacy selector comparison absent')
+        for sample in legacy:
+            counters(sample.get('claim_work', {}).get('session_statistics'))
+            if sample.get('selector_queries') != 1:
+                raise ValueError('Legacy selector execution accounting absent')
         samples = distribution.get('samples')
         if not isinstance(samples, list) or len(samples) != 3:
             raise ValueError('Oracle claim diagnostic samples absent')
