@@ -51,6 +51,21 @@ def selected_plans(value):
             raise ValueError('Selected Oracle ordered index range scan absent')
 
 
+def cleanup_evidence(phases):
+    proofs = []
+    for name in ('cleanup_preflight', 'cleanup_verification'):
+        proof = phases.get(name)
+        if (not isinstance(proof, dict) or proof.get('strategy') not in
+                {'SCOPED_DELETE', 'OWNED_CONTAINER_TRUNCATE'} or proof.get('scope_verified') is not True):
+            raise ValueError('Oracle fixture cleanup scope/strategy unverified')
+        if (proof['strategy'] == 'OWNED_CONTAINER_TRUNCATE'
+                and (proof.get('foreign_key_restored') is not True or proof.get('orphan_probe_rejected') is not True)):
+            raise ValueError('Oracle fixture foreign-key restoration/enforcement unverified')
+        proofs.append(proof['strategy'])
+    if len(set(proofs)) != 1:
+        raise ValueError('Oracle fixture cleanup strategy changed after preflight')
+
+
 def check(root: Path, scale: dict, workload: dict):
     distributions = scale.get('distributions')
     if not isinstance(distributions, list) or {v.get('distribution') for v in distributions} != DISTRIBUTIONS:
@@ -84,6 +99,7 @@ def check(root: Path, scale: dict, workload: dict):
     selected_plans(phases.get('claim_plans'))
     if phases.get('cleanup_rows_remaining') != 0 or scale.get('cleanup_rows_remaining') != 0:
         raise ValueError('Oracle fixture row cleanup unverified')
+    cleanup_evidence(phases)
     grants = workload.get('measured_quota_grants')
     denials = workload.get('measured_quota_denials')
     attempts = workload.get('ledger_attempts')

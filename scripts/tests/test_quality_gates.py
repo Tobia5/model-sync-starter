@@ -398,6 +398,23 @@ class QualityGateTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'row sources absent'):
             selected_plans([{**cursor, 'row_sources': ['malformed']}])
 
+    def test_disposable_cleanup_requires_scope_and_restored_enforced_foreign_key(self):
+        from queue_evidence import cleanup_evidence
+        proof = {'strategy': 'OWNED_CONTAINER_TRUNCATE', 'scope_verified': True,
+                 'foreign_key_restored': True, 'orphan_probe_rejected': True}
+        cleanup_evidence({'cleanup_preflight': proof, 'cleanup_verification': proof})
+        for name in ('cleanup_preflight', 'cleanup_verification'):
+            for field in ('strategy', 'scope_verified', 'foreign_key_restored', 'orphan_probe_rejected'):
+                malformed = dict(proof)
+                malformed.pop(field)
+                value = {'cleanup_preflight': proof, 'cleanup_verification': proof, name: malformed}
+                with self.assertRaises(ValueError):
+                    cleanup_evidence(value)
+        external = {'strategy': 'SCOPED_DELETE', 'scope_verified': True}
+        cleanup_evidence({'cleanup_preflight': external, 'cleanup_verification': external})
+        with self.assertRaisesRegex(ValueError, 'changed after preflight'):
+            cleanup_evidence({'cleanup_preflight': external, 'cleanup_verification': proof})
+
     def test_failing_oracle_comparison_keeps_fresh_partial_measurements(self):
         spec = spec_from_file_location('comparison_qm', ROOT / 'scripts/qm-report.py')
         module = module_from_spec(spec)

@@ -46,6 +46,7 @@ class OracleCapacityIT {
     String password = System.getenv("MODELSYNC_ORACLE_PASSWORD");
     assertNotNull(url); assertNotNull(user); assertNotNull(password);
     assertTrue(user.matches("MS_TEST_[A-Za-z0-9_]{1,20}"));
+    boolean ownedContainer = OracleFixtureCleanup.ownedContainer(System.getenv(), url, user);
     HikariConfig config = new HikariConfig();
     config.setJdbcUrl(url); config.setUsername(user); config.setPassword(password);
     config.setDriverClassName("oracle.jdbc.OracleDriver");
@@ -77,6 +78,10 @@ class OracleCapacityIT {
       phases.put("pool_max_connections", 8);
       Path phaseReport = Path.of("target/qm/oracle-workload-phases.json");
       try {
+        long cleanupPreflightStarted = System.nanoTime();
+        phases.put("cleanup_preflight", OracleFixtureCleanup.preflight(jdbc, ownedContainer));
+        phases.put("cleanup_preflight_ms", (System.nanoTime() - cleanupPreflightStarted) / 1_000_000);
+        OracleMeasurements.write(phaseReport, phases);
         long requestedAt = System.currentTimeMillis();
         var seedBefore = OracleMeasurements.snapshot(jdbc);
         long seedStarted = System.nanoTime();
@@ -238,8 +243,7 @@ class OracleCapacityIT {
       } finally {
         var cleanupBefore = OracleMeasurements.snapshot(jdbc);
         long cleanupStarted = System.nanoTime();
-        jdbc.update("delete from MS_STATE where work_id in (select work_id from MS_WORK where binding_id=?)", binding);
-        jdbc.update("delete from MS_WORK where binding_id=?", binding);
+        phases.put("cleanup_verification", OracleFixtureCleanup.clearLedger(jdbc, binding, ownedContainer));
         jdbc.update("delete from MS_QUOTA where quota_group=?", quotaGroup);
         jdbc.execute("drop table MS_TEST_PROJECTION purge");
         phases.put("cleanup_ms", (System.nanoTime() - cleanupStarted) / 1_000_000);
