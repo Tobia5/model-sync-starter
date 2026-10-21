@@ -58,12 +58,18 @@ public final class MemoryWorkStore implements WorkStore, SnapshotResource {
 
   @Override
   public synchronized Optional<WorkLease> claim(Priority p, Instant now, Duration duration) {
+    return claim(p, now, duration, null);
+  }
+
+  @Override
+  public synchronized Optional<WorkLease> claim(Priority p, Instant now, Duration duration, Set<String> waitingBindings) {
     Optional<MemoryWorkCell> selected =
         rows.values().stream()
             .filter(c -> c.priority() == p)
             .filter(
                 c ->
-                    (c.status().equals("WAITING") && !c.due().isAfter(now))
+                    (c.status().equals("WAITING") && !c.due().isAfter(now)
+                            && (waitingBindings == null || waitingBindings.contains(c.key().binding())))
                         || (c.status().equals("LEASED") && !c.until().isAfter(now)))
             .min(Comparator.comparing(MemoryWorkCell::due).thenComparing(c -> c.key().storageId()));
     if (selected.isEmpty()) return Optional.empty();

@@ -33,12 +33,13 @@
           <param>io.modelsync.core.domain.FreshnessPolicy</param>
           <param>io.modelsync.core.application.SyncAccess</param>
           <param>io.modelsync.core.application.SyncCoordinator</param>
+          <param>io.modelsync.core.application.ProviderClaimScheduler</param>
           <param>io.modelsync.core.application.SyncPlanner</param>
           <param>io.modelsync.core.application.SyncResultApplier</param>
           <param>io.modelsync.core.application.SyncFailurePolicy</param>
           <param>io.modelsync.core.application.SyncJob</param>
         </targetClasses>
-        <targetTests><param>io.modelsync.testkit.CoreContractsTest</param><param>io.modelsync.testkit.TriggerContractsTest</param></targetTests>
+        <targetTests><param>io.modelsync.testkit.CoreContractsTest</param><param>io.modelsync.testkit.TriggerContractsTest</param><param>io.modelsync.testkit.AdmissionHintsTest</param></targetTests>
       </configuration>
     </plugin>
   </plugins></build></profile></profiles>

@@ -22,6 +22,7 @@ public final class SyncCoordinator {
   private final SyncResultApplier applier;
   private final SyncFailurePolicy failurePolicy;
   private final OwnerCallExecutor ownerCalls;
+  private final ProviderClaimScheduler scheduling;
 
   public SyncCoordinator(
       ModelRegistry registry,
@@ -45,6 +46,7 @@ public final class SyncCoordinator {
     this.applier = new SyncResultApplier(store, tx, clock, options, completion);
     this.failurePolicy = new SyncFailurePolicy(registry, store, tx, gate, clock, options, jitter);
     this.ownerCalls = new OwnerCallExecutor(options);
+    this.scheduling = new ProviderClaimScheduler(registry, gate);
     if (registry.all().stream().anyMatch(b -> b.refreshMode() == RefreshMode.ON_DEMAND)
         && !store.supportsOnDemand()) {
       throw new IllegalStateException("ON_DEMAND requires an idle-capable WorkStore; JDBC requires schema v2");
@@ -54,23 +56,43 @@ public final class SyncCoordinator {
   public Optional<WorkLease> claim() {
     if (tx.active())
       throw new IllegalStateException("Worker cannot run inside a caller transaction");
+    Instant now = clock.instant();
+    ClaimSchedule schedule = scheduling.schedule(now, options.lease());
+    Set<String> eligible = schedule.waitingBindings().orElse(null);
     Priority first = priorities.next();
-    return tx.required(
-        () -> {
-          Optional<WorkLease> result = store.claim(first, clock.instant(), options.lease());
-          if (result.isPresent()) return result;
-          for (Priority p : Priority.values())
-            if (p != first) {
-              result = store.claim(p, clock.instant(), options.lease());
-              if (result.isPresent()) return result;
-            }
-          return Optional.empty();
-        });
+    Optional<WorkLease> claimed = Optional.empty();
+    try {
+      claimed = tx.required(() -> {
+        Optional<WorkLease> result = claimPriority(first, now, eligible);
+        if (result.isPresent()) return result;
+        for (Priority p : Priority.values()) {
+          if (p != first) {
+            result = claimPriority(p, now, eligible);
+            if (result.isPresent()) return result;
+          }
+        }
+        return Optional.empty();
+      });
+      return claimed;
+    } finally {
+      scheduling.claimed(schedule, claimed);
+    }
   }
 
-  public Optional<PreparedSync<?>> prepare(WorkLease lease) { return planner.prepare(lease); }
+  private Optional<WorkLease> claimPriority(Priority priority, Instant now, Set<String> eligible) {
+    return eligible == null ? store.claim(priority, now, options.lease())
+        : store.claim(priority, now, options.lease(), eligible);
+  }
+
+  public Optional<PreparedSync<?>> prepare(WorkLease lease) {
+    try { return planner.prepare(lease); }
+    finally { scheduling.release(lease); }
+  }
   public void finish(PreparedSync<?> prepared, FetchResult<?> result) { applier.finish(prepared, result); }
-  public void failed(WorkLease lease, Throwable failure) { failurePolicy.failed(lease, failure); }
+  public void failed(WorkLease lease, Throwable failure) {
+    try { failurePolicy.failed(lease, failure); }
+    finally { scheduling.release(lease); }
+  }
 
   /** Headless/blocking entry point. HTTP adapters must also enforce transport timeouts. */
   public boolean runOne() {

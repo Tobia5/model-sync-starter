@@ -54,6 +54,7 @@ class OracleMigrationIT {
       assertTrue(new JdbcWorkStore(jdbc).supportsOnDemand());
       // The initial fixture is current; remove only its test-owned additive index to emulate v2.
       jdbc.execute("drop index MS_WORK_RECOVER_IX");
+      jdbc.execute("drop index MS_WORK_BIND_READY_IX");
       String queueMigration = new ClassPathResource("model-sync/migration/oracle-queue-v1.sql")
           .getContentAsString(StandardCharsets.UTF_8).replace("\r\n", "\n");
       int queueStart = queueMigration.indexOf("DECLARE\n");
@@ -63,6 +64,12 @@ class OracleMigrationIT {
           jdbc.queryForList("select column_name from user_ind_columns where index_name='MS_WORK_RECOVER_IX' order by column_position", String.class));
       assertThrows(org.springframework.dao.DataAccessException.class,
           () -> jdbc.execute(queueMigration.substring(queueStart, queueEnd)), "Never silently replace an existing index");
+      String routeMigration = new ClassPathResource("model-sync/migration/oracle-queue-v2.sql").getContentAsString(StandardCharsets.UTF_8).replace("\r\n", "\n");
+      int routeStart = routeMigration.indexOf("DECLARE\n");
+      int routeEnd = routeMigration.indexOf("\n/",routeStart);
+      jdbc.execute(routeMigration.substring(routeStart,routeEnd));
+      assertEquals(List.of("BINDING_ID","PRIORITY","WORK_STATUS","NEXT_AT_MS","WORK_ID"),jdbc.queryForList("select column_name from user_ind_columns where index_name='MS_WORK_BIND_READY_IX' order by column_position",String.class));
+      new JdbcWorkStore(jdbc).verifySchema();
       assertEquals(2, jdbc.queryForObject("select count(*) from MS_WORK", Integer.class));
       assertEquals("MISMATCH", jdbc.queryForObject("select outcome from MS_STATE where work_id='test-dead'", String.class));
     } finally {

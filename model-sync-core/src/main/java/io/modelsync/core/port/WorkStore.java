@@ -5,6 +5,7 @@ import io.modelsync.core.domain.*;
 
 import java.time.*;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Durable work-ledger port.
@@ -42,6 +43,17 @@ public interface WorkStore {
    * @return claimed lease when ready work exists
    */
   Optional<WorkLease> claim(Priority priority, Instant now, Duration leaseTime);
+
+  /**
+   * Advisory selection: only these bindings have potentially admissible WAITING work.
+   * Expired LEASED work remains recoverable regardless of this set (including an empty set).
+   * Custom stores may ignore this optimization; authoritative quota admission still applies.
+   * The caller supplies an immutable snapshot and performs no external waits in this transaction.
+   */
+  default Optional<WorkLease> claim(Priority priority, Instant now, Duration leaseTime,
+      Set<String> waitingBindings) {
+    return claim(priority, now, leaseTime);
+  }
 
   /**
    * Validates that a lease still owns the durable work row.

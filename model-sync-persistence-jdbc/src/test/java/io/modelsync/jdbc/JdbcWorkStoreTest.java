@@ -133,4 +133,20 @@ class JdbcWorkStoreTest {
     assertThrows(
         IllegalStateException.class, () -> gate.register("provider", Duration.ofSeconds(2)));
   }
+  @Test void hintReadsDoNotConsumeOrShortenDistributedAdmission() {
+    var gate = new JdbcQuotaGate(jdbc,manager,Clock.fixed(now,ZoneOffset.UTC));
+    gate.register("hint",Duration.ofSeconds(1));
+    assertEquals(Instant.EPOCH,gate.nextAdmission("hint").orElseThrow());
+    for(int i=0;i<20;i++) {gate.nextAdmission("hint");assertTrue(tx.execute(s -> store.claim(Priority.NORMAL,now,Duration.ofSeconds(60))).isEmpty());}
+    assertEquals(0L,jdbc.queryForObject("select next_allowed_ms from MS_QUOTA where quota_group='hint'",Long.class));
+    assertTrue(gate.acquire("hint").granted());
+    gate.cooldown("hint",now.plusSeconds(30));
+    assertEquals(now.plusSeconds(30),gate.nextAdmission("hint").orElseThrow());
+    assertFalse(gate.acquire("hint").granted());
+  }
+
+  @Test void missingQueueIndexFailsStartupBeforeWorkers() {
+    jdbc.execute("drop index MS_WORK_BIND_READY_IX");
+    assertThrows(IllegalStateException.class,store::verifySchema);
+  }
 }

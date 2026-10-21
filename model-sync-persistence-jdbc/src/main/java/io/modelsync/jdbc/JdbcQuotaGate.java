@@ -78,6 +78,15 @@ public final class JdbcQuotaGate implements QuotaGate {
   }
 
   @Override
+  public Optional<Instant> nextAdmission(String group) {
+    // Plain consistent read: no FOR UPDATE, independent transaction or permit consumption.
+    Long next = jdbc.queryForObject(
+        "select next_allowed_ms from MS_QUOTA where quota_group=?", Long.class, group);
+    if (next == null) throw new IllegalStateException("Unknown quota: " + group);
+    return Optional.of(Instant.ofEpochMilli(next));
+  }
+
+  @Override
   public void cooldown(String group, Instant until) {
     independent.executeWithoutResult(
         status -> {

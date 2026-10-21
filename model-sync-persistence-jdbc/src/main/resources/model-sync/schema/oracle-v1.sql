@@ -21,6 +21,7 @@ CREATE TABLE MS_WORK (
 CREATE INDEX MS_WORK_READY_IX ON MS_WORK(priority,work_status,next_at_ms,work_id);
 CREATE INDEX MS_WORK_LEASE_IX ON MS_WORK(work_status,lease_until_ms,priority);
 CREATE INDEX MS_WORK_RECOVER_IX ON MS_WORK(priority,work_status,lease_until_ms,work_id);
+CREATE INDEX MS_WORK_BIND_READY_IX ON MS_WORK(binding_id,priority,work_status,next_at_ms,work_id);
 CREATE TABLE MS_STATE (
  work_id VARCHAR2(64 CHAR) PRIMARY KEY REFERENCES MS_WORK(work_id),
  validated_at_ms NUMBER(19),

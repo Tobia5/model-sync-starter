@@ -18,6 +18,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  */
 public final class JdbcWorkStore implements WorkStore {
   private final JdbcTemplate jdbc;
+  private final AtomicIntegerArray bindingLanes = new AtomicIntegerArray(Priority.values().length);
   private final AtomicIntegerArray claimLanes = new AtomicIntegerArray(Priority.values().length);
 
   public JdbcWorkStore(JdbcTemplate jdbc) {
@@ -30,6 +31,17 @@ public final class JdbcWorkStore implements WorkStore {
             "select meta_value from MS_META where meta_name='schema_version'", String.class);
     if (!"1".equals(version) && !"2".equals(version))
       throw new IllegalStateException("Unsupported Model Sync schema version");
+    Set<String> indexes = jdbc.execute((ConnectionCallback<Set<String>>) connection -> {
+      Set<String> names = new HashSet<>();
+      try (ResultSet metadata = connection.getMetaData().getIndexInfo(
+          connection.getCatalog(), connection.getSchema(), "MS_WORK", false, true)) {
+        while (metadata.next()) names.add(metadata.getString("INDEX_NAME"));
+      }
+      return names;
+    });
+    if (indexes == null || !indexes.containsAll(Set.of("MS_WORK_READY_IX","MS_WORK_RECOVER_IX","MS_WORK_BIND_READY_IX")))
+      throw new IllegalStateException("Queue indexes missing: apply reviewed oracle-queue-v1/v2 migrations before starting workers");
+
   }
 
   @Override
@@ -151,38 +163,60 @@ public final class JdbcWorkStore implements WorkStore {
 
   @Override
   public Optional<WorkLease> claim(Priority priority, Instant now, Duration duration) {
+    return claimInternal(priority, now, duration, null);
+  }
+
+  @Override
+  public Optional<WorkLease> claim(Priority priority, Instant now, Duration duration, Set<String> waitingBindings) {
+    Objects.requireNonNull(waitingBindings);
+    return claimInternal(priority, now, duration, waitingBindings.stream().sorted().toList());
+  }
+
+  private Optional<WorkLease> claimInternal(Priority priority, Instant now, Duration duration, List<String> waitingBindings) {
     tx();
     // Alternate lanes within each weighted priority: sustained arrivals cannot starve recovery,
     // and repeated expirations cannot starve ordinary work. This is scheduling, not fencing state.
     boolean recoveryFirst = (claimLanes.getAndIncrement(priority.ordinal()) & 1) != 0;
-    Optional<JdbcWorkRow> selected = select(priority, now, recoveryFirst);
-    if (selected.isEmpty()) selected = select(priority, now, !recoveryFirst);
+    Optional<JdbcWorkRow> selected = selectLane(priority, now, recoveryFirst, waitingBindings);
+    if (selected.isEmpty()) selected = selectLane(priority, now, !recoveryFirst, waitingBindings);
     return lease(selected, priority, now, duration);
   }
 
-  private Optional<JdbcWorkRow> select(Priority priority, Instant now, boolean recovery) {
-    // Order by the numeric deadline only. A linguistic hash-ID tie-breaker forced a full sort.
-    // Ties have no promised order. The actual Oracle plan/counters,
-    // not fetchSize/maxRows, establish its cost. No FETCH FIRST/ROWNUM + locking combination.
+  private Optional<JdbcWorkRow> selectLane(Priority priority, Instant now, boolean recovery, List<String> waitingBindings) {
+    if (recovery || waitingBindings == null) return select(priority, now, recovery, null);
+    if (waitingBindings.isEmpty()) return Optional.empty();
+    int start = Math.floorMod(bindingLanes.getAndIncrement(priority.ordinal()), waitingBindings.size());
+    for (int offset = 0; offset < waitingBindings.size(); offset++) {
+      var result = select(priority, now, false, waitingBindings.get((start + offset) % waitingBindings.size()));
+      if (result.isPresent()) return result;
+    }
+    return Optional.empty();
+  }
+
+  private Optional<JdbcWorkRow> select(Priority priority, Instant now, boolean recovery, String binding) {
+    // Numeric deadlines preserve index order under linguistic NLS_SORT settings too.
+    // Equal deadlines have no promised order. No Oracle pagination/locking combination.
     String sql = recovery
         ? "select /*+ index_asc(w MS_WORK_RECOVER_IX) first_rows(1) */ w.* from MS_WORK w where priority=?"
             + " and work_status='LEASED' and lease_until_ms<=? order by lease_until_ms for update skip locked"
+        : binding != null
+            ? "select /*+ index_asc(w MS_WORK_BIND_READY_IX) first_rows(1) */ w.* from MS_WORK w where binding_id=? and priority=?"
+                + " and work_status='WAITING' and next_at_ms<=? order by next_at_ms for update skip locked"
         : "select /*+ index_asc(w MS_WORK_READY_IX) first_rows(1) */ w.* from MS_WORK w where priority=?"
             + " and work_status='WAITING' and next_at_ms<=? order by next_at_ms for update skip locked";
-    Optional<JdbcWorkRow> selected =
-        jdbc.execute(
-            (ConnectionCallback<Optional<JdbcWorkRow>>)
-                connection -> {
-                  try (PreparedStatement ps = connection.prepareStatement(sql)) {
-                    ps.setInt(1, priority.ordinal());
-                    ps.setLong(2, now.toEpochMilli());
-                    ps.setFetchSize(1);
-                    ps.setMaxRows(1);
-                    try (ResultSet rs = ps.executeQuery()) {
-                      return rs.next() ? Optional.of(row(rs)) : Optional.empty();
-                    }
-                  }
-                });
+    Optional<JdbcWorkRow> selected = jdbc.execute((ConnectionCallback<Optional<JdbcWorkRow>>) connection -> {
+      try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        int index=1;
+        if (binding != null) statement.setString(index++,binding);
+        statement.setInt(index++,priority.ordinal());
+        statement.setLong(index,now.toEpochMilli());
+        statement.setFetchSize(1);
+        statement.setMaxRows(1);
+        try (ResultSet rows=statement.executeQuery()) {
+          return rows.next() ? Optional.of(row(rows)) : Optional.empty();
+        }
+      }
+    });
     return selected == null ? Optional.empty() : selected;
   }
 

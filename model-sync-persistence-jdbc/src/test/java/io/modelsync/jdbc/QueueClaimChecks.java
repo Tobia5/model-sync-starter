@@ -32,7 +32,7 @@ abstract class QueueClaimChecks {
 
   @AfterEach void cleanupQueue() {
     jdbc.update("delete from MS_STATE where work_id in (select work_id from MS_WORK where binding_id=?)", binding);
-    jdbc.update("delete from MS_WORK where binding_id=?", binding);
+    jdbc.update("delete from MS_WORK where binding_id in (?,?)", binding,binding+"-other");
   }
 
   private WorkKey enqueue(String id, Priority priority, Instant due) {
@@ -158,5 +158,35 @@ abstract class QueueClaimChecks {
         assertEquals(later, claim(Priority.NORMAL).orElseThrow().key());
       } finally { connection.rollback(); }
     }
+  }
+  @Test void filteringWaitingWorkNeverSuppressesRecovery() {
+    var expired = enqueue("expired-filtered", Priority.NORMAL, now);
+    enqueue("waiting-filtered", Priority.NORMAL, now);
+    jdbc.update("update MS_WORK set work_status='LEASED',lease_until_ms=?,lease_token='old',leased_generation=generation where work_id=?",now.minusMillis(1).toEpochMilli(),expired.storageId());
+    var lease = tx.execute(s -> store.claim(Priority.NORMAL,now,Duration.ofSeconds(30),Set.of())).orElseThrow();
+    assertEquals(expired,lease.key());
+    assertTrue(tx.execute(s -> store.claim(Priority.NORMAL,now,Duration.ofSeconds(30),Set.of())).isEmpty());
+    assertEquals(1,jdbc.queryForObject("select count(*) from MS_WORK where binding_id=? and work_status='WAITING'",Integer.class,binding));
+  }
+
+  @Test void availableBindingProgressesPastDelayedEarlierWork() {
+    enqueue("delayed-first",Priority.NORMAL,now.minusSeconds(1));
+    var other = new WorkKey(binding+"-other",new SubjectKey("synthetic","available"));
+    tx.executeWithoutResult(s -> store.enqueue(other,Priority.NORMAL,true,now));
+    assertEquals(other,tx.execute(s -> store.claim(Priority.NORMAL,now,Duration.ofSeconds(30),Set.of(other.binding()))).orElseThrow().key());
+  }
+
+  @Test void availableBindingsAlternateWithinOnePriority() {
+    for(int i=0;i<4;i++) {
+      enqueue("first-"+i,Priority.NORMAL,now.minusSeconds(1));
+      var other=new WorkKey(binding+"-other",new SubjectKey("synthetic","other-"+i));
+      tx.executeWithoutResult(s -> store.enqueue(other,Priority.NORMAL,true,now));
+    }
+    Map<String,Integer> counts=new HashMap<>();
+    for(int i=0;i<4;i++) {
+      var lease=tx.execute(s -> store.claim(Priority.NORMAL,now,Duration.ofSeconds(30),Set.of(binding,binding+"-other"))).orElseThrow();
+      counts.merge(lease.key().binding(),1,Integer::sum);
+    }
+    assertEquals(Map.of(binding,2,binding+"-other",2),counts);
   }
 }
