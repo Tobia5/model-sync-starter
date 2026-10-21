@@ -11,6 +11,33 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
 class AdmissionHintsTest {
+  @Test void allKnownAvailableProvidersRetainExplicitBindingDispatch() {
+    var f = new CoreFixture();
+    var store = new ClaimDispatchWorkStore(f.store);
+    var c = new SyncCoordinator(f.registry, store, f.tx,
+        new SchedulingQuotaGate(f.gate, group -> Optional.of(Instant.EPOCH)), f.clock,
+        SyncOptions.defaults(), WeightedPriorities.defaults(), () -> .5);
+    assertTrue(c.claim().isEmpty());
+    assertEquals(0, store.unrestrictedClaims, "Known hints must retain the JDBC binding-rotation capability");
+    assertEquals(Priority.values().length, store.filteredBindings.size());
+    assertTrue(store.filteredBindings.stream().allMatch(bindings -> bindings.equals(Set.of("customer"))));
+    assertEquals(0, f.gate.grants());
+    assertEquals(0, f.calls.get());
+  }
+
+  @Test void unknownHintsRetainLegacyUnrestrictedDispatch() {
+    var f = new CoreFixture();
+    var store = new ClaimDispatchWorkStore(f.store);
+    var c = new SyncCoordinator(f.registry, store, f.tx,
+        new SchedulingQuotaGate(f.gate, group -> Optional.empty()), f.clock,
+        SyncOptions.defaults(), WeightedPriorities.defaults(), () -> .5);
+    assertTrue(c.claim().isEmpty());
+    assertEquals(Priority.values().length, store.unrestrictedClaims);
+    assertTrue(store.filteredBindings.isEmpty(), "Unknown hints retain the legacy port contract");
+    assertEquals(0, f.gate.grants());
+    assertEquals(0, f.calls.get());
+  }
+
   private SyncCoordinator coordinator(CoreFixture f, ModelRegistry registry, QuotaGate gate) {
     return new SyncCoordinator(registry, f.store, f.tx, gate, f.clock,
         SyncOptions.defaults(), WeightedPriorities.defaults(), () -> .5);
