@@ -115,6 +115,8 @@ model-sync:
   lease: 60s
   fetch-timeout: 15s
   poll-interval: 250ms
+  productive-interval: 5ms
+  max-idle-interval: 1s
   concurrency: 4
   persistence-threads: 4
   owner-threads: 8
@@ -129,6 +131,18 @@ spring:
     hibernate:
       ddl-auto: validate
 ```
+
+The auto-configured continuous worker has four independent lanes by default. After a completed
+owner fetch/application attempt, a lane waits `productive-interval` (positive, default 5 ms).
+Empty claims, prepare-only/deferred work and failures wait 250 ms, then 500 ms, then at most
+`max-idle-interval` (default 1 s). A fetched result resets that lane's idle backoff. This does
+not change persisted retry/cooldown, distributed provider admission or lease fencing. A lane
+does not cache queue deadlines: it rechecks at least once per maximum idle interval, subject
+to database/scheduler availability. New work from another process needs no local signal.
+Worker cancellation disposes scheduled delays and subscriptions; blocking adapters still need
+transport/database timeouts. `activity()` reports scheduling counters, not successful syncs.
+Set both extra intervals to `poll-interval` for the former fixed delay after every tick.
+The existing five-argument `ReactorSyncWorker` constructor retains that fixed-delay behavior.
 
 `750ms` is a shared minimum admission spacing, roughly 80 admissions per minute under ideal continuous execution. It is not a burst/rolling-window quota model or a guaranteed provider arrival rate. Reserve capacity for other applications and retries.
 

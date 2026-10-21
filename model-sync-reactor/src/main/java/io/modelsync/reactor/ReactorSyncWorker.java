@@ -5,6 +5,8 @@ import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
@@ -18,9 +20,13 @@ public final class ReactorSyncWorker implements SmartLifecycle {
   private final SyncCoordinator coordinator;
   private final Scheduler persistence, blockingOwner;
   private final int concurrency;
-  private final Duration poll;
+  private final Duration poll, productiveDelay, maximumIdle;
   private volatile boolean running;
   private Disposable subscription;
+  private final AtomicLong ticks = new AtomicLong(), empty = new AtomicLong(),
+      deferred = new AtomicLong(), failed = new AtomicLong(), fetched = new AtomicLong(),
+      cancelled = new AtomicLong();
+  private final AtomicInteger inFlight = new AtomicInteger(), maximumInFlight = new AtomicInteger();
 
   public ReactorSyncWorker(
       SyncCoordinator coordinator,
@@ -28,27 +34,41 @@ public final class ReactorSyncWorker implements SmartLifecycle {
       Scheduler blockingOwner,
       int concurrency,
       Duration poll) {
-    if (concurrency < 1 || concurrency > 128 || poll.isZero() || poll.isNegative())
+    this(coordinator, persistence, blockingOwner, concurrency, poll, poll, poll);
+  }
+
+  /** Explicit pacing. The five-argument constructor retains its fixed-delay behavior. */
+  public ReactorSyncWorker(
+      SyncCoordinator coordinator, Scheduler persistence, Scheduler blockingOwner,
+      int concurrency, Duration poll, Duration productiveDelay, Duration maximumIdle) {
+    if (concurrency < 1 || concurrency > 128)
       throw new IllegalArgumentException("Invalid worker bounds");
+    new WorkerPacing(productiveDelay, poll, maximumIdle);
     this.coordinator = coordinator;
     this.persistence = persistence;
     this.blockingOwner = blockingOwner;
     this.concurrency = concurrency;
     this.poll = poll;
+    this.productiveDelay = productiveDelay;
+    this.maximumIdle = maximumIdle;
   }
 
   public Mono<Boolean> tick() {
+    return attempt().map(result -> result != WorkerTickResult.EMPTY);
+  }
+
+  private Mono<WorkerTickResult> attempt() {
     return Mono.fromCallable(coordinator::claim)
         .subscribeOn(persistence)
         .flatMap(
             claim -> {
-              if (claim.isEmpty()) return Mono.just(false);
+              if (claim.isEmpty()) return Mono.just(WorkerTickResult.EMPTY);
               WorkLease lease = claim.get();
               return Mono.fromCallable(() -> coordinator.prepare(lease))
                   .subscribeOn(persistence)
                   .flatMap(
                       plan -> {
-                        if (plan.isEmpty()) return Mono.just(true);
+                        if (plan.isEmpty()) return Mono.just(WorkerTickResult.DEFERRED);
                         PreparedSync<?> p = plan.get();
                         return fetch(p)
                             .switchIfEmpty(Mono.error(new Permanent("NULL_FETCH")))
@@ -57,14 +77,45 @@ public final class ReactorSyncWorker implements SmartLifecycle {
                                 result ->
                                     Mono.fromRunnable(() -> coordinator.finish(p, result))
                                         .subscribeOn(persistence)
-                                        .thenReturn(true));
+                                        .thenReturn(WorkerTickResult.FETCHED));
                       })
                   .onErrorResume(
                       error ->
                           Mono.fromRunnable(() -> coordinator.failed(lease, error))
                               .subscribeOn(persistence)
-                              .thenReturn(true));
+                              .thenReturn(WorkerTickResult.FAILED));
             });
+  }
+
+  Flux<WorkerTickResult> lane() {
+    WorkerPacing pacing = new WorkerPacing(productiveDelay, poll, maximumIdle);
+    return Mono.defer(() -> {
+          ticks.incrementAndGet();
+          maximumInFlight.accumulateAndGet(inFlight.incrementAndGet(), Math::max);
+          return attempt()
+        .onErrorResume(error -> {
+          log.warn("Model Sync infrastructure error: {}", error.getClass().getSimpleName());
+          return Mono.just(WorkerTickResult.FAILED);
+        })
+        .doOnNext(result -> {
+          if (result == WorkerTickResult.EMPTY) empty.incrementAndGet();
+          else if (result == WorkerTickResult.DEFERRED) deferred.incrementAndGet();
+          else if (result == WorkerTickResult.FAILED) failed.incrementAndGet();
+          else fetched.incrementAndGet();
+        })
+        .doFinally(signal -> {
+          inFlight.decrementAndGet();
+          if (signal == SignalType.CANCEL) cancelled.incrementAndGet();
+        });
+        })
+        .flatMap(result -> Mono.delay(pacing.after(result)).thenReturn(result))
+        .repeat();
+  }
+
+  /** A live snapshot; take interval endpoints after drain for exact scheduling accounting. */
+  public WorkerActivity activity() {
+    return new WorkerActivity(ticks.get(), empty.get(), deferred.get(), failed.get(), fetched.get(),
+        cancelled.get(), inFlight.get(), maximumInFlight.get());
   }
 
   private Mono<FetchResult<?>> fetch(PreparedSync<?> prepared) {
@@ -86,17 +137,7 @@ public final class ReactorSyncWorker implements SmartLifecycle {
     subscription =
         Flux.range(0, concurrency)
             .flatMap(
-                lane ->
-                    Mono.defer(this::tick)
-                        .onErrorResume(
-                            error -> {
-                              log.warn(
-                                  "Model Sync infrastructure error: {}",
-                                  error.getClass().getSimpleName());
-                              return Mono.just(false);
-                            })
-                        .delayElement(poll)
-                        .repeat(),
+                lane -> lane(),
                 concurrency)
             .subscribe(
                 ignored -> {},

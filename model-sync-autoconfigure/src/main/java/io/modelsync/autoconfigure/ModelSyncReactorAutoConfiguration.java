@@ -47,6 +47,7 @@ public class ModelSyncReactorAutoConfiguration {
       @Qualifier("modelSyncPersistenceScheduler") Scheduler persistence,
       @Qualifier("modelSyncOwnerScheduler") Scheduler owner) {
     return new ReactorSyncWorker(
-        coordinator, persistence, owner, p.getConcurrency(), p.getPollInterval());
+        coordinator, persistence, owner, p.getConcurrency(), p.getPollInterval(),
+        p.getProductiveInterval(), p.getMaxIdleInterval());
   }
 }

@@ -69,4 +69,11 @@ class ModelSyncAutoConfigurationTest {
               assertThat(c.getBean(WeightedPriorities.class)).isSameAs(custom);
             });
   }
+
+  @Test void invalidWorkerPacingFailsStartup() {
+    runner(new CoreFixture()).withPropertyValues("model-sync.enabled=true", "model-sync.productive-interval=0ms")
+        .run(c -> assertThat(c).hasFailed());
+    runner(new CoreFixture()).withPropertyValues("model-sync.enabled=true", "model-sync.max-idle-interval=100ms")
+        .run(c -> assertThat(c).hasFailed());
+  }
 }
