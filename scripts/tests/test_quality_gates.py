@@ -162,7 +162,7 @@ class QualityGateTests(unittest.TestCase):
             for name in gate.ORACLE:
                 report = root / 'model-sync-persistence-jdbc/target/failsafe-reports' / f'TEST-{name}.xml'
                 report.parent.mkdir(parents=True, exist_ok=True)
-                count = 8 if name == "OracleSelectionIT" else 1
+                count = 11 if name == "OracleSelectionIT" else 3 if name == "OracleConcurrencyIT" else 1
                 report.write_text(f'<testsuite name="{name}" tests="{count}" failures="0" errors="0" skipped="0"/>')
             with self.assertRaisesRegex(ValueError, 'OracleAtomicityIT'):
                 gate.oracle_suites(root)
@@ -178,7 +178,7 @@ class QualityGateTests(unittest.TestCase):
             report.write_text('<testsuite name="OracleAtomicityIT" tests="7" failures="0" errors="0" skipped="0"/>')
             self.assertIn('OracleAtomicityIT', gate.oracle_suites(root))
             selection = root / 'model-sync-persistence-jdbc/target/failsafe-reports/TEST-OracleSelectionIT.xml'
-            selection.write_text('<testsuite name="OracleSelectionIT" tests="7" failures="0" errors="0" skipped="0"/>')
+            selection.write_text('<testsuite name="OracleSelectionIT" tests="10" failures="0" errors="0" skipped="0"/>')
             with self.assertRaisesRegex(ValueError, 'OracleSelectionIT'):
                 gate.oracle_suites(root)
 
@@ -384,6 +384,38 @@ class QualityGateTests(unittest.TestCase):
         plans([{**cursor, 'actual_plan': ['| Starts | A-Rows | Buffers |']}])
         with self.assertRaisesRegex(ValueError, 'loaded-cursor'):
             plans([{**cursor, 'window_executions': 0, 'actual_plan': ['| A-Rows |']}])
+
+    def test_selected_queue_plans_reject_full_population_sorts_and_missing_shapes(self):
+        from queue_evidence import selected_plans
+        cursor = {'SQL_ID': 'fixture', 'EXECUTIONS': 1, 'CHILD_ADDRESS': 'A0',
+                  'LAST_LOAD_TIME': '2026-10-20/00:00:00', 'LOADS': 1, 'window_executions': 1,
+                  'SQL_TEXT': 'select /*+ index_asc(w MS_WORK_READY_IX) first_rows(1) */ w.*',
+                  'actual_plan': ['| Starts | A-Rows | Buffers |'],
+                  'row_sources': [{'OPERATION': 'INDEX', 'OPTIONS': 'RANGE SCAN', 'OBJECT_NAME': 'MS_WORK_READY_IX'}]}
+        selected_plans([cursor])
+        with self.assertRaisesRegex(ValueError, 'still sorts'):
+            selected_plans([{**cursor, 'row_sources': cursor['row_sources'] + [{'OPERATION': 'SORT'}]}])
+        with self.assertRaisesRegex(ValueError, 'row sources absent'):
+            selected_plans([{**cursor, 'row_sources': ['malformed']}])
+
+    def test_failing_oracle_comparison_keeps_fresh_partial_measurements(self):
+        spec = spec_from_file_location('comparison_qm', ROOT / 'scripts/qm-report.py')
+        module = module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = self.fixture_repo(directory)
+            (root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"><modules><module>model-sync-persistence-jdbc</module></modules></project>')
+            begin(root)
+            report = root / 'model-sync-persistence-jdbc/target/failsafe-reports/TEST-OracleOptimizationIT.xml'
+            report.parent.mkdir(parents=True)
+            report.write_text('<testsuite name="OracleOptimizationIT" tests="1" failures="1" errors="0" skipped="0"/>')
+            data = root / 'model-sync-persistence-jdbc/target/qm/oracle-optimization.json'
+            data.parent.mkdir(parents=True)
+            data.write_text(json.dumps({'scope': 'controlled-oracle-queue-comparison-not-production-capacity',
+                                        'results': [{'variant': 'baseline', 'quota_denials': 17}]}))
+            evidence = module.collect(True, root)['oracle_optimization']
+            self.assertEqual('FAILED', evidence['status'])
+            self.assertEqual(17, evidence['results'][0]['quota_denials'])
 
     def test_container_uses_selected_project_settings_and_keeps_full_goals(self):
         spec = spec_from_file_location('oracle_container_maven', ROOT / 'scripts/full-oracle-container.py')

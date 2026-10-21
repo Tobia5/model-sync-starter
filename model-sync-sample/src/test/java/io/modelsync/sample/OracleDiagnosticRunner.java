@@ -28,13 +28,19 @@ public final class OracleDiagnosticRunner {
     List<Map<String, Object>> results = new ArrayList<>();
     report.put("suites", results);
     boolean passed = true;
-    for (String name : List.of("io.modelsync.sample.OracleAtomicityIT", "io.modelsync.jdbc.OracleSelectionIT", "io.modelsync.jdbc.OracleScaleIT")) {
+    List<String> suites = switch (System.getProperty("modelsync.oracle.diagnostic", "transactions-and-scale")) {
+      case "transactions-and-scale" -> List.of("io.modelsync.sample.OracleAtomicityIT", "io.modelsync.jdbc.OracleSelectionIT", "io.modelsync.jdbc.OracleScaleIT");
+      case "queue-comparison" -> List.of("io.modelsync.jdbc.OracleSelectionIT", "io.modelsync.jdbc.OracleOptimizationIT");
+      default -> throw new IllegalArgumentException("Unknown diagnostic scope");
+    };
+    report.put("selected_classes", suites);
+    for (String name : suites) {
       var listener = new SummaryGeneratingListener();
       var launcher = LauncherFactory.create();
       launcher.registerTestExecutionListeners(listener);
       launcher.execute(LauncherDiscoveryRequestBuilder.request().selectors(selectClass(name)).build());
       var summary = listener.getSummary();
-      long expected = name.endsWith("OracleScaleIT") ? 1 : name.endsWith("OracleSelectionIT") ? 8 : 7;
+      long expected = name.endsWith("OracleAtomicityIT") ? 7 : name.endsWith("OracleSelectionIT") ? 11 : 1;
       boolean success = summary.getTestsFoundCount() == expected
           && summary.getTestsSucceededCount() == expected && summary.getTestsSkippedCount() == 0
           && summary.getTestsFailedCount() == 0 && summary.getContainersFailedCount() == 0;

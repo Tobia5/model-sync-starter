@@ -75,6 +75,16 @@ final class OracleMeasurements {
     return result;
   }
 
+  @SuppressWarnings("unchecked")
+  static Map<String, Long> statisticsFrom(Map<String, Object> snapshot) {
+    return (Map<String, Long>) snapshot.get("session_statistics");
+  }
+
+  @SuppressWarnings("unchecked")
+  static List<Map<String, Object>> sqlFrom(Map<String, Object> snapshot) {
+    return (List<Map<String, Object>>) snapshot.get("sql_cursors");
+  }
+
   static Map<String, Object> difference(Map<String, Object> before, Map<String, Object> after) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (String key : List.of("session_statistics", "nonidle_session_waits")) {
@@ -91,12 +101,12 @@ final class OracleMeasurements {
 
   static List<Map<String, Object>> claimPlans(JdbcTemplate jdbc, List<Map<String, Object>> before) {
     var current = jdbc.queryForList("select sql_id,child_number,rawtohex(child_address) child_address,last_load_time,loads,plan_hash_value,"
-        + "executions,buffer_gets,disk_reads,rows_processed from v$sql where parsing_schema_name=user"
+        + "executions,buffer_gets,disk_reads,rows_processed,sql_text from v$sql where parsing_schema_name=user"
         + " and (sql_text like 'select * from MS_WORK where priority=%' or sql_text like 'select /*+ index_asc(w MS_WORK_%' or sql_text like 'select /* modelsync-claim-lock */%') order by sql_id,child_number");
     List<Map<String, Object>> cursors = executedCursors(before, current);
     if (cursors.isEmpty()) throw new IllegalStateException("Actual production claim cursor absent");
     for (var cursor : cursors) {
-      var plan = jdbc.queryForList("select plan_table_output from table(dbms_xplan.display_cursor(?,?,'ALLSTATS LAST +PREDICATE +IOSTATS +HINT_REPORT'))",
+      var plan = jdbc.queryForList("select plan_table_output from table(dbms_xplan.display_cursor(?,?,'ALLSTATS LAST +PREDICATE +IOSTATS +HINT_REPORT +PROJECTION'))",
           String.class, cursor.get("SQL_ID"), cursor.get("CHILD_NUMBER"));
       if (plan.isEmpty() || plan.stream().noneMatch(line -> line.contains("A-Rows"))
           || plan.stream().anyMatch(line -> line.contains("cannot fetch plan")))

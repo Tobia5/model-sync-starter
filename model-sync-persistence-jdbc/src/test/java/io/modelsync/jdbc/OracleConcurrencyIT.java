@@ -72,4 +72,22 @@ class OracleConcurrencyIT {
       assertTrue(store.lockValid(current,now.plusSeconds(31)));
     });
   }
+  @Test void hintsNeverSpendPermitsAndIndependentGatesStillSerialize() throws Exception {
+    var now=Instant.now();
+    String group="oracle-quota-"+UUID.randomUUID();
+    var manager=new DataSourceTransactionManager(jdbc.getDataSource());
+    var first=new JdbcQuotaGate(jdbc,manager,java.time.Clock.fixed(now,java.time.ZoneOffset.UTC));
+    var second=new JdbcQuotaGate(jdbc,manager,java.time.Clock.fixed(now,java.time.ZoneOffset.UTC));
+    first.register(group,Duration.ofSeconds(1));
+    try {
+      CountDownLatch read=new CountDownLatch(2);
+      try(var workers=Executors.newFixedThreadPool(2)) {
+        var a=workers.submit(()->{assertEquals(Instant.EPOCH,first.nextAdmission(group).orElseThrow());read.countDown();assertTrue(read.await(10,TimeUnit.SECONDS));return first.acquire(group);});
+        var b=workers.submit(()->{assertEquals(Instant.EPOCH,second.nextAdmission(group).orElseThrow());read.countDown();assertTrue(read.await(10,TimeUnit.SECONDS));return second.acquire(group);});
+        int grants=(a.get(20,TimeUnit.SECONDS).granted()?1:0)+(b.get(20,TimeUnit.SECONDS).granted()?1:0);
+        assertEquals(1,grants);
+      }
+      assertEquals(now.plusSeconds(1).toEpochMilli(),jdbc.queryForObject("select next_allowed_ms from MS_QUOTA where quota_group=?",Long.class,group));
+    } finally {jdbc.update("delete from MS_QUOTA where quota_group=?",group);}
+  }
 }

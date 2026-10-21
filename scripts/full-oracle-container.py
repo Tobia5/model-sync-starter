@@ -60,7 +60,7 @@ def maven_command(diagnostic: bool = False) -> list[str]:
             else [*command, '-Pfull', 'clean', 'verify'])
 
 
-def diagnostic_command(root: Path = ROOT) -> list[str]:
+def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False) -> list[str]:
     """Use only the current successful default build's compiled tests and resolved classpath."""
     current(root)
     for script in ('check-test-reports.py', 'check-default-log.py'):
@@ -85,12 +85,13 @@ def diagnostic_command(root: Path = ROOT) -> list[str]:
     compiled = root / 'model-sync-sample/target/test-classes/io/modelsync/sample/OracleDiagnosticRunner.class'
     fresh(compiled, root)
     jdbc_tests = root / 'model-sync-persistence-jdbc/target/test-classes'
-    fresh(jdbc_tests / 'io/modelsync/jdbc/OracleScaleIT.class', root)
+    fresh(jdbc_tests / ('io/modelsync/jdbc/OracleOptimizationIT.class' if queue_comparison else 'io/modelsync/jdbc/OracleScaleIT.class'), root)
     java_home = os.environ.get('JAVA_HOME')
     java = str(Path(java_home) / 'bin' / ('java.exe' if os.name == 'nt' else 'java')) if java_home else shutil.which('java')
     if not java or not Path(java).is_file():
         raise ValueError('The build JDK is unavailable for diagnostics')
-    return [java, f'-Dmodelsync.repository.root={root}', '-cp',
+    return [java, f'-Dmodelsync.repository.root={root}',
+            '-Dmodelsync.oracle.diagnostic=' + ('queue-comparison' if queue_comparison else 'transactions-and-scale'), '-cp',
             str(jdbc_tests) + os.pathsep + classpath, 'io.modelsync.sample.OracleDiagnosticRunner']
 
 
@@ -157,17 +158,19 @@ def preflight() -> None:
     docker('info', '--format', '{{.ServerVersion}}')
 
 
-def main(diagnostic: bool = False) -> int:
+def main(diagnostic: bool = False, queue_comparison: bool = False) -> int:
+    diagnostic = diagnostic or queue_comparison
     attempt = {'attempt_id': str(uuid.uuid4()), **identity(ROOT), 'image': IMAGE,
                'runtime_schema': 'MS_TEST_RUNTIME', 'migration_schema': 'MS_TEST_MIGRATION',
                'mode': 'diagnostic' if diagnostic else 'full',
+               'diagnostic_scope': ('queue-comparison' if queue_comparison else 'transactions-and-scale') if diagnostic else None,
                'full_qualification': 'NOT_RUN' if diagnostic else 'REQUIRES_FULL_EVIDENCE'}
     selected = os.environ.get('MODELSYNC_MAVEN_SETTINGS')
     attempt['maven_settings'] = selected or 'USER_DEFAULT'
     if selected == PROJECT_SETTINGS and (ROOT / selected).is_file():
         attempt['maven_settings_sha256'] = hashlib.sha256((ROOT / selected).read_bytes()).hexdigest()
     try:
-        launcher = diagnostic_command() if diagnostic else None
+        launcher = (diagnostic_command(queue_comparison=True) if queue_comparison else diagnostic_command()) if diagnostic else None
         invalidate(ROOT)
         preflight()
     except (ValueError, OSError, ET.ParseError, subprocess.CalledProcessError) as error:
@@ -308,6 +311,10 @@ def main(diagnostic: bool = False) -> int:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--diagnostic', action='store_true',
+    selections = parser.add_mutually_exclusive_group()
+    selections.add_argument('--diagnostic', action='store_true',
                         help='Run the current default build\'s Oracle atomicity and 100k diagnostics; never qualifies full')
-    raise SystemExit(main(parser.parse_args().diagnostic))
+    selections.add_argument('--queue-diagnostic', action='store_true',
+                            help='Run only queue locking and four-way comparison diagnostics; never qualifies full')
+    args = parser.parse_args()
+    raise SystemExit(main(args.diagnostic, args.queue_diagnostic))

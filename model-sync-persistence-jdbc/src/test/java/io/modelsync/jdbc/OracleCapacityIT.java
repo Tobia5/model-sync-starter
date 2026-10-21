@@ -55,7 +55,7 @@ class OracleCapacityIT {
     config.setConnectionInitSql("alter session set statistics_level=all");
     config.setPoolName("modelsync-capacity");
     try (HikariDataSource source = new HikariDataSource(config)) {
-      JdbcTemplate jdbc = new JdbcTemplate(source);
+      SelectorJdbcTemplate jdbc = new SelectorJdbcTemplate(source);
       assertEquals(0, jdbc.queryForObject("select count(*) from MS_WORK", Integer.class),
           "Capacity fixture requires an empty dedicated ledger");
       assertEquals(0, jdbc.queryForObject("select count(*) from user_tables where table_name='MS_TEST_PROJECTION'", Integer.class),
@@ -89,7 +89,7 @@ class OracleCapacityIT {
         assertEquals(DUE, jdbc.queryForObject("select count(*) from MS_WORK where binding_id=? and next_at_ms=0", Integer.class, binding));
         var manager = new DataSourceTransactionManager(source);
         var tx = new SpringLocalTransactions(manager);
-        var store = new JdbcWorkStore(jdbc);
+        var store = new CountedWorkStore(new JdbcWorkStore(jdbc));
         var quota = new JdbcQuotaGate(jdbc, manager, Clock.systemUTC());
         quota.register(quotaGroup, Duration.ofMillis(20)); // 50 physical calls/s, shared by all workers.
         var measuredQuota = new MeasuredQuotaGate(quota);
@@ -132,18 +132,29 @@ class OracleCapacityIT {
         long grantsBefore = measuredQuota.granted.get();
         long denialsBefore = measuredQuota.denied.get();
         long cooldownsBefore = measuredQuota.cooldowns.get();
+        long selectorQueriesBefore = jdbc.selectorQueries.get();
+        long selectionsBefore = store.selections.get();
+        long emptySelectionsBefore = store.empty.get();
         long beforeWork = jdbc.queryForObject(SESSION_WORK, Long.class);
         long started = System.nanoTime();
         long deadline = started + Duration.ofMinutes(3).toNanos();
         AtomicLong attempts = new AtomicLong();
+        AtomicLong polls = new AtomicLong();
+        AtomicLong emptyPolls = new AtomicLong();
+        List<Long> claimedLatencies = Collections.synchronizedList(new ArrayList<>());
+        List<Long> emptyLatencies = Collections.synchronizedList(new ArrayList<>());
         List<Long> latencies = Collections.synchronizedList(new ArrayList<>());
         try (var workers = Executors.newFixedThreadPool(WORKERS)) {
           List<java.util.concurrent.Future<?>> futures = new ArrayList<>();
           for (int i = 0; i < WORKERS; i++) futures.add(workers.submit(() -> {
             while (ownerCalls.get() < OWNER_CALL_TARGET && System.nanoTime() < deadline) {
               long callStarted = System.nanoTime();
-              if (coordinator.runOne()) attempts.incrementAndGet();
-              latencies.add((System.nanoTime() - callStarted) / 1_000_000);
+              boolean claimed = coordinator.runOne();
+              polls.incrementAndGet();
+              long latency = (System.nanoTime() - callStarted) / 1_000_000;
+              if (claimed) { attempts.incrementAndGet(); claimedLatencies.add(latency); }
+              else { emptyPolls.incrementAndGet(); emptyLatencies.add(latency); }
+              latencies.add(latency);
               try { Thread.sleep(5); }
               catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); return; }
             }
@@ -160,6 +171,11 @@ class OracleCapacityIT {
         long measuredGrants = measuredQuota.granted.get() - grantsBefore;
         long measuredDenials = measuredQuota.denied.get() - denialsBefore;
         phases.put("measurement_ms", elapsedMs);
+        phases.put("selector_queries", jdbc.selectorQueries.get() - selectorQueriesBefore);
+        phases.put("polls", polls.get());
+        phases.put("empty_polls", emptyPolls.get());
+        phases.put("selection_attempts", store.selections.get() - selectionsBefore);
+        phases.put("empty_selections", store.empty.get() - emptySelectionsBefore);
         phases.put("measured_quota_grants", measuredGrants);
         phases.put("measured_quota_denials", measuredDenials);
         phases.put("measured_provider_cooldowns", measuredQuota.cooldowns.get() - cooldownsBefore);
@@ -197,6 +213,13 @@ class OracleCapacityIT {
             + ",\"pool_max_connections\":8,\"pool_max_lifetime_ms\":0,\"oracle_version\":" + quote(oracleVersion) + "}\n");
         @SuppressWarnings("unchecked") Map<String, Object> workload =
             tools.jackson.databind.json.JsonMapper.builder().build().readValue(Files.readString(report), Map.class);
+        workload.put("selector_queries", jdbc.selectorQueries.get() - selectorQueriesBefore);
+        workload.put("polls", polls.get());
+        workload.put("empty_polls", emptyPolls.get());
+        workload.put("selection_attempts", store.selections.get() - selectionsBefore);
+        workload.put("empty_selections", store.empty.get() - emptySelectionsBefore);
+        workload.put("claimed_run_one_latency_ms", tools.jackson.databind.json.JsonMapper.builder().build().readValue(percentiles(claimedLatencies), Map.class));
+        workload.put("empty_poll_latency_ms", tools.jackson.databind.json.JsonMapper.builder().build().readValue(percentiles(emptyLatencies), Map.class));
         workload.put("measured_quota_grants", measuredGrants);
         workload.put("measured_quota_denials", measuredDenials);
         workload.put("db_work_per_ledger_attempt", attempts.get() == 0 ? null : (double) dbWork / attempts.get());

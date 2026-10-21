@@ -7,11 +7,11 @@ import sys
 import xml.etree.ElementTree as ET
 from run_evidence import current, fresh
 from gatling_evidence import measured as gatling_measured
-from queue_evidence import check as check_queue_evidence
+from queue_evidence import check as check_queue_evidence, optimization as check_optimization
 
 ROOT=Path(__file__).resolve().parents[1]
 SIMULATIONS={'fresh','hot','unsafe','event','cooldown','leases'}
-ORACLE={'OracleSmokeIT','OracleConcurrencyIT','OracleMigrationIT','OracleScaleIT','OracleCapacityIT','OracleSelectionIT'}
+ORACLE={'OracleSmokeIT','OracleConcurrencyIT','OracleMigrationIT','OracleScaleIT','OracleCapacityIT','OracleSelectionIT','OracleOptimizationIT'}
 ORACLE_MODULES={'model-sync-persistence-jdbc':ORACLE, 'model-sync-sample':{'OracleAtomicityIT'}}
 
 def oracle_suites(root=ROOT):
@@ -21,7 +21,7 @@ def oracle_suites(root=ROOT):
             fresh(report,root)
             suite=ET.parse(report).getroot()
             name=(suite.get('name') or '').rsplit('.',1)[-1]
-            minimum=7 if name=='OracleAtomicityIT' else 8 if name=='OracleSelectionIT' else 1
+            minimum=7 if name=='OracleAtomicityIT' else 11 if name=='OracleSelectionIT' else 3 if name=='OracleConcurrencyIT' else 1
             total=int(suite.get('tests','0'))
             bad=sum(int(suite.get(x,'0')) for x in ('errors','failures','skipped'))
             if name in names and total>=minimum and bad==0: found.add(name)
@@ -105,8 +105,9 @@ def check(root=ROOT):
             or not isinstance(measured.get('reconciliation_lag_ms'),dict)):
         raise ValueError('Oracle capacity report lacks completed projections, owner calls, lag or database work')
     check_queue_evidence(root,capacity,measured)
+    comparison=check_optimization(root)
     return {'junit_tests':tests,'oracle_suites':sorted(found),'pit_counts':dict(counts),
-            'pit_score':score,'gatling':load,'oracle_scale':capacity,'oracle_workload':measured}
+            'pit_score':score,'gatling':load,'oracle_scale':capacity,'oracle_workload':measured,'oracle_optimization':comparison}
 
 if __name__=='__main__':
     try: result=check()

@@ -90,7 +90,7 @@ def collect(full: bool, root: Path = ROOT) -> dict:
         }
     executed_oracle = set()
     oracle_modules = {'model-sync-persistence-jdbc': ('OracleSmokeIT', 'OracleConcurrencyIT',
-                      'OracleMigrationIT', 'OracleScaleIT', 'OracleCapacityIT'),
+                      'OracleMigrationIT', 'OracleScaleIT', 'OracleCapacityIT', 'OracleSelectionIT', 'OracleOptimizationIT'),
                       'model-sync-sample': ('OracleAtomicityIT',)}
     for module, names in (oracle_modules.items() if full else ()):
         if module not in modules:
@@ -194,8 +194,26 @@ def collect(full: bool, root: Path = ROOT) -> dict:
             measured = {'status': 'REJECTED', 'reason': str(error)}
     if measured is None and full and 'OracleCapacityIT' in executed_oracle:
         measured = {'status': 'FAILED', 'reason': 'OracleCapacityIT executed without JSON report'}
+    comparison = None
+    comparison_path = root / 'model-sync-persistence-jdbc/target/qm/oracle-optimization.json'
+    if full and comparison_path.is_file():
+        try:
+            fresh(comparison_path, root)
+            comparison = json.loads(comparison_path.read_text(encoding='utf-8'))
+            if not isinstance(comparison, dict) or comparison.get('scope') != 'controlled-oracle-queue-comparison-not-production-capacity':
+                raise ValueError('Malformed or mismatched Oracle comparison evidence')
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            comparison = {'status': 'REJECTED', 'reason': str(error)}
+    if isinstance(comparison, dict) and comparison.get('status') != 'REJECTED':
+        suites = modules.get('model-sync-persistence-jdbc', {}).get('failsafe', {}).get('suites', [])
+        suite = next((s for s in suites if s['name'].rsplit('.', 1)[-1] == 'OracleOptimizationIT'), None)
+        if suite and (suite.get('status') == 'FAILED' or any(suite.get(k, 0) for k in ('failures', 'errors', 'skipped'))):
+            comparison['measurement_report_status'] = comparison.get('status')
+            comparison.update(status='FAILED', reason='Executed comparison suite failed; fresh partial measurements retained')
+    if full and 'OracleOptimizationIT' in executed_oracle and comparison is None:
+        comparison = {'status': 'FAILED', 'reason': 'OracleOptimizationIT executed without JSON report'}
     return {'modules': modules, 'mutation': mutation, 'gatling': load, 'oracle_scale': scale,
-            'oracle_workload': measured, 'rejected': log_rejected + [reason for module in modules.values()
+            'oracle_workload': measured, 'oracle_optimization': comparison, 'rejected': log_rejected + [reason for module in modules.values()
                 for suite in module.values() for reason in suite.get('rejected', [])],
             'attribution': run['run_id']}
 
