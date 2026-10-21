@@ -9,9 +9,11 @@ See [assessment](docs/PRODUCTION-READINESS.md), [packaging](docs/PACKAGING.md), 
 
 **B1 (preserved baseline):** source `4f440807f20c568a2240ed5ce32f1aab8e9558b0`, tree `02faa6e6b9b5b8a28af6234d2b1de699a736b735`, full run `3177a6c3-3b64-4e5b-b40b-dc18bf1c7884`, attempt `99a77d95-2499-4964-95d9-8e4ecf67d84d`. [Immutable report](https://github.com/Tobia5/model-sync-starter/blob/a67966d16ccf6c140f4c95bebc2ddfd3ad497364/QM.md), [raw evidence](validation/qualification/2026-10-20/raw-evidence.zip), SHA-256 `ab7ff892a1d8ceafab878deb977d1eacb7becf53bdca5f3dab71ef06eebbf92c`. B1-marked leaf criteria are completed only within that measured scope; Q2 leaves are identified separately. **R01–R13 parent gates remain open.**
 
-## Implemented in the delivered patch; execution still required
+## Implemented features and source-bound qualification
 
-**Q2:** source `1a9187ce0886912c14a2f77dbcccd3287a37e4a8`, tree `0276124dd146d4fc9ae89dfe5ebddf7154840374`; default run `83d7f773-3c8e-4a21-91a8-d6b90453253f` (61 JUnit tests), full run `8a2204e2-1371-4cce-8b7a-7ee5c573ae14`, attempt `a47ddfb5-db5b-42f9-bb2e-7f2b86b79b2e` (63 Surefire / 13 Oracle tests, zero failures/errors/skips). [QM](QM.md) and [raw artifacts](validation/qualification/2026-10-21-atomicity-queue/README.md) retain Q2, the separate diagnostic and all later failed attempts. The full configured suite passed; **all parent gates remain open**.
+**Q2:** source `1a9187ce0886912c14a2f77dbcccd3287a37e4a8`, tree `0276124dd146d4fc9ae89dfe5ebddf7154840374`; default run `83d7f773-3c8e-4a21-91a8-d6b90453253f` (61 JUnit tests), full run `8a2204e2-1371-4cce-8b7a-7ee5c573ae14`, attempt `a47ddfb5-db5b-42f9-bb2e-7f2b86b79b2e` (63 Surefire / 13 Oracle tests, zero failures/errors/skips). [Pinned Q2 QM](https://github.com/Tobia5/model-sync-starter/blob/e73b3deba59aab0401512aa73329b14b8adbcadd/QM.md) and [raw artifacts](validation/qualification/2026-10-21-atomicity-queue/README.md) retain Q2, its separate diagnostic and contemporaneous failed attempts. The full configured suite passed; **all parent gates remain open**.
+
+**Q3:** tested code `ede199a33ad3a0ec5c911110bb84fd7407af1c25`, tree `7c9577e9de49a2f96b1093a65673250a46163da6`; default run `d0ef4b54-0ed3-428b-bbd8-1d1b77d62a54` (103 JUnit tests / 55 Python guards), full run `2b75d9cc-8836-4e99-b227-9d836e7e207a`, attempt `c3a564fe-e255-4b85-a209-05244d9b86ec` (105 Surefire / 26 Oracle tests, zero failures/errors/skips). Configured local full PASS; production NO-GO. [QM](QM.md), [current default CI](https://github.com/Tobia5/model-sync-starter/actions/runs/39623846568) and [raw evidence](validation/qualification/2026-10-21-queue-optimization/README.md). Older passes, failures and source-changed attempts remain separate. All R01-R13 parents stay open.
 
 - [x] Supply arc42, user handbook, production runbook, explicit job/event/visit APIs and ON_DEMAND recurrence.
 - [x] Supply a read-only PR/main workflow and separate guarded, manual development SNAPSHOT publishing workflow.
@@ -27,6 +29,7 @@ Suggested owner: maintainer/build engineering.
 - [x] Build Java21 / Boot 4.1.1 with the pinned wrapper: `./mvnw -B -ntp clean verify`; B1 used the explicitly approved project Central settings, exit 0 (50 JUnit tests). Packaging is separate from verification.
 - [x] Dependency-linked compiler, framework, AOP, auto-configuration, JPA/H2 and Reactor tests pass without disabling tests: B1 default run `f50960a1-2cec-438d-90ca-3ea6d70cdc30`.
 - [x] Require and retain nonempty, unskipped reports: B1 full has 52 Surefire / 6 Oracle tests, zero failures/errors/skips, plus PIT 133/135 killed and six semantic Gatling scenarios. Oracle evidence remains separately identified.
+- [x] Requalify the current review code with explicit default/full separation: Q3 default 102 goals with no PIT/Gatling/Failsafe, full PIT 160/162, all eight declared classes and six semantic Gatling scenarios. Exact source/tree and library build hashes are retained.
 - [ ] Make verification a required branch check; restrict workflow-file changes and protect main.
 Acceptance: reproducible green Actions run on the review commit and on the merge commit, with exact dependency/JDK versions.
 
@@ -34,7 +37,7 @@ Acceptance: reproducible green Actions run on the review commit and on the merge
 Suggested owner: persistence maintainer + DBA/QA.
 - [x] Two independent Oracle connections coalesce one new subject, and reclaim rejects the old token: B1 `OracleConcurrencyIT`, 2 tests, 0.772 s. This is not independent-process/multi-pod proof.
 - [ ] Independent processes claim different subjects and demonstrate crash/restart fencing under contention.
-- [x] Prove real JPA projection + JDBC ledger rollback after flush, during completion, before commit and at physical Oracle COMMIT, with fresh-connection reads and separate retry metadata; preserve local-version and old-lease checks: Q2 `OracleAtomicityIT`, 7 passed / 11.95 s through the actual starter `JpaTransactionManager`.
+- [x] Prove real JPA projection + JDBC ledger rollback after flush, during completion, before commit and at physical Oracle COMMIT, with fresh-connection reads and separate retry metadata; preserve local-version and old-lease checks: Q2 `OracleAtomicityIT`, 7 passed / 11.95 s through the actual starter `JpaTransactionManager`. Repeated unchanged in Q3: seven passed / 13.558 s.
 - [x] Reject a different transaction-manager datasource before schema access: Q2 default `TransactionEnlistmentTest`; six portable H2 atomicity regressions also passed. This is not multi-datasource/XA qualification.
 - [ ] Extend to racing inserts and actual pessimistic/optimistic exception races, independent-process crash/restart and arbitrary supported host configurations.
 - [ ] Test quota registration races, shared cooldown and admission across pods; include missing/misconfigured quota and database outage.
@@ -44,6 +47,7 @@ Acceptance: all scenarios pass against the deployed Oracle major version/JDBC dr
 ### R03 — Schema migration and rollback/recovery
 Suggested owner: DBA + maintainer.
 - [x] Exercise v1 to v2 preserving WAITING/DEAD evidence and enabling IDLE: B1 `OracleMigrationIT`, 1 test, 3.747 s, isolated migration schema.
+- [x] Apply additive recovery/binding-ready index migrations to an older-schema Oracle fixture, check exact columns/data and refusal to replace an existing index: Q3 `OracleMigrationIT`, 1 passed / 3.376 s in the isolated migration schema.
 - [ ] Extend migration proof to LEASED and pending-generation records, preserved indexes/constraints, interruption and rollback compatibility.
 - [ ] Exercise stop/migrate/start ordering, interruption and backup restoration. Document why an old application cannot read IDLE without compatibility support.
 - [x] Supply versioned v1-to-v2 migration and startup schema validation; no automatic production DDL: B1 migration test and `JdbcWorkStore.verifySchema` / JDBC auto-configuration.
@@ -55,6 +59,9 @@ Suggested owner: runtime maintainer + performance QA.
 - [ ] Run several pods at representative distributions and agree sustainable capacity/resource bounds.
 - [x] Retain baseline cost/latency counters: B1 337 measured attempts, 222 stub calls / 201 completions, 34,237,829 summed block-work units, p95/p99 run-one latency 899/927 ms. These are not query counts, visit latency or a freshness SLO.
 - [x] Capture individual claim/SQL counters, actual plans/waits and quota-denial churn, with separate seed/measurement/cleanup phases: Q2 8 distributions / 24 samples on 100k rows and unchanged 1M fixture, 360 measured attempts / 222 grants / 138 denials / 201 completions. About 99.93% of measured logical gets belonged to claim selection. B1 and failed attempts remain separate; no production SQL/index optimization is claimed.
+- [x] Compare baseline, selector-only, admission-only and combined in forward/reverse order on one 100k catalog with four workers/pool eight: Q3 `OracleOptimizationIT`, 1 passed / 500.062 s covering eight cases. Combined logical gets/completion 293.055/287.605 versus baseline 163316.378/155011; denials 5/3 versus 101/85. Selector-only was faster but had 616/659 denials; admission-only was slower. This is not a universal speedup/SLO.
+- [x] Repeat eleven locking/fairness/recovery cases on H2 and Oracle, and retain 48 same-population legacy/selected probes across eight scale cases: Q3. Selected plans had no SORT; future-only gathered-stat probes still cost 1859 versus legacy 1710 logical gets. One million seeded intents produced 200 measured completions / 220 owner entries in 11096 ms; total 210 including warmup, not one million reconciliations.
+- [ ] Investigate future-only/index-history/polling cost and ambiguous cursor reload accounting before sustained-scale claims. Current selector totals use callback counts and native stable-session deltas; raw cursor snapshots remain, without trusting reload sums as current-window counts. No claim-batch benchmark was run; empty probes cannot yield a claim batch.
 - [ ] Qualify oldest-age/freshness SLOs and sustainable provider/DB economics at production-like statistics/distributions and multi-pod resource bounds; a million seeds and a completed sample do not establish this gate.
 - [x] Inject synthetic 429/timeouts and 5/25 ms latency: B1 Oracle workload (13 rate limits / 8 timeouts); local semantic Gatling cooldown recovery. No real provider or hung-call proof.
 - [ ] Inject hung calls, network reset, database loss, pod kill and shutdown during fetch/commit.
