@@ -442,7 +442,7 @@ class QualityGateTests(unittest.TestCase):
                 phase['enqueue_process_exit'] = 0
                 completed = 2 if name == 'cooldown-expires' else 1
                 phase['scheduling_delta'].update(owner_calls=completed, completed_syncs=completed)
-            if name.startswith('cooldown-'):
+            if name == 'cooldown-independent-owner-and-recovery':
                 phase.update(other_owner_wakeup_ms=1000, recovery_wakeup_upper_ms=1000)
                 phase['scheduling_delta'].update(owner_calls=1, completed_syncs=1, deferred=1, quota_denials=1)
             value['phases'].append(phase)
