@@ -26,7 +26,8 @@ final class OracleMeasurements {
     jdbc.query("select n.name,sum(s.value) value from v$sesstat s join v$statname n"
         + " on n.statistic#=s.statistic# join v$session x on x.sid=s.sid where x.username=user"
         + " and n.name in ('db block gets','consistent gets','physical reads','execute count',"
-        + "'parse count (total)','redo size','user commits','user rollbacks','CPU used by this session')"
+        + "'parse count (total)','redo size','user commits','user rollbacks','CPU used by this session',"
+        + "'sorts (rows)','sorts (memory)','sorts (disk)')"
         + " group by n.name order by n.name", r -> { result.put(r.getString(1), r.getLong(2)); });
     return result;
   }
@@ -55,10 +56,10 @@ final class OracleMeasurements {
 
   static List<Map<String, Object>> sql(JdbcTemplate jdbc) {
     return jdbc.queryForList("select sql_id,child_number,rawtohex(child_address) child_address,last_load_time,loads,"
-        + "plan_hash_value,executions,fetches,rows_processed,"
+        + "plan_hash_value,executions,fetches,rows_processed,sorts,"
         + "buffer_gets,disk_reads,elapsed_time,cpu_time,application_wait_time,concurrency_wait_time,"
         + "user_io_wait_time,sql_text from v$sql where parsing_schema_name=user and ("
-        + "sql_text like 'select * from MS_WORK where priority=%' or sql_text like 'update MS_WORK set%'"
+        + "(sql_text like 'select * from MS_WORK where priority=%' or sql_text like 'select /*+ index_asc(w MS_WORK_%') or sql_text like 'update MS_WORK set%'"
         + " or sql_text like 'select * from MS_WORK where work_id=%' or sql_text like 'select * from MS_STATE%'"
         + " or sql_text like 'update MS_STATE set%' or sql_text like 'insert into MS_STATE%'"
         + " or sql_text like 'select%MS_QUOTA%for update%' or sql_text like 'update MS_QUOTA set%'"
@@ -91,7 +92,7 @@ final class OracleMeasurements {
   static List<Map<String, Object>> claimPlans(JdbcTemplate jdbc, List<Map<String, Object>> before) {
     var current = jdbc.queryForList("select sql_id,child_number,rawtohex(child_address) child_address,last_load_time,loads,plan_hash_value,"
         + "executions,buffer_gets,disk_reads,rows_processed from v$sql where parsing_schema_name=user"
-        + " and sql_text like 'select * from MS_WORK where priority=%' order by sql_id,child_number");
+        + " and (sql_text like 'select * from MS_WORK where priority=%' or sql_text like 'select /*+ index_asc(w MS_WORK_%') order by sql_id,child_number");
     List<Map<String, Object>> cursors = executedCursors(before, current);
     if (cursors.isEmpty()) throw new IllegalStateException("Actual production claim cursor absent");
     for (var cursor : cursors) {
@@ -101,6 +102,7 @@ final class OracleMeasurements {
           || plan.stream().anyMatch(line -> line.contains("cannot fetch plan")))
         throw new IllegalStateException("Actual claim execution plan unavailable");
       cursor.put("actual_plan", plan);
+      cursor.put("row_sources", jdbc.queryForList("select id,operation,options,object_name,last_starts,last_output_rows,last_cr_buffer_gets,last_cu_buffer_gets,last_disk_reads,last_elapsed_time from v$sql_plan_statistics_all where sql_id=? and child_number=? order by id", cursor.get("SQL_ID"), cursor.get("CHILD_NUMBER")));
     }
     return cursors;
   }

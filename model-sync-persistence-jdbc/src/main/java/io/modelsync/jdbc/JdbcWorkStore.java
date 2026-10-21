@@ -7,6 +7,7 @@ import io.modelsync.core.*;
 import java.sql.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.*;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -17,6 +18,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  */
 public final class JdbcWorkStore implements WorkStore {
   private final JdbcTemplate jdbc;
+  private final AtomicIntegerArray claimLanes = new AtomicIntegerArray(Priority.values().length);
 
   public JdbcWorkStore(JdbcTemplate jdbc) {
     this.jdbc = jdbc;
@@ -150,11 +152,22 @@ public final class JdbcWorkStore implements WorkStore {
   @Override
   public Optional<WorkLease> claim(Priority priority, Instant now, Duration duration) {
     tx();
-    // Do NOT append Oracle FETCH FIRST to FOR UPDATE. Fetch one row from the locking cursor.
-    String sql =
-        "select * from MS_WORK where priority=? and ((work_status='WAITING' and next_at_ms<=?) or"
-            + " (work_status='LEASED' and lease_until_ms<=?)) order by next_at_ms,work_id for"
-            + " update skip locked";
+    // Alternate lanes within each weighted priority: sustained arrivals cannot starve recovery,
+    // and repeated expirations cannot starve ordinary work. This is scheduling, not fencing state.
+    boolean recoveryFirst = (claimLanes.getAndIncrement(priority.ordinal()) & 1) != 0;
+    Optional<JdbcWorkRow> selected = select(priority, now, recoveryFirst);
+    if (selected.isEmpty()) selected = select(priority, now, !recoveryFirst);
+    return lease(selected, priority, now, duration);
+  }
+
+  private Optional<JdbcWorkRow> select(Priority priority, Instant now, boolean recovery) {
+    // An ordered range scan can stop at the first unlocked row. The actual Oracle plan/counters,
+    // not fetchSize/maxRows, establish its cost. No FETCH FIRST/ROWNUM + locking combination.
+    String sql = recovery
+        ? "select /*+ index_asc(w MS_WORK_RECOVER_IX) */ w.* from MS_WORK w where priority=?"
+            + " and work_status='LEASED' and lease_until_ms<=? order by lease_until_ms,work_id for update skip locked"
+        : "select /*+ index_asc(w MS_WORK_READY_IX) */ w.* from MS_WORK w where priority=?"
+            + " and work_status='WAITING' and next_at_ms<=? order by next_at_ms,work_id for update skip locked";
     Optional<JdbcWorkRow> selected =
         jdbc.execute(
             (ConnectionCallback<Optional<JdbcWorkRow>>)
@@ -162,7 +175,6 @@ public final class JdbcWorkStore implements WorkStore {
                   try (PreparedStatement ps = connection.prepareStatement(sql)) {
                     ps.setInt(1, priority.ordinal());
                     ps.setLong(2, now.toEpochMilli());
-                    ps.setLong(3, now.toEpochMilli());
                     ps.setFetchSize(1);
                     ps.setMaxRows(1);
                     try (ResultSet rs = ps.executeQuery()) {
@@ -170,6 +182,10 @@ public final class JdbcWorkStore implements WorkStore {
                     }
                   }
                 });
+    return selected == null ? Optional.empty() : selected;
+  }
+
+  private Optional<WorkLease> lease(Optional<JdbcWorkRow> selected, Priority priority, Instant now, Duration duration) {
     if (selected == null || selected.isEmpty()) return Optional.empty();
     JdbcWorkRow r = selected.get();
     String token = UUID.randomUUID().toString();

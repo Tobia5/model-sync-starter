@@ -52,6 +52,19 @@ class OracleMigrationIT {
       jdbc.update("update MS_WORK set work_status='IDLE' where work_id='test-waiting'");
       assertEquals("IDLE",jdbc.queryForObject("select work_status from MS_WORK where work_id='test-waiting'",String.class));
       assertTrue(new JdbcWorkStore(jdbc).supportsOnDemand());
+      // The initial fixture is current; remove only its test-owned additive index to emulate v2.
+      jdbc.execute("drop index MS_WORK_RECOVER_IX");
+      String queueMigration = new ClassPathResource("model-sync/migration/oracle-queue-v1.sql")
+          .getContentAsString(StandardCharsets.UTF_8).replace("\r\n", "\n");
+      int queueStart = queueMigration.indexOf("DECLARE\n");
+      int queueEnd = queueMigration.indexOf("\n/", queueStart);
+      jdbc.execute(queueMigration.substring(queueStart, queueEnd));
+      assertEquals(List.of("PRIORITY", "WORK_STATUS", "LEASE_UNTIL_MS", "WORK_ID"),
+          jdbc.queryForList("select column_name from user_ind_columns where index_name='MS_WORK_RECOVER_IX' order by column_position", String.class));
+      assertThrows(org.springframework.dao.DataAccessException.class,
+          () -> jdbc.execute(queueMigration.substring(queueStart, queueEnd)), "Never silently replace an existing index");
+      assertEquals(2, jdbc.queryForObject("select count(*) from MS_WORK", Integer.class));
+      assertEquals("MISMATCH", jdbc.queryForObject("select outcome from MS_STATE where work_id='test-dead'", String.class));
     } finally {
       // Only the tables created after the empty-schema check may be removed.
       for(String table:List.of("MS_STATE","MS_QUOTA","MS_WORK","MS_META"))
