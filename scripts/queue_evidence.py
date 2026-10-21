@@ -196,7 +196,7 @@ def worker(root: Path):
 def validate_worker(value):
     required = {'fixed-productive', 'fixed-empty', 'bounded-productive', 'bounded-empty',
                 'bounded-future', 'local-urgent', 'independent-process-urgent',
-                'cooldown-independent-owner-and-recovery'}
+                'cooldown-independent-owner-and-recovery', 'future-becomes-due', 'cooldown-expires'}
     if (not isinstance(value, dict) or value.get('status') != 'PASS'
             or value.get('scope') != 'actual-auto-configured-reactor-worker-not-million-row-capacity'
             or value.get('workers') != 4 or value.get('pool') != 8):
@@ -216,6 +216,12 @@ def validate_worker(value):
                           'selector_callbacks', 'quota_grants', 'quota_denials', 'owner_calls', 'completed_syncs')):
             raise ValueError('Worker scheduling/admission/outcome counters absent')
         counters(phase.get('session_delta'))
+        sessions = phase.get('sessions_before')
+        if (phase.get('session_attribution') != 'VALID' or not isinstance(sessions, list)
+                or len(sessions) != 8 or len(set(sessions)) != 8 or sessions != phase.get('sessions_after')):
+            raise ValueError('Worker native session continuity unproven')
+        if counts['failed']:
+            raise ValueError('Benign worker probe reported infrastructure/owner failures')
         fixed = phase['name'].startswith('fixed-')
         if (phase.get('poll_interval_ms') != 250 or phase.get('productive_interval_ms') != (250 if fixed else 5)
                 or phase.get('maximum_idle_interval_ms') != (250 if fixed else 1000)):
@@ -232,9 +238,10 @@ def validate_worker(value):
             if not fixed and (type(phase.get('logical_gets_per_second')) not in (int, float)
                     or not 0 <= phase['logical_gets_per_second'] <= 100000):
                 raise ValueError('Worker idle native-work budget exceeded')
-        if phase['name'] in {'local-urgent', 'independent-process-urgent'}:
+        if phase['name'] in {'local-urgent', 'independent-process-urgent', 'future-becomes-due', 'cooldown-expires'}:
             latency = phase.get('wakeup_latency_upper_ms')
-            if type(latency) is not int or latency < 0 or latency > 2500 or counts['completed_syncs'] != 1:
+            expected = 2 if phase['name'] == 'cooldown-expires' else 1
+            if type(latency) is not int or latency < 0 or latency > 2500 or counts['completed_syncs'] != expected:
                 raise ValueError('Worker urgent committed completion/wakeup bound absent')
         if phase['name'] == 'independent-process-urgent' and phase.get('enqueue_process_exit') != 0:
             raise ValueError('Independent enqueue process did not complete')

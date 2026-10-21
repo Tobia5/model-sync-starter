@@ -19,6 +19,10 @@ final class WorkerMeasurements {
         });
     return counters;
   }
+  static java.util.List<String> sessions(WorkerJdbcTemplate jdbc) {
+    return jdbc.query("select sid,serial# from v$session where username=user order by sid,serial#",
+        (row, number) -> row.getLong(1) + ":" + row.getLong(2));
+  }
   static Map<String, Long> scheduling(ReactorSyncWorker worker, WorkerJdbcTemplate jdbc,
       WorkerOwner owner, WorkerQuota quota) {
     var a = worker.activity();

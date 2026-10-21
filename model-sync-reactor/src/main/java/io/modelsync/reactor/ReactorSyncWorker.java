@@ -83,7 +83,7 @@ public final class ReactorSyncWorker implements SmartLifecycle {
                       error ->
                           Mono.fromRunnable(() -> coordinator.failed(lease, error))
                               .subscribeOn(persistence)
-                              .thenReturn(WorkerTickResult.FAILED));
+                              .thenReturn(error instanceof RetryLater ? WorkerTickResult.DEFERRED : WorkerTickResult.FAILED));
             });
   }
 

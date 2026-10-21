@@ -57,6 +57,7 @@ class OracleWorkerIT {
           idle(adaptive ? "bounded-empty" : "fixed-empty", adaptive);
           if (adaptive) {
             future();
+            futureDeadline();
             wake(false);
             wake(true);
             cooldownRecovery();
@@ -172,12 +173,26 @@ class OracleWorkerIT {
     phase.put("status", "PASS"); WorkerMeasurements.write(report);
   }
 
+  private void futureDeadline() throws Exception {
+    worker.start(); Thread.sleep(3000);
+    var phase = begin("future-becomes-due");
+    long due = System.currentTimeMillis() + 500;
+    jdbc.update("update MS_WORK set next_at_ms=? where work_id=?", due, key("future-0").storageId());
+    await(() -> completedAt("future-0") > 0, WAKE_BUDGET_MS + 500);
+    long observed = System.currentTimeMillis();
+    phase.put("eligible_at_ms", due); phase.put("completion_observed_at_ms", observed);
+    phase.put("wakeup_latency_upper_ms", Math.max(0, observed - due)); end(phase);
+    assertTrue(observed - due <= WAKE_BUDGET_MS);
+    phase.put("status", "PASS"); WorkerMeasurements.write(report);
+  }
+
   private void cooldownRecovery() throws Exception {
     clear(); enqueue("cooldown"); enqueue("recovery");
     long expiry = System.currentTimeMillis() + 1000;
     String recovery = key("recovery").storageId();
     jdbc.update("update MS_WORK set work_status='LEASED',lease_token='abandoned',leased_generation=generation,lease_until_ms=? where work_id=?", expiry, recovery);
-    quota.cooldown("worker-main", Instant.now().plusSeconds(20));
+    long cooldownUntil = System.currentTimeMillis() + 8000;
+    quota.cooldown("worker-main", Instant.ofEpochMilli(cooldownUntil));
     var phase = begin("cooldown-independent-owner-and-recovery");
     gateway.request("worker-other", "synthetic-worker", "other", Priority.URGENT, true);
     long enqueued = System.currentTimeMillis(); worker.start();
@@ -193,6 +208,17 @@ class OracleWorkerIT {
     assertEquals(0L, completedAt("cooldown")); assertEquals(0L, completedAt("recovery"));
     assertTrue(((Number) phase.get("recovery_wakeup_upper_ms")).longValue() <= WAKE_BUDGET_MS);
     phase.put("status", "PASS"); WorkerMeasurements.write(report);
+    var resumed = begin("cooldown-expires");
+    resumed.put("eligible_at_ms", cooldownUntil); worker.start();
+    await(() -> completedAt("cooldown") > 0 && completedAt("recovery") > 0,
+        Math.max(0, cooldownUntil - System.currentTimeMillis()) + WAKE_BUDGET_MS);
+    long observed = System.currentTimeMillis();
+    resumed.put("completion_observed_at_ms", observed);
+    resumed.put("wakeup_latency_upper_ms", Math.max(0, observed - cooldownUntil)); end(resumed);
+    @SuppressWarnings("unchecked") var resumedCounts = (Map<String, Long>) resumed.get("scheduling_delta");
+    assertEquals(2L, resumedCounts.get("owner_calls")); assertEquals(2L, resumedCounts.get("completed_syncs"));
+    assertTrue(observed - cooldownUntil <= WAKE_BUDGET_MS);
+    resumed.put("status", "PASS"); WorkerMeasurements.write(report);
   }
 
   private Map<String, Object> begin(String name) {
@@ -203,22 +229,31 @@ class OracleWorkerIT {
     phase.put("productive_interval_ms", properties.getProductiveInterval().toMillis());
     phase.put("maximum_idle_interval_ms", properties.getMaxIdleInterval().toMillis());
     phase.put("scheduling_before", WorkerMeasurements.scheduling(worker, jdbc, owner, quota));
+    phase.put("sessions_before", WorkerMeasurements.sessions(jdbc));
     phase.put("session_before", WorkerMeasurements.counters(jdbc)); phase.put("started_ns", System.nanoTime());
     phases.add(phase); return phase;
   }
   @SuppressWarnings("unchecked") private void end(Map<String, Object> phase) {
-    stop();
+    await(() -> worker.activity().inFlight() == 0 && owner.active.get() == 0, 3000);
     long elapsed = (System.nanoTime() - ((Number) phase.get("started_ns")).longValue()) / 1000000;
     phase.put("elapsed_ms", elapsed);
     var after = WorkerMeasurements.scheduling(worker, jdbc, owner, quota);
     var nativeAfter = WorkerMeasurements.counters(jdbc);
+    var sessionsAfter = WorkerMeasurements.sessions(jdbc);
+    phase.put("sessions_after", sessionsAfter);
     phase.put("scheduling_after", after); phase.put("session_after", nativeAfter);
+    phase.put("session_attribution", phase.get("sessions_before").equals(sessionsAfter) && sessionsAfter.size() == 8
+        ? "VALID" : "UNATTRIBUTABLE");
+    assertEquals(8, sessionsAfter.size());
+    assertEquals(phase.get("sessions_before"), sessionsAfter, "Native counter interval lost physical session continuity");
     var delta = WorkerMeasurements.delta((Map<String, Long>) phase.get("scheduling_before"), after);
     var nativeDelta = WorkerMeasurements.delta((Map<String, Long>) phase.get("session_before"), nativeAfter);
     phase.put("scheduling_delta", delta); phase.put("session_delta", nativeDelta);
+    assertEquals(0L, delta.get("failed"), "Infrastructure/owner failure in a benign pacing probe");
     phase.put("polls_per_second", 1000.0 * delta.get("ticks") / elapsed);
     phase.put("completed_syncs_per_second", 1000.0 * delta.get("completed_syncs") / elapsed);
     phase.put("logical_gets_per_second", 1000.0 * (nativeDelta.get("consistent gets") + nativeDelta.get("db block gets")) / elapsed);
+    stop();
   }
   private void enqueue(String id) { gateway.request("worker-main", "synthetic-worker", id, Priority.URGENT, true); }
   private WorkKey key(String id) { return new WorkKey("worker-main", new SubjectKey("synthetic-worker", id)); }
@@ -231,6 +266,8 @@ class OracleWorkerIT {
   }
   private void stop() {
     if (worker == null) return;
+    // End measurements before cancellation and cancel in a natural idle gap, not in Oracle I/O.
+    await(() -> worker.activity().inFlight() == 0 && owner.active.get() == 0, 3000);
     worker.stop(); await(() -> worker.activity().inFlight() == 0 && owner.active.get() == 0, 3000);
   }
   private void clear() {

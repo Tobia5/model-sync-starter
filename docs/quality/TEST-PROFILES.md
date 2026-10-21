@@ -105,7 +105,8 @@ a proof of constant selector work. Report measured native gets/reads separately.
 speedup assertion requires each isolated probe to beat its control.
 
 Urgent local/independent-process enqueue, independent-owner work during main-provider cooldown,
-and expired-lease recovery have a 2500 ms local wake/completion budget: the 1000 ms recheck cap
+expired-lease recovery, a future WAITING deadline and cooldown expiry have a 2500 ms local
+wake/completion budget: the 1000 ms recheck cap
 plus 1500 ms diagnostic scheduler/database margin. The independent JVM commits through the
 public WorkStore port and reports a commit-time bracket; report lower/upper completion latency,
 not HTTP acceptance. Cooldown recovery must relinquish the expired lease without owner I/O,
@@ -115,5 +116,14 @@ warmup, pool startup, process startup, table history and observed phases are dis
 `python scripts/full-oracle-container.py --worker-diagnostic` selects only this application-level
 probe after a current green default build. It is DIAGNOSTIC_ONLY / full NOT_RUN, uses the same
 pinned image/6 GiB/4 CPU cap and owned cleanup as full, and does not replace any existing suite.
-The full gate now also requires its nonempty Failsafe XML, eight fresh measured phases and their
+The full gate now also requires its nonempty Failsafe XML, ten fresh measured phases and their
 outcome/resource/wakeup assertions. Failed-run QM retains partial worker measurements.
+
+Native worker deltas also require identical eight SID/serial pairs at the interval endpoints.
+Take the after snapshot before cancellation, then stop during a bounded natural idle gap.
+Preserve both endpoints and mark a replacement/lost-session interval UNATTRIBUTABLE without
+computing a delta. This fixture boundary avoids interrupting an Oracle read and silently counting
+replacement-session counters. It is not a production graceful-drain or hung-call qualification.
+RetryLater from authoritative admission is classified as deferred; prepare-only/fresh no-fetch
+paths share that scheduling counter. It is not a count of quota denials (the quota port records
+those separately). Benign pacing phases must report zero infrastructure/owner failures.

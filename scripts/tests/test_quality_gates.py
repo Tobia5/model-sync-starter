@@ -422,7 +422,8 @@ class QualityGateTests(unittest.TestCase):
         counts = {name: 0 for name in ('ticks', 'empty', 'deferred', 'failed', 'fetched', 'cancelled',
                   'selector_callbacks', 'quota_grants', 'quota_denials', 'owner_calls', 'completed_syncs')}
         names = ['fixed-productive', 'fixed-empty', 'bounded-productive', 'bounded-empty', 'bounded-future',
-                 'local-urgent', 'independent-process-urgent', 'cooldown-independent-owner-and-recovery']
+                 'local-urgent', 'independent-process-urgent', 'cooldown-independent-owner-and-recovery',
+                 'future-becomes-due', 'cooldown-expires']
         value = {'status': 'PASS', 'scope': 'actual-auto-configured-reactor-worker-not-million-row-capacity',
                  'workers': 4, 'pool': 8, 'phases': []}
         for name in names:
@@ -432,12 +433,15 @@ class QualityGateTests(unittest.TestCase):
                      'scheduling_delta': dict(counts), 'session_delta': native,
                      'poll_interval_ms': 250, 'productive_interval_ms': 250 if fixed else 5,
                      'maximum_idle_interval_ms': 250 if fixed else 1000, 'logical_gets_per_second': 1}
+            phase.update(sessions_before=[f'{i}:1' for i in range(8)], sessions_after=[f'{i}:1' for i in range(8)],
+                         session_attribution='VALID')
             if name.endswith('productive'):
                 phase['scheduling_delta'].update(ticks=160, owner_calls=160, quota_grants=160, completed_syncs=160)
-            if name.endswith('urgent'):
+            if name.endswith('urgent') or name in {'future-becomes-due', 'cooldown-expires'}:
                 phase['wakeup_latency_upper_ms'] = 1000
                 phase['enqueue_process_exit'] = 0
-                phase['scheduling_delta'].update(owner_calls=1, completed_syncs=1)
+                completed = 2 if name == 'cooldown-expires' else 1
+                phase['scheduling_delta'].update(owner_calls=completed, completed_syncs=completed)
             if name.startswith('cooldown-'):
                 phase.update(other_owner_wakeup_ms=1000, recovery_wakeup_upper_ms=1000)
                 phase['scheduling_delta'].update(owner_calls=1, completed_syncs=1, deferred=1, quota_denials=1)
@@ -452,6 +456,9 @@ class QualityGateTests(unittest.TestCase):
             invalid = deepcopy(value)
             invalid['phases'][index][key] = bad
             with self.assertRaises(ValueError): validate_worker(invalid)
+        invalid = deepcopy(value)
+        invalid['phases'][0]['sessions_after'][0] = 'replacement'
+        with self.assertRaisesRegex(ValueError, 'continuity'): validate_worker(invalid)
         with self.assertRaises(ValueError): validate_worker({**value, 'phases': value['phases'][:-1]})
 
     def test_disposable_cleanup_requires_scope_and_restored_enforced_foreign_key(self):

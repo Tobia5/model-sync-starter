@@ -69,4 +69,18 @@ class WorkerPacingTest {
     assertEquals(1, worker.activity().failed());
     assertEquals(0, worker.activity().fetched());
   }
+
+  @Test void authoritativeQuotaDenialIsDeferredWithoutOwnerIoOrFailureAttribution() {
+    var fixture = new CoreFixture(); fixture.enqueue();
+    var coordinator = new io.modelsync.core.application.SyncCoordinator(fixture.registry, fixture.store,
+        fixture.tx, new WorkerQuotaDenial(), fixture.clock, io.modelsync.core.SyncOptions.defaults(),
+        io.modelsync.core.WeightedPriorities.defaults(), () -> 0.5);
+    var worker = new ReactorSyncWorker(coordinator, Schedulers.immediate(), Schedulers.immediate(),
+        1, Duration.ofMillis(250), Duration.ofMillis(5), Duration.ofSeconds(1));
+    StepVerifier.withVirtualTime(worker::lane).expectSubscription()
+        .thenAwait(Duration.ofMillis(250)).expectNext(WorkerTickResult.DEFERRED)
+        .thenCancel().verify(Duration.ofSeconds(3));
+    assertEquals(1, worker.activity().deferred()); assertEquals(0, worker.activity().failed());
+    assertEquals(0, fixture.calls.get());
+  }
 }
