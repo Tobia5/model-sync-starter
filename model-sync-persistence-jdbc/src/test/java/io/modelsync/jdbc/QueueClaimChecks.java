@@ -145,4 +145,18 @@ abstract class QueueClaimChecks {
     assertEquals(Priority.URGENT, claim(Priority.URGENT).orElseThrow().priority());
     assertEquals(Priority.BACKGROUND, claim(Priority.BACKGROUND).orElseThrow().priority());
   }
+  @Test void lockedPrefixDoesNotHideWorkBeyondDriverFetch() throws Exception {
+    for (int i = 0; i < 20; i++) enqueue("prefix-" + i, Priority.NORMAL, now.minusSeconds(2));
+    var later = enqueue("unlocked-later", Priority.NORMAL, now);
+    try (var connection = source.getConnection()) {
+      connection.setAutoCommit(false);
+      try (var statement = connection.prepareStatement("select work_id from MS_WORK where binding_id=? and subject_id like 'prefix-%' for update")) {
+        statement.setString(1, binding);
+        int locked = 0;
+        try (var rows = statement.executeQuery()) { while (rows.next()) locked++; }
+        assertEquals(20, locked);
+        assertEquals(later, claim(Priority.NORMAL).orElseThrow().key());
+      } finally { connection.rollback(); }
+    }
+  }
 }

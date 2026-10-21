@@ -11,7 +11,7 @@ from queue_evidence import check as check_queue_evidence
 
 ROOT=Path(__file__).resolve().parents[1]
 SIMULATIONS={'fresh','hot','unsafe','event','cooldown','leases'}
-ORACLE={'OracleSmokeIT','OracleConcurrencyIT','OracleMigrationIT','OracleScaleIT','OracleCapacityIT'}
+ORACLE={'OracleSmokeIT','OracleConcurrencyIT','OracleMigrationIT','OracleScaleIT','OracleCapacityIT','OracleSelectionIT'}
 ORACLE_MODULES={'model-sync-persistence-jdbc':ORACLE, 'model-sync-sample':{'OracleAtomicityIT'}}
 
 def oracle_suites(root=ROOT):
@@ -21,7 +21,7 @@ def oracle_suites(root=ROOT):
             fresh(report,root)
             suite=ET.parse(report).getroot()
             name=(suite.get('name') or '').rsplit('.',1)[-1]
-            minimum=7 if name=='OracleAtomicityIT' else 1
+            minimum=7 if name=='OracleAtomicityIT' else 8 if name=='OracleSelectionIT' else 1
             total=int(suite.get('tests','0'))
             bad=sum(int(suite.get(x,'0')) for x in ('errors','failures','skipped'))
             if name in names and total>=minimum and bad==0: found.add(name)

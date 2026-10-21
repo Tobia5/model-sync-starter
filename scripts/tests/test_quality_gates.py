@@ -162,7 +162,8 @@ class QualityGateTests(unittest.TestCase):
             for name in gate.ORACLE:
                 report = root / 'model-sync-persistence-jdbc/target/failsafe-reports' / f'TEST-{name}.xml'
                 report.parent.mkdir(parents=True, exist_ok=True)
-                report.write_text(f'<testsuite name="{name}" tests="1" failures="0" errors="0" skipped="0"/>')
+                count = 8 if name == "OracleSelectionIT" else 1
+                report.write_text(f'<testsuite name="{name}" tests="{count}" failures="0" errors="0" skipped="0"/>')
             with self.assertRaisesRegex(ValueError, 'OracleAtomicityIT'):
                 gate.oracle_suites(root)
             report = root / 'model-sync-sample/target/failsafe-reports/TEST-OracleAtomicityIT.xml'
@@ -176,6 +177,11 @@ class QualityGateTests(unittest.TestCase):
             self.assertEqual(1, collected['failures'])
             report.write_text('<testsuite name="OracleAtomicityIT" tests="7" failures="0" errors="0" skipped="0"/>')
             self.assertIn('OracleAtomicityIT', gate.oracle_suites(root))
+            selection = root / 'model-sync-persistence-jdbc/target/failsafe-reports/TEST-OracleSelectionIT.xml'
+            selection.write_text('<testsuite name="OracleSelectionIT" tests="7" failures="0" errors="0" skipped="0"/>')
+            with self.assertRaisesRegex(ValueError, 'OracleSelectionIT'):
+                gate.oracle_suites(root)
+
 
     def test_failed_gatling_retains_http_counts_despite_passing_harness(self):
         spec = spec_from_file_location('qm_report_gatling', ROOT / 'scripts/qm-report.py')

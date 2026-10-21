@@ -59,7 +59,7 @@ final class OracleMeasurements {
         + "plan_hash_value,executions,fetches,rows_processed,sorts,"
         + "buffer_gets,disk_reads,elapsed_time,cpu_time,application_wait_time,concurrency_wait_time,"
         + "user_io_wait_time,sql_text from v$sql where parsing_schema_name=user and ("
-        + "(sql_text like 'select * from MS_WORK where priority=%' or sql_text like 'select /*+ index_asc(w MS_WORK_%') or sql_text like 'update MS_WORK set%'"
+        + "(sql_text like 'select * from MS_WORK where priority=%' or sql_text like 'select /*+ index_asc(w MS_WORK_%' or sql_text like 'select /* modelsync-claim-lock */%') or sql_text like 'update MS_WORK set%'"
         + " or sql_text like 'select * from MS_WORK where work_id=%' or sql_text like 'select * from MS_STATE%'"
         + " or sql_text like 'update MS_STATE set%' or sql_text like 'insert into MS_STATE%'"
         + " or sql_text like 'select%MS_QUOTA%for update%' or sql_text like 'update MS_QUOTA set%'"
@@ -92,11 +92,11 @@ final class OracleMeasurements {
   static List<Map<String, Object>> claimPlans(JdbcTemplate jdbc, List<Map<String, Object>> before) {
     var current = jdbc.queryForList("select sql_id,child_number,rawtohex(child_address) child_address,last_load_time,loads,plan_hash_value,"
         + "executions,buffer_gets,disk_reads,rows_processed from v$sql where parsing_schema_name=user"
-        + " and (sql_text like 'select * from MS_WORK where priority=%' or sql_text like 'select /*+ index_asc(w MS_WORK_%') order by sql_id,child_number");
+        + " and (sql_text like 'select * from MS_WORK where priority=%' or sql_text like 'select /*+ index_asc(w MS_WORK_%' or sql_text like 'select /* modelsync-claim-lock */%') order by sql_id,child_number");
     List<Map<String, Object>> cursors = executedCursors(before, current);
     if (cursors.isEmpty()) throw new IllegalStateException("Actual production claim cursor absent");
     for (var cursor : cursors) {
-      var plan = jdbc.queryForList("select plan_table_output from table(dbms_xplan.display_cursor(?,?,'ALLSTATS LAST +PREDICATE +IOSTATS'))",
+      var plan = jdbc.queryForList("select plan_table_output from table(dbms_xplan.display_cursor(?,?,'ALLSTATS LAST +PREDICATE +IOSTATS +HINT_REPORT'))",
           String.class, cursor.get("SQL_ID"), cursor.get("CHILD_NUMBER"));
       if (plan.isEmpty() || plan.stream().noneMatch(line -> line.contains("A-Rows"))
           || plan.stream().anyMatch(line -> line.contains("cannot fetch plan")))

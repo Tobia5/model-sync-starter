@@ -34,7 +34,7 @@ public final class OracleDiagnosticRunner {
       launcher.registerTestExecutionListeners(listener);
       launcher.execute(LauncherDiscoveryRequestBuilder.request().selectors(selectClass(name)).build());
       var summary = listener.getSummary();
-      long expected = name.endsWith("OracleScaleIT") ? 1 : 7;
+      long expected = name.endsWith("OracleScaleIT") ? 1 : name.endsWith("OracleSelectionIT") ? 8 : 7;
       boolean success = summary.getTestsFoundCount() == expected
           && summary.getTestsSucceededCount() == expected && summary.getTestsSkippedCount() == 0
           && summary.getTestsFailedCount() == 0 && summary.getContainersFailedCount() == 0;
