@@ -161,40 +161,28 @@ public final class JdbcWorkStore implements WorkStore {
   }
 
   private Optional<JdbcWorkRow> select(Priority priority, Instant now, boolean recovery) {
-    // Stream only indexed candidate IDs, then lock/recheck one base row by its primary key.
-    // A locking w.* range query allowed Oracle to batch rowids and sort the entire due queue.
-    // The nonlocking cursor can preserve index order without reading/sorting every base row.
-    // It is NOT a claim: eligibility is checked again by the independent locking statement.
+    // Order by the numeric deadline only. A linguistic hash-ID tie-breaker forced a full sort.
+    // Ties have no promised order. The actual Oracle plan/counters,
+    // not fetchSize/maxRows, establish its cost. No FETCH FIRST/ROWNUM + locking combination.
     String sql = recovery
-        ? "select /*+ index_asc(w MS_WORK_RECOVER_IX) first_rows(1) */ work_id from MS_WORK w where priority=?"
-            + " and work_status='LEASED' and lease_until_ms<=? order by lease_until_ms,work_id"
-        : "select /*+ index_asc(w MS_WORK_READY_IX) first_rows(1) */ work_id from MS_WORK w where priority=?"
-            + " and work_status='WAITING' and next_at_ms<=? order by next_at_ms,work_id";
-    String lockSql = "select /* modelsync-claim-lock */ * from MS_WORK where work_id=? and priority=?"
-        + (recovery ? " and work_status='LEASED' and lease_until_ms<=?"
-            : " and work_status='WAITING' and next_at_ms<=?")
-        + " for update skip locked";
-    Optional<JdbcWorkRow> selected = jdbc.execute((ConnectionCallback<Optional<JdbcWorkRow>>) connection -> {
-      try (PreparedStatement candidates = connection.prepareStatement(sql);
-          PreparedStatement lock = connection.prepareStatement(lockSql)) {
-        int index = 1;
-        candidates.setInt(index++, priority.ordinal());
-        candidates.setLong(index, now.toEpochMilli());
-        candidates.setFetchSize(1);
-        // No max-row/window cutoff: locked earliest candidates must not hide later work.
-        try (ResultSet ids = candidates.executeQuery()) {
-          while (ids.next()) {
-            lock.setString(1, ids.getString(1));
-            lock.setInt(2, priority.ordinal());
-            lock.setLong(3, now.toEpochMilli());
-            try (ResultSet row = lock.executeQuery()) {
-              if (row.next()) return Optional.of(row(row));
-            }
-          }
-          return Optional.empty();
-        }
-      }
-    });
+        ? "select /*+ index_asc(w MS_WORK_RECOVER_IX) first_rows(1) */ w.* from MS_WORK w where priority=?"
+            + " and work_status='LEASED' and lease_until_ms<=? order by lease_until_ms for update skip locked"
+        : "select /*+ index_asc(w MS_WORK_READY_IX) first_rows(1) */ w.* from MS_WORK w where priority=?"
+            + " and work_status='WAITING' and next_at_ms<=? order by next_at_ms for update skip locked";
+    Optional<JdbcWorkRow> selected =
+        jdbc.execute(
+            (ConnectionCallback<Optional<JdbcWorkRow>>)
+                connection -> {
+                  try (PreparedStatement ps = connection.prepareStatement(sql)) {
+                    ps.setInt(1, priority.ordinal());
+                    ps.setLong(2, now.toEpochMilli());
+                    ps.setFetchSize(1);
+                    ps.setMaxRows(1);
+                    try (ResultSet rs = ps.executeQuery()) {
+                      return rs.next() ? Optional.of(row(rs)) : Optional.empty();
+                    }
+                  }
+                });
     return selected == null ? Optional.empty() : selected;
   }
 
