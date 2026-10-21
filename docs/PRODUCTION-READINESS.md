@@ -6,7 +6,9 @@ The historical main assessment below is preserved. It predates the successful re
 
 The first supported scope is **known-ID owner-to-Oracle/JPA reconciliation**, using one correctly enlisted local datasource and `JpaTransactionManager`, application-supplied detached DTO mappings and an application-authorized owner reader. This scope does not promise inventory/discovery, broker delivery, vendor connectors or remote writeback. No such feature is added by qualification work.
 
-The configured baseline suite passed; production remains **NO-GO** while applicable [parent release gates](../TODO.md) remain incomplete. In particular, its JDBC test projection did not prove mixed JDBC/JPA atomicity, and its queue-work sum did not explain individual SQL cost. Later proof and measurements must name their own tested source/run and must not overwrite the baseline.
+The configured baseline suite passed. A separate qualification of source `1a9187ce0886912c14a2f77dbcccd3287a37e4a8`, tree `0276124dd146d4fc9ae89dfe5ebddf7154840374`, full run `8a2204e2-1371-4cce-8b7a-7ee5c573ae14` also passed: 63 Surefire / 13 Oracle tests, including seven real starter/JPA/JDBC atomicity cases. It adds actual claim plans, separate counters/waits, eight 100k distributions and an unchanged million-row sample. The sample completed 211 reconciliations (201 during measurement), not one million. Both qualifications and intermediate failures retain their own source-bound artifacts; the earlier baseline is unchanged.
+
+Production remains **NO-GO** while applicable [parent release gates](../TODO.md) remain incomplete. The tested single-datasource rollback gap is closed for the injected cases, including physical Oracle commit rejection, old leases and local revisions. Independent-process/crash/racing-insert proof, production-like capacity/SLOs, real provider budgets, timeouts, operations/security, consumer/compatibility/supply-chain and retention gates remain open. Claim selection still dominates measured logical work; no production SQL/index optimization or production-readiness claim follows from the configured full PASS.
 
 ## Historical main assessment
 

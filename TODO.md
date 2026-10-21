@@ -1,15 +1,17 @@
 # Production qualification backlog
 
-Reconciled on the review branch against the immutable qualification below; the original main assessment was `a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6`.
+Reconciled on 2026-10-21 on the review branch against the source-bound qualifications below; the original main assessment was `a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6`.
 These are **acceptance gates, not a claim that the project is production-ready**.
 Owners below are suggested responsibilities; no person has accepted an assignment.
 See [assessment](docs/PRODUCTION-READINESS.md), [packaging](docs/PACKAGING.md), and [worker task](docs/CODEX-HANDOFF.md).
 
 **First supported scope:** known-ID owner-to-Oracle/JPA reconciliation in one correctly enlisted local datasource/`JpaTransactionManager`. The application supplies its owner reader, mapping, identity authorization and provider policy. Complete-population inventory, broker delivery, vendor connectors and remote target writes are outside this first scope. Their future gates remain open; interfaces do not constitute implemented connectors.
 
-**B1 (preserved baseline):** source `4f440807f20c568a2240ed5ce32f1aab8e9558b0`, tree `02faa6e6b9b5b8a28af6234d2b1de699a736b735`, full run `3177a6c3-3b64-4e5b-b40b-dc18bf1c7884`, attempt `99a77d95-2499-4964-95d9-8e4ecf67d84d`. [Immutable report](https://github.com/Tobia5/model-sync-starter/blob/a67966d16ccf6c140f4c95bebc2ddfd3ad497364/QM.md), [raw evidence](validation/qualification/2026-10-20/raw-evidence.zip), SHA-256 `ab7ff892a1d8ceafab878deb977d1eacb7becf53bdca5f3dab71ef06eebbf92c`. Leaf criteria below are completed only within that measured scope. **R01–R13 parent gates remain open.**
+**B1 (preserved baseline):** source `4f440807f20c568a2240ed5ce32f1aab8e9558b0`, tree `02faa6e6b9b5b8a28af6234d2b1de699a736b735`, full run `3177a6c3-3b64-4e5b-b40b-dc18bf1c7884`, attempt `99a77d95-2499-4964-95d9-8e4ecf67d84d`. [Immutable report](https://github.com/Tobia5/model-sync-starter/blob/a67966d16ccf6c140f4c95bebc2ddfd3ad497364/QM.md), [raw evidence](validation/qualification/2026-10-20/raw-evidence.zip), SHA-256 `ab7ff892a1d8ceafab878deb977d1eacb7becf53bdca5f3dab71ef06eebbf92c`. B1-marked leaf criteria are completed only within that measured scope; Q2 leaves are identified separately. **R01–R13 parent gates remain open.**
 
 ## Implemented in the delivered patch; execution still required
+
+**Q2:** source `1a9187ce0886912c14a2f77dbcccd3287a37e4a8`, tree `0276124dd146d4fc9ae89dfe5ebddf7154840374`; default run `83d7f773-3c8e-4a21-91a8-d6b90453253f` (61 JUnit tests), full run `8a2204e2-1371-4cce-8b7a-7ee5c573ae14`, attempt `a47ddfb5-db5b-42f9-bb2e-7f2b86b79b2e` (63 Surefire / 13 Oracle tests, zero failures/errors/skips). [QM](QM.md) and [raw artifacts](validation/qualification/2026-10-21-atomicity-queue/README.md) retain Q2, the separate diagnostic and all later failed attempts. The full configured suite passed; **all parent gates remain open**.
 
 - [x] Supply arc42, user handbook, production runbook, explicit job/event/visit APIs and ON_DEMAND recurrence.
 - [x] Supply a read-only PR/main workflow and separate guarded, manual development SNAPSHOT publishing workflow.
@@ -32,7 +34,9 @@ Acceptance: reproducible green Actions run on the review commit and on the merge
 Suggested owner: persistence maintainer + DBA/QA.
 - [x] Two independent Oracle connections coalesce one new subject, and reclaim rejects the old token: B1 `OracleConcurrencyIT`, 2 tests, 0.772 s. This is not independent-process/multi-pod proof.
 - [ ] Independent processes claim different subjects and demonstrate crash/restart fencing under contention.
-- [ ] Test JDBC ledger + JPA projection rollback together, racing inserts, pessimistic/optimistic conflicts and configured transaction-manager datasource enlistment.
+- [x] Prove real JPA projection + JDBC ledger rollback after flush, during completion, before commit and at physical Oracle COMMIT, with fresh-connection reads and separate retry metadata; preserve local-version and old-lease checks: Q2 `OracleAtomicityIT`, 7 passed / 11.95 s through the actual starter `JpaTransactionManager`.
+- [x] Reject a different transaction-manager datasource before schema access: Q2 default `TransactionEnlistmentTest`; six portable H2 atomicity regressions also passed. This is not multi-datasource/XA qualification.
+- [ ] Extend to racing inserts and actual pessimistic/optimistic exception races, independent-process crash/restart and arbitrary supported host configurations.
 - [ ] Test quota registration races, shared cooldown and admission across pods; include missing/misconfigured quota and database outage.
 - [ ] Set and test statement, lock and transaction timeouts; a fetch timeout does not bound database waits.
 Acceptance: all scenarios pass against the deployed Oracle major version/JDBC driver, with bounded completion times. H2 and in-memory synchronization are not substitutes.
@@ -50,7 +54,8 @@ Suggested owner: runtime maintainer + performance QA.
 - [x] Seed one million intents (100k due / 900k future), coalesce 100 hot-key requests, and run four workers with pool 8: B1 `OracleCapacityIT`, 211 persisted completions from 232 controlled stub calls. One JVM, not several pods; one million seeds are not one million completions.
 - [ ] Run several pods at representative distributions and agree sustainable capacity/resource bounds.
 - [x] Retain baseline cost/latency counters: B1 337 measured attempts, 222 stub calls / 201 completions, 34,237,829 summed block-work units, p95/p99 run-one latency 899/927 ms. These are not query counts, visit latency or a freshness SLO.
-- [ ] Diagnose individual claim/SQL counters, quota-denial churn, actual plans/waits, oldest age and sustainable provider/DB economics; compare equivalent resources and workloads before optimization.
+- [x] Capture individual claim/SQL counters, actual plans/waits and quota-denial churn, with separate seed/measurement/cleanup phases: Q2 8 distributions / 24 samples on 100k rows and unchanged 1M fixture, 360 measured attempts / 222 grants / 138 denials / 201 completions. About 99.93% of measured logical gets belonged to claim selection. B1 and failed attempts remain separate; no production SQL/index optimization is claimed.
+- [ ] Qualify oldest-age/freshness SLOs and sustainable provider/DB economics at production-like statistics/distributions and multi-pod resource bounds; a million seeds and a completed sample do not establish this gate.
 - [x] Inject synthetic 429/timeouts and 5/25 ms latency: B1 Oracle workload (13 rate limits / 8 timeouts); local semantic Gatling cooldown recovery. No real provider or hung-call proof.
 - [ ] Inject hung calls, network reset, database loss, pod kill and shutdown during fetch/commit.
 - [ ] Budget physical calls, including adapter-internal retries, MDM lookups and pagination; prove bursts respect the provider's actual contract.
