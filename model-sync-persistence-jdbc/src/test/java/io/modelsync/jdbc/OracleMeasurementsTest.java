@@ -15,22 +15,58 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 class OracleMeasurementsTest {
-  @Test void cursorReloadMayReuseSqlAndChildNumbersWithResetCounters() {
+  @Test void cursorReloadWithResetOrRetainedCumulativeCountsIsUnattributable() {
     Map<String, Object> old = Map.of("SQL_ID", "claim", "CHILD_NUMBER", 0, "CHILD_ADDRESS", "A0",
         "LAST_LOAD_TIME", "2026-10-20/22:14:00", "LOADS", 1, "EXECUTIONS", 15);
     Map<String, Object> reloaded = Map.of("SQL_ID", "claim", "CHILD_NUMBER", 0, "CHILD_ADDRESS", "B0",
         "LAST_LOAD_TIME", "2026-10-20/22:17:00", "LOADS", 1, "EXECUTIONS", 3);
-    var fresh = OracleMeasurements.executedCursors(List.of(old), List.of(reloaded));
+    var fresh = OracleMeasurements.cursorIntervals(List.of(old), List.of(reloaded));
     assertEquals(1, fresh.size());
-    assertEquals(3L, fresh.getFirst().get("window_executions"));
-    assertTrue(OracleMeasurements.executedCursors(List.of(old), List.of(old)).isEmpty());
+    assertNull(fresh.getFirst().get("window_executions"));
+    assertEquals("LOAD_IDENTITY_CHANGED", fresh.getFirst().get("reason"));
+    var retained = new java.util.LinkedHashMap<>(old);
+    retained.put("LOADS", 2);
+    retained.put("EXECUTIONS", 18);
+    var interval = OracleMeasurements.cursorIntervals(List.of(old), List.of(retained)).getFirst();
+    assertEquals("UNATTRIBUTABLE", interval.get("attribution"));
+    assertNull(interval.get("window_executions"));
+    assertSame(old, interval.get("before"));
+    assertSame(retained, interval.get("after"));
+  }
+
+  @Test void sameLoadedCursorHasDeltasOnlyForContinuousMonotonicCounters() {
+    var old = cursor(15);
+    assertEquals(0L, OracleMeasurements.cursorIntervals(List.of(old), List.of(old)).getFirst().get("window_executions"));
     var invalid = new java.util.LinkedHashMap<>(old);
     invalid.put("EXECUTIONS", 3);
-    assertThrows(IllegalStateException.class,
-        () -> OracleMeasurements.executedCursors(List.of(old), List.of(invalid)));
+    var reset = OracleMeasurements.cursorIntervals(List.of(old), List.of(invalid)).getFirst();
+    assertEquals("COUNTER_RESET", reset.get("reason"));
+    assertNull(reset.get("counter_deltas"));
     var advanced = new java.util.LinkedHashMap<>(old);
     advanced.put("EXECUTIONS", 18);
-    assertEquals(3L, OracleMeasurements.executedCursors(List.of(old), List.of(advanced)).getFirst().get("window_executions"));
+    var valid = OracleMeasurements.cursorIntervals(List.of(old), List.of(advanced)).getFirst();
+    assertEquals("VALID", valid.get("attribution"));
+    assertEquals(3L, valid.get("window_executions"));
+    advanced.put("BUFFER_GETS", 2L);
+    old.put("BUFFER_GETS", 20L);
+    assertEquals("COUNTER_RESET", OracleMeasurements.cursorIntervals(List.of(old), List.of(advanced)).getFirst().get("reason"));
+  }
+
+  @Test void absentBeforeAndDisappearingChildrenNeverBecomeZeroBasedDeltas() {
+    var old = cursor(15);
+    var appeared = OracleMeasurements.cursorIntervals(List.of(), List.of(old)).getFirst();
+    assertEquals("MISSING_BEFORE", appeared.get("reason"));
+    assertNull(appeared.get("window_executions"));
+    var disappeared = OracleMeasurements.cursorIntervals(List.of(old), List.of()).getFirst();
+    assertEquals("DISAPPEARED_CHILD", disappeared.get("reason"));
+    assertSame(old, disappeared.get("before"));
+    assertNull(disappeared.get("after"));
+    assertNull(disappeared.get("window_executions"));
+  }
+
+  private static java.util.LinkedHashMap<String, Object> cursor(long executions) {
+    return new java.util.LinkedHashMap<>(Map.of("SQL_ID", "claim", "CHILD_NUMBER", 0,
+        "CHILD_ADDRESS", "A0", "LAST_LOAD_TIME", "2026-10-20/22:14:00", "LOADS", 1, "EXECUTIONS", executions));
   }
 
   @Test void populationBucketsIncludeEqualityAndExcludeOtherBindings() {

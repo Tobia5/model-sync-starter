@@ -72,3 +72,48 @@ Code `ede199a33ad3a0ec5c911110bb84fd7407af1c25`, tree `7c9577e9de49a2f96b1093a65
 Report completed selector callbacks separately from ledger claims, quota admission, owner entries and persisted completions. Runtime-user session deltas retain native logical gets, physical reads, executions, parses, redo, sorted rows and waits. Loaded-cursor identities/positive counters discover actual plans, but reloads can retain cumulative counts: one identity-based sum is not a valid window execution total. Do not sum raw `window_executions` or cumulative child values as current calls when continuity is unproven. Callback counts are the reported selector totals; source collector ambiguity remains a follow-up. Raw before/after values and a reviewed derivative are retained.
 
 Improvement is not uniform or a constant work bound: the gathered-stat all-future case used 1859 versus legacy 1710 logical gets and returned no work. Empty/index-history polling economics and arbitrarily large locked prefixes remain unqualified. No claim batch or bulk-owner protocol was added or benchmarked. DDL owned-fixture teardown is measured separately and changes segment history; it is not a row-DELETE or production cleanup benchmark.
+
+### Continuous worker and cursor continuity qualification
+
+The preceding Q3 statements and raw archive are historical and unchanged. The new collector
+requires the same SQL/child/address/load time/load count and monotonic observed counters before
+calculating a cursor delta. Reloads (including retained cumulative counts), resets, new children
+without a before snapshot and disappeared children are `UNATTRIBUTABLE`, with null deltas and
+both original snapshots. An unchanged continuous cursor legitimately has a zero delta. Plan
+discovery is separate: LAST plans from ambiguous loaded children remain available, explicitly
+without attribution to the measurement window. They are not summed as window executions/work.
+Selector callbacks and stable runtime-session deltas remain separate observations.
+
+`OracleWorkerIT` is full-only and starts the actual starter auto-configured SmartLifecycle worker,
+coordinator, JDBC ledger/quota and JPA projection under the configured JpaTransactionManager.
+Its instrumented ports delegate to the real JDBC implementations. It compares the former fixed
+250 ms pacing with the auto-configured productive 5 ms / idle 250, 500, 1000 ms policy. Each host
+uses four lanes/persistence threads, eight owner threads, queue capacity 64/thread, stable pool
+eight, 20 ms main-provider spacing and 5 ms synthetic owner latency. Ten actual-worker warmup
+completions and 160 measured backlog completions per variant are separate from seeding.
+These are small application-level measurements, not the million-row coordinator benchmark.
+The original coordinator benchmark retains its direct `runOne` loops and 5 ms sleep.
+
+Predeclared local diagnostic budgets: after 3 s idle warmup, observe 4 s of empty/all-future
+polling. Bounded pacing allows 6 ticks/s plus four boundary ticks (expected steady rate about
+4/s for four lanes); fixed control allows 18/s plus four (expected 16/s). Two bindings and
+three priorities permit at most nine completed selector callbacks/tick plus 36 in-flight window
+boundary callbacks. Adaptive idle native logical gets must stay below 100,000/s in this small
+1000-future-row probe. This deliberately generous diagnostic ceiling allows the previously
+observed index-history costs with headroom; it is not a production capacity/SLO guarantee or
+a proof of constant selector work. Report measured native gets/reads separately. No relative
+speedup assertion requires each isolated probe to beat its control.
+
+Urgent local/independent-process enqueue, independent-owner work during main-provider cooldown,
+and expired-lease recovery have a 2500 ms local wake/completion budget: the 1000 ms recheck cap
+plus 1500 ms diagnostic scheduler/database margin. The independent JVM commits through the
+public WorkStore port and reports a commit-time bracket; report lower/upper completion latency,
+not HTTP acceptance. Cooldown recovery must relinquish the expired lease without owner I/O,
+while the independent owner completes. Main-provider cooldown remains authoritative. Seed,
+warmup, pool startup, process startup, table history and observed phases are disclosed.
+
+`python scripts/full-oracle-container.py --worker-diagnostic` selects only this application-level
+probe after a current green default build. It is DIAGNOSTIC_ONLY / full NOT_RUN, uses the same
+pinned image/6 GiB/4 CPU cap and owned cleanup as full, and does not replace any existing suite.
+The full gate now also requires its nonempty Failsafe XML, eight fresh measured phases and their
+outcome/resource/wakeup assertions. Failed-run QM retains partial worker measurements.

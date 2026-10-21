@@ -176,6 +176,10 @@ class QualityGateTests(unittest.TestCase):
             self.assertEqual(7, collected['tests'])
             self.assertEqual(1, collected['failures'])
             report.write_text('<testsuite name="OracleAtomicityIT" tests="7" failures="0" errors="0" skipped="0"/>')
+            worker = root / 'model-sync-sample/target/failsafe-reports/TEST-OracleWorkerIT.xml'
+            with self.assertRaisesRegex(ValueError, 'OracleWorkerIT'):
+                gate.oracle_suites(root)
+            worker.write_text('<testsuite name="OracleWorkerIT" tests="1" failures="0" errors="0" skipped="0"/>')
             self.assertIn('OracleAtomicityIT', gate.oracle_suites(root))
             selection = root / 'model-sync-persistence-jdbc/target/failsafe-reports/TEST-OracleSelectionIT.xml'
             selection.write_text('<testsuite name="OracleSelectionIT" tests="10" failures="0" errors="0" skipped="0"/>')
@@ -373,7 +377,7 @@ class QualityGateTests(unittest.TestCase):
     def test_queue_evidence_rejects_estimated_plans_and_combined_or_regressed_counters(self):
         from queue_evidence import plans, counters
         cursor = {'SQL_ID': 'fixture', 'EXECUTIONS': 1, 'CHILD_ADDRESS': 'A0',
-                  'LAST_LOAD_TIME': '2026-10-20/00:00:00', 'LOADS': 1, 'window_executions': 1}
+                  'LAST_LOAD_TIME': '2026-10-20/00:00:00', 'LOADS': 1, 'window_executions': 1, 'attribution': 'VALID'}
         with self.assertRaisesRegex(ValueError, 'actual row-source'):
             plans([{**cursor, 'actual_plan': ['EXPLAIN PLAN estimates only']}])
         with self.assertRaisesRegex(ValueError, 'Separate Oracle counters'):
@@ -388,7 +392,7 @@ class QualityGateTests(unittest.TestCase):
     def test_selected_queue_plans_reject_full_population_sorts_and_missing_shapes(self):
         from queue_evidence import selected_plans
         cursor = {'SQL_ID': 'fixture', 'EXECUTIONS': 1, 'CHILD_ADDRESS': 'A0',
-                  'LAST_LOAD_TIME': '2026-10-20/00:00:00', 'LOADS': 1, 'window_executions': 1,
+                  'LAST_LOAD_TIME': '2026-10-20/00:00:00', 'LOADS': 1, 'window_executions': 1, 'attribution': 'VALID',
                   'SQL_TEXT': 'select /*+ index_asc(w MS_WORK_READY_IX) first_rows(1) */ w.*',
                   'actual_plan': ['| Starts | A-Rows | Buffers |'],
                   'row_sources': [{'OPERATION': 'INDEX', 'OPTIONS': 'RANGE SCAN', 'OBJECT_NAME': 'MS_WORK_READY_IX'}]}
@@ -397,6 +401,58 @@ class QualityGateTests(unittest.TestCase):
             selected_plans([{**cursor, 'row_sources': cursor['row_sources'] + [{'OPERATION': 'SORT'}]}])
         with self.assertRaisesRegex(ValueError, 'row sources absent'):
             selected_plans([{**cursor, 'row_sources': ['malformed']}])
+
+    def test_reloaded_cursor_plan_is_retained_without_invented_window_counts(self):
+        from queue_evidence import plans
+        cursor = {'SQL_ID': 'fixture', 'EXECUTIONS': 150, 'CHILD_ADDRESS': 'A0',
+                  'LAST_LOAD_TIME': '2026-10-20/00:00:00', 'LOADS': 2,
+                  'window_executions': None, 'counter_deltas': None,
+                  'attribution': 'UNATTRIBUTABLE', 'reason': 'LOAD_IDENTITY_CHANGED',
+                  'actual_plan': ['| Starts | A-Rows | Buffers |']}
+        plans([cursor])
+        with self.assertRaisesRegex(ValueError, 'must not supply'):
+            plans([{**cursor, 'window_executions': 150}])
+        with self.assertRaisesRegex(ValueError, 'attribution absent'):
+            plans([{**cursor, 'attribution': None}])
+
+    def test_worker_gate_rejects_acceptance_without_completion_and_missing_idle_wakeup_proof(self):
+        from queue_evidence import validate_worker
+        from copy import deepcopy
+        native = {'db block gets': 1, 'consistent gets': 1, 'physical reads': 0, 'execute count': 1, 'redo size': 0}
+        counts = {name: 0 for name in ('ticks', 'empty', 'deferred', 'failed', 'fetched', 'cancelled',
+                  'selector_callbacks', 'quota_grants', 'quota_denials', 'owner_calls', 'completed_syncs')}
+        names = ['fixed-productive', 'fixed-empty', 'bounded-productive', 'bounded-empty', 'bounded-future',
+                 'local-urgent', 'independent-process-urgent', 'cooldown-independent-owner-and-recovery']
+        value = {'status': 'PASS', 'scope': 'actual-auto-configured-reactor-worker-not-million-row-capacity',
+                 'workers': 4, 'pool': 8, 'phases': []}
+        for name in names:
+            fixed = name.startswith('fixed-')
+            phase = {'name': name, 'status': 'PASS', 'elapsed_ms': 4000,
+                     'execution_mode': 'auto-configured-ReactorSyncWorker-SmartLifecycle',
+                     'scheduling_delta': dict(counts), 'session_delta': native,
+                     'poll_interval_ms': 250, 'productive_interval_ms': 250 if fixed else 5,
+                     'maximum_idle_interval_ms': 250 if fixed else 1000, 'logical_gets_per_second': 1}
+            if name.endswith('productive'):
+                phase['scheduling_delta'].update(ticks=160, owner_calls=160, quota_grants=160, completed_syncs=160)
+            if name.endswith('urgent'):
+                phase['wakeup_latency_upper_ms'] = 1000
+                phase['enqueue_process_exit'] = 0
+                phase['scheduling_delta'].update(owner_calls=1, completed_syncs=1)
+            if name.startswith('cooldown-'):
+                phase.update(other_owner_wakeup_ms=1000, recovery_wakeup_upper_ms=1000)
+                phase['scheduling_delta'].update(owner_calls=1, completed_syncs=1, deferred=1, quota_denials=1)
+            value['phases'].append(phase)
+        validate_worker(value)
+        for index, key, bad in [(0, 'completed_syncs', 0), (3, 'ticks', 1000), (3, 'quota_grants', 1)]:
+            invalid = deepcopy(value)
+            invalid['phases'][index]['scheduling_delta'][key] = bad
+            with self.assertRaises(ValueError): validate_worker(invalid)
+        for index, key, bad in [(4, 'logical_gets_per_second', 100001), (5, 'wakeup_latency_upper_ms', 2501),
+                                (6, 'enqueue_process_exit', 1), (7, 'recovery_wakeup_upper_ms', None)]:
+            invalid = deepcopy(value)
+            invalid['phases'][index][key] = bad
+            with self.assertRaises(ValueError): validate_worker(invalid)
+        with self.assertRaises(ValueError): validate_worker({**value, 'phases': value['phases'][:-1]})
 
     def test_disposable_cleanup_requires_scope_and_restored_enforced_foreign_key(self):
         from queue_evidence import cleanup_evidence

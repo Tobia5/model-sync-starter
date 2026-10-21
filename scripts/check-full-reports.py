@@ -7,12 +7,12 @@ import sys
 import xml.etree.ElementTree as ET
 from run_evidence import current, fresh
 from gatling_evidence import measured as gatling_measured
-from queue_evidence import check as check_queue_evidence, optimization as check_optimization
+from queue_evidence import check as check_queue_evidence, optimization as check_optimization, worker as check_worker
 
 ROOT=Path(__file__).resolve().parents[1]
 SIMULATIONS={'fresh','hot','unsafe','event','cooldown','leases'}
 ORACLE={'OracleSmokeIT','OracleConcurrencyIT','OracleMigrationIT','OracleScaleIT','OracleCapacityIT','OracleSelectionIT','OracleOptimizationIT'}
-ORACLE_MODULES={'model-sync-persistence-jdbc':ORACLE, 'model-sync-sample':{'OracleAtomicityIT'}}
+ORACLE_MODULES={'model-sync-persistence-jdbc':ORACLE, 'model-sync-sample':{'OracleAtomicityIT', 'OracleWorkerIT'}}
 
 def oracle_suites(root=ROOT):
     found=set()
@@ -106,8 +106,9 @@ def check(root=ROOT):
         raise ValueError('Oracle capacity report lacks completed projections, owner calls, lag or database work')
     check_queue_evidence(root,capacity,measured)
     comparison=check_optimization(root)
+    worker=check_worker(root)
     return {'junit_tests':tests,'oracle_suites':sorted(found),'pit_counts':dict(counts),
-            'pit_score':score,'gatling':load,'oracle_scale':capacity,'oracle_workload':measured,'oracle_optimization':comparison}
+            'pit_score':score,'gatling':load,'oracle_scale':capacity,'oracle_workload':measured,'oracle_optimization':comparison,'oracle_worker':worker}
 
 if __name__=='__main__':
     try: result=check()

@@ -95,6 +95,7 @@ final class OracleMeasurements {
     // Keep loaded-cursor identities and raw values, including reloads that reset execution counts.
     result.put("sql_cursors_before", before.get("sql_cursors"));
     result.put("sql_cursors_after", after.get("sql_cursors"));
+    result.put("cursor_intervals", cursorIntervals(sqlFrom(before), sqlFrom(after)));
     result.put("observation_scope", "all runtime-user sessions; stable pool; includes snapshot query overhead");
     return result;
   }
@@ -103,7 +104,18 @@ final class OracleMeasurements {
     var current = jdbc.queryForList("select sql_id,child_number,rawtohex(child_address) child_address,last_load_time,loads,plan_hash_value,"
         + "executions,buffer_gets,disk_reads,rows_processed,sql_text from v$sql where parsing_schema_name=user"
         + " and (sql_text like 'select * from MS_WORK where priority=%' or sql_text like 'select /*+ index_asc(w MS_WORK_%' or sql_text like 'select /* modelsync-claim-lock */%') order by sql_id,child_number");
-    List<Map<String, Object>> cursors = executedCursors(before, current);
+    // Discovery is deliberately separate from attribution. A reloaded cursor may retain old
+    // cumulative counts; its LAST plan is retained, explicitly without window attribution.
+    List<Map<String, Object>> cursors = new ArrayList<>();
+    for (var interval : cursorIntervals(before, current)) {
+      @SuppressWarnings("unchecked") var row = (Map<String, Object>) interval.get("after");
+      if (row == null || ((Number) row.get("EXECUTIONS")).longValue() == 0) continue;
+      if ("VALID".equals(interval.get("attribution"))
+          && ((Number) interval.get("window_executions")).longValue() == 0) continue;
+      var cursor = new LinkedHashMap<>(row);
+      cursor.putAll(interval);
+      cursors.add(cursor);
+    }
     if (cursors.isEmpty()) throw new IllegalStateException("Actual production claim cursor absent");
     for (var cursor : cursors) {
       var plan = jdbc.queryForList("select plan_table_output from table(dbms_xplan.display_cursor(?,?,'ALLSTATS LAST +PREDICATE +IOSTATS +HINT_REPORT +PROJECTION'))",
@@ -117,22 +129,48 @@ final class OracleMeasurements {
     return cursors;
   }
 
-  static List<Map<String, Object>> executedCursors(
+  static List<Map<String, Object>> cursorIntervals(
       List<Map<String, Object>> before, List<Map<String, Object>> after) {
-    Map<OracleCursorIdentity, Long> previous = new LinkedHashMap<>();
-    for (var row : before) previous.put(OracleCursorIdentity.from(row), ((Number) row.get("EXECUTIONS")).longValue());
+    Map<String, Map<String, Object>> previous = new LinkedHashMap<>();
+    for (var row : before) previous.put(cursorSlot(row), row);
     List<Map<String, Object>> result = new ArrayList<>();
     for (var row : after) {
-      long oldCount = previous.getOrDefault(OracleCursorIdentity.from(row), 0L);
-      long count = ((Number) row.get("EXECUTIONS")).longValue();
-      if (count < oldCount) throw new IllegalStateException("Oracle cursor executions regressed without a new load identity");
-      if (count > oldCount) {
-        Map<String, Object> measured = new LinkedHashMap<>(row);
-        measured.put("window_executions", count - oldCount);
-        result.add(measured);
+      var old = previous.remove(cursorSlot(row));
+      String reason = old == null ? "MISSING_BEFORE" :
+          !OracleCursorIdentity.from(old).equals(OracleCursorIdentity.from(row)) ? "LOAD_IDENTITY_CHANGED" : null;
+      Map<String, Long> deltas = new LinkedHashMap<>();
+      for (String key : List.of("EXECUTIONS", "FETCHES", "ROWS_PROCESSED", "SORTS", "BUFFER_GETS",
+          "DISK_READS", "ELAPSED_TIME", "CPU_TIME", "APPLICATION_WAIT_TIME", "CONCURRENCY_WAIT_TIME", "USER_IO_WAIT_TIME")) {
+        if (reason != null) break;
+        if (!(old.get(key) instanceof Number first) || !(row.get(key) instanceof Number last)) continue;
+        long delta = last.longValue() - first.longValue();
+        if (delta < 0) reason = "COUNTER_RESET";
+        else deltas.put(key, delta);
       }
+      Map<String, Object> interval = new LinkedHashMap<>();
+      interval.put("before", old);
+      interval.put("after", row);
+      interval.put("attribution", reason == null ? "VALID" : "UNATTRIBUTABLE");
+      interval.put("reason", reason);
+      interval.put("window_executions", reason == null ? deltas.get("EXECUTIONS") : null);
+      interval.put("counter_deltas", reason == null ? deltas : null);
+      result.add(interval);
+    }
+    for (var old : previous.values()) {
+      Map<String, Object> interval = new LinkedHashMap<>();
+      interval.put("before", old);
+      interval.put("after", null);
+      interval.put("attribution", "UNATTRIBUTABLE");
+      interval.put("reason", "DISAPPEARED_CHILD");
+      interval.put("window_executions", null);
+      interval.put("counter_deltas", null);
+      result.add(interval);
     }
     return result;
+  }
+
+  private static String cursorSlot(Map<String, Object> row) {
+    return row.get("SQL_ID") + ":" + row.get("CHILD_NUMBER");
   }
 
   static void write(Path path, Object value) throws Exception {

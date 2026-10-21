@@ -91,7 +91,7 @@ def collect(full: bool, root: Path = ROOT) -> dict:
     executed_oracle = set()
     oracle_modules = {'model-sync-persistence-jdbc': ('OracleSmokeIT', 'OracleConcurrencyIT',
                       'OracleMigrationIT', 'OracleScaleIT', 'OracleCapacityIT', 'OracleSelectionIT', 'OracleOptimizationIT'),
-                      'model-sync-sample': ('OracleAtomicityIT',)}
+                      'model-sync-sample': ('OracleAtomicityIT', 'OracleWorkerIT')}
     for module, names in (oracle_modules.items() if full else ()):
         if module not in modules:
             continue
@@ -212,7 +212,26 @@ def collect(full: bool, root: Path = ROOT) -> dict:
             comparison.update(status='FAILED', reason='Executed comparison suite failed; fresh partial measurements retained')
     if full and 'OracleOptimizationIT' in executed_oracle and comparison is None:
         comparison = {'status': 'FAILED', 'reason': 'OracleOptimizationIT executed without JSON report'}
+    worker = None
+    worker_path = root / 'model-sync-sample/target/qm/oracle-worker.json'
+    if full and worker_path.is_file():
+        try:
+            fresh(worker_path, root)
+            worker = json.loads(worker_path.read_text(encoding='utf-8'))
+            if not isinstance(worker, dict) or worker.get('scope') != 'actual-auto-configured-reactor-worker-not-million-row-capacity':
+                raise ValueError('Malformed or mismatched Oracle worker evidence')
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            worker = {'status': 'REJECTED', 'reason': str(error)}
+    if full and 'OracleWorkerIT' in executed_oracle and worker is None:
+        worker = {'status': 'FAILED', 'reason': 'OracleWorkerIT executed without JSON report'}
+    if isinstance(worker, dict) and worker.get('status') != 'REJECTED':
+        suites = modules.get('model-sync-sample', {}).get('failsafe', {}).get('suites', [])
+        suite = next((s for s in suites if s['name'].rsplit('.', 1)[-1] == 'OracleWorkerIT'), None)
+        if suite and (suite.get('status') == 'FAILED' or any(suite.get(k, 0) for k in ('failures', 'errors', 'skipped'))):
+            worker['measurement_report_status'] = worker.get('status')
+            worker.update(status='FAILED', reason='Worker suite failed; fresh partial measurements retained')
     return {'modules': modules, 'mutation': mutation, 'gatling': load, 'oracle_scale': scale,
+            'oracle_worker': worker,
             'oracle_workload': measured, 'oracle_optimization': comparison, 'rejected': log_rejected + [reason for module in modules.values()
                 for suite in module.values() for reason in suite.get('rejected', [])],
             'attribution': run['run_id']}
@@ -229,6 +248,7 @@ def manifest(full: bool, root: Path = ROOT) -> dict:
         paths.extend((root / 'model-sync-performance/target/gatling').glob('**/*'))
         paths.extend((root / 'model-sync-performance/target/qm').glob('*.json'))
         paths.extend((root / 'model-sync-persistence-jdbc/target/qm').glob('*.json'))
+        paths.extend((root / 'model-sync-sample/target/qm').glob('*'))
     paths.extend((root / 'target/qm').glob('*.log'))
     paths.extend((root / 'target/qm').glob('oracle-container.json'))
     files = {}
@@ -280,6 +300,8 @@ def markdown(data: dict) -> str:
         summary = {k: v for k, v in item.items() if k not in
                    ('distributions', 'seed_work', 'cleanup_work', 'table_statistics', 'index_statistics', 'phase_diagnostics')} if item else None
         lines.append(label + ': ' + (json.dumps(summary, sort_keys=True) if summary else 'NOT_RUN.'))
+    worker = evidence.get('oracle_worker')
+    lines.append('Actual Reactor worker: ' + (str(worker.get('status')) + '; see raw oracle-worker.json for phases.' if worker else 'NOT_RUN.'))
     for module_name, module in evidence['modules'].items():
         for runner in ('surefire', 'failsafe'):
             for suite in module[runner].get('suites', []):

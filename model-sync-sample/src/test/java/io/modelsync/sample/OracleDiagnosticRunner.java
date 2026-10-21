@@ -31,6 +31,7 @@ public final class OracleDiagnosticRunner {
     List<String> suites = switch (System.getProperty("modelsync.oracle.diagnostic", "transactions-and-scale")) {
       case "transactions-and-scale" -> List.of("io.modelsync.sample.OracleAtomicityIT", "io.modelsync.jdbc.OracleSelectionIT", "io.modelsync.jdbc.OracleScaleIT");
       case "queue-comparison" -> List.of("io.modelsync.jdbc.OracleSelectionIT", "io.modelsync.jdbc.OracleOptimizationIT");
+      case "worker-pacing" -> List.of("io.modelsync.sample.OracleWorkerIT");
       default -> throw new IllegalArgumentException("Unknown diagnostic scope");
     };
     report.put("selected_classes", suites);

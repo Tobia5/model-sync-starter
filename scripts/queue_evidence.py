@@ -23,8 +23,18 @@ def plans(value):
         if not isinstance(cursor, dict) or not cursor.get('SQL_ID') or cursor.get('EXECUTIONS', 0) < 1:
             raise ValueError('Oracle cursor identity/execution absent')
         if (not cursor.get('CHILD_ADDRESS') or not cursor.get('LAST_LOAD_TIME')
-                or cursor.get('LOADS', 0) < 1 or cursor.get('window_executions', 0) < 1):
-            raise ValueError('Oracle loaded-cursor identity/window execution absent')
+                or cursor.get('LOADS', 0) < 1):
+            raise ValueError('Oracle loaded-cursor identity absent')
+        attribution = cursor.get('attribution')
+        if attribution == 'VALID':
+            if type(cursor.get('window_executions')) is not int or cursor['window_executions'] < 1:
+                raise ValueError('Oracle loaded-cursor continuous execution absent')
+        elif attribution == 'UNATTRIBUTABLE':
+            if (cursor.get('reason') not in {'MISSING_BEFORE', 'LOAD_IDENTITY_CHANGED', 'COUNTER_RESET'}
+                    or cursor.get('window_executions') is not None or cursor.get('counter_deltas') is not None):
+                raise ValueError('Ambiguous Oracle cursor must not supply window counters')
+        else:
+            raise ValueError('Oracle cursor attribution absent')
         plan = cursor.get('actual_plan')
         if not isinstance(plan, list) or not any('A-Rows' in str(line) for line in plan):
             raise ValueError('Oracle actual row-source statistics absent')
@@ -173,3 +183,64 @@ def optimization(root: Path):
         if (run['combined']['quota_denials'] >= selector_denials if selector_denials else run['combined']['quota_denials'] != 0):
             raise ValueError('Admission did not reduce selector-only churn or preserve zero')
     return value
+
+
+def worker(root: Path):
+    path = root / 'model-sync-sample/target/qm/oracle-worker.json'
+    fresh(path, root)
+    value = json.loads(path.read_text(encoding='utf-8'))
+    validate_worker(value)
+    return value
+
+
+def validate_worker(value):
+    required = {'fixed-productive', 'fixed-empty', 'bounded-productive', 'bounded-empty',
+                'bounded-future', 'local-urgent', 'independent-process-urgent',
+                'cooldown-independent-owner-and-recovery'}
+    if (not isinstance(value, dict) or value.get('status') != 'PASS'
+            or value.get('scope') != 'actual-auto-configured-reactor-worker-not-million-row-capacity'
+            or value.get('workers') != 4 or value.get('pool') != 8):
+        raise ValueError('Actual worker evidence absent/failed or execution bounds changed')
+    phases = value.get('phases')
+    if (not isinstance(phases, list) or len(phases) != len(required)
+            or not all(isinstance(p, dict) for p in phases) or {p.get('name') for p in phases} != required):
+        raise ValueError('Required worker productive/idle/wakeup phases absent')
+    for phase in phases:
+        if (phase.get('status') != 'PASS'
+                or phase.get('execution_mode') != 'auto-configured-ReactorSyncWorker-SmartLifecycle'
+                or type(phase.get('elapsed_ms')) is not int or phase['elapsed_ms'] <= 0):
+            raise ValueError('Worker phase failed, unexecuted or malformed')
+        counts = phase.get('scheduling_delta')
+        if not isinstance(counts, dict) or any(type(counts.get(k)) is not int or counts[k] < 0
+                for k in ('ticks', 'empty', 'deferred', 'failed', 'fetched', 'cancelled',
+                          'selector_callbacks', 'quota_grants', 'quota_denials', 'owner_calls', 'completed_syncs')):
+            raise ValueError('Worker scheduling/admission/outcome counters absent')
+        counters(phase.get('session_delta'))
+        fixed = phase['name'].startswith('fixed-')
+        if (phase.get('poll_interval_ms') != 250 or phase.get('productive_interval_ms') != (250 if fixed else 5)
+                or phase.get('maximum_idle_interval_ms') != (250 if fixed else 1000)):
+            raise ValueError('Worker runtime pacing configuration changed')
+        if phase['name'].endswith('productive'):
+            if any(counts[k] != 160 for k in ('completed_syncs', 'owner_calls', 'quota_grants')):
+                raise ValueError('Worker backlog not completed; HTTP/claim acceptance is insufficient')
+        if phase['name'] in {'fixed-empty', 'bounded-empty', 'bounded-future'}:
+            if any(counts[k] for k in ('owner_calls', 'quota_grants', 'quota_denials')):
+                raise ValueError('Idle worker spent provider admission')
+            if (counts['ticks'] > (18 if fixed else 6) * phase['elapsed_ms'] / 1000 + 4
+                    or counts['selector_callbacks'] > 9 * counts['ticks'] + 36):
+                raise ValueError('Worker idle poll/selector budget exceeded')
+            if not fixed and (type(phase.get('logical_gets_per_second')) not in (int, float)
+                    or not 0 <= phase['logical_gets_per_second'] <= 100000):
+                raise ValueError('Worker idle native-work budget exceeded')
+        if phase['name'] in {'local-urgent', 'independent-process-urgent'}:
+            latency = phase.get('wakeup_latency_upper_ms')
+            if type(latency) is not int or latency < 0 or latency > 2500 or counts['completed_syncs'] != 1:
+                raise ValueError('Worker urgent committed completion/wakeup bound absent')
+        if phase['name'] == 'independent-process-urgent' and phase.get('enqueue_process_exit') != 0:
+            raise ValueError('Independent enqueue process did not complete')
+        if phase['name'] == 'cooldown-independent-owner-and-recovery':
+            if (counts['owner_calls'] != 1 or counts['completed_syncs'] != 1
+                    or counts['deferred'] < 1 or counts['quota_denials'] < 1
+                    or any(type(phase.get(k)) is not int or not 0 <= phase[k] <= 2500
+                           for k in ('other_owner_wakeup_ms', 'recovery_wakeup_upper_ms'))):
+                raise ValueError('Worker cooldown owner isolation/recovery proof absent')
