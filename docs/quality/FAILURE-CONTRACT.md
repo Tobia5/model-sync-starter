@@ -75,3 +75,9 @@ atomicity, fencing, quota, architecture, mutation, scale and semantic-load gate.
 Racing inserts, multi-pod availability/SLOs, real provider retry/fanout budgets,
 arbitrary network partitions, XA and production operational qualification stay
 open unless separately evidenced.
+
+API basis: [Reactor future cancellation](https://projectreactor.io/docs/core/release/api/reactor/core/publisher/Mono.html#fromFuture-java.util.concurrent.CompletableFuture-boolean-),
+[Oracle connection/read properties](https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/OracleConnection.html),
+[Oracle statement cancellation limits](https://docs.oracle.com/en/database/oracle/oracle-database/19/jjdbc/JDBC-troubleshooting.html),
+and [Spring JDBC transaction deadlines](https://docs.spring.io/spring-framework/reference/data-access/jdbc/connections.html).
+Driver cancellation attempts are not unconditional physical-operation termination guarantees.

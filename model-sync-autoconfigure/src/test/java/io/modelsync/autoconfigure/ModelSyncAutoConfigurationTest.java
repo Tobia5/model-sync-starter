@@ -76,4 +76,13 @@ class ModelSyncAutoConfigurationTest {
     runner(new CoreFixture()).withPropertyValues("model-sync.enabled=true", "model-sync.max-idle-interval=100ms")
         .run(c -> assertThat(c).hasFailed());
   }
+
+  @Test void invalidShutdownDeadlineFailsStartup() {
+    for (String value : new String[] {"0ms", "-1ms", "301s"}) {
+      runner(new CoreFixture()).withPropertyValues("model-sync.enabled=true", "model-sync.shutdown-timeout=" + value)
+          .run(c -> assertThat(c).hasFailed());
+    }
+    var properties = new ModelSyncProperties();
+    assertThat(properties.getShutdownTimeout()).isEqualTo(java.time.Duration.ofSeconds(5));
+  }
 }

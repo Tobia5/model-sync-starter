@@ -117,6 +117,7 @@ model-sync:
   poll-interval: 250ms
   productive-interval: 5ms
   max-idle-interval: 1s
+  shutdown-timeout: 5s
   concurrency: 4
   persistence-threads: 4
   owner-threads: 8
@@ -139,8 +140,20 @@ Empty claims, prepare-only/deferred work and failures wait 250 ms, then 500 ms, 
 not change persisted retry/cooldown, distributed provider admission or lease fencing. A lane
 does not cache queue deadlines: it rechecks at least once per maximum idle interval, subject
 to database/scheduler availability. New work from another process needs no local signal.
-Worker cancellation disposes scheduled delays and subscriptions; blocking adapters still need
-transport/database timeouts. `activity()` reports scheduling counters, not successful syncs.
+Worker stop first closes new claim admission and waits up to `shutdown-timeout` (positive,
+at most five minutes). `shutdown()` distinguishes DRAINED from TIMED_OUT and records both
+logical and tracked physical operations. Remaining subscriptions are cancelled at the bound;
+this does not prove that JDBC/owner transports stopped. `physicalOperations()` observes actual
+blocking call exits and uncancelled async-stage completions; the owner must define what its
+stage completion means for HTTP resource release. A late cancelled result cannot apply.
+Owner capacity is retained until that physical callable/stage completes. Restart is refused
+while previous operations remain unresolved. `stop(Runnable)` acknowledges bounded stop,
+including timeout, rather than promising successful drain. Do not call blocking `stop()` from
+a Reactor event loop; use the host's lifecycle/control thread.
+Configure datasource, statement/lock, transaction and owner transport bounds in the host;
+the starter does not globally change application-owned resources. See the
+[failure contract](quality/FAILURE-CONTRACT.md). `activity()` reports scheduling counters,
+not successful syncs or proof of physical resource cleanup.
 Set both extra intervals to `poll-interval` for the former fixed delay after every tick.
 The existing five-argument `ReactorSyncWorker` constructor retains that fixed-delay behavior.
 

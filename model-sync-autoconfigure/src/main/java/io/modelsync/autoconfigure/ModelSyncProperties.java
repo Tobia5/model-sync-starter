@@ -17,6 +17,7 @@ public final class ModelSyncProperties {
       pollInterval = Duration.ofMillis(250),
       productiveInterval = Duration.ofMillis(5),
       maxIdleInterval = Duration.ofSeconds(1);
+  private Duration shutdownTimeout = Duration.ofSeconds(5);
   private Duration retryBase = Duration.ofSeconds(2), retryMax = Duration.ofMinutes(10);
   private int maxAttempts = 8,
       concurrency = 4,
@@ -69,6 +70,8 @@ public final class ModelSyncProperties {
   public void setProductiveInterval(Duration v) { productiveInterval = v; }
   public Duration getMaxIdleInterval() { return maxIdleInterval; }
   public void setMaxIdleInterval(Duration v) { maxIdleInterval = v; }
+  public Duration getShutdownTimeout() { return shutdownTimeout; }
+  public void setShutdownTimeout(Duration v) { shutdownTimeout = v; }
 
   public Duration getRetryBase() {
     return retryBase;
@@ -135,6 +138,9 @@ public final class ModelSyncProperties {
   }
 
   public void validateBounds() {
+    if (shutdownTimeout == null || shutdownTimeout.isZero() || shutdownTimeout.isNegative()
+        || shutdownTimeout.compareTo(Duration.ofMinutes(5)) > 0)
+      throw new IllegalArgumentException("shutdownTimeout must be positive and at most five minutes");
     if (persistenceThreads < 1
         || ownerThreads < 1
         || queuedTasksPerThread < 1
