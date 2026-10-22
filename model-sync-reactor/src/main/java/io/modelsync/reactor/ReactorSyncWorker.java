@@ -5,7 +5,7 @@ import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
 import java.time.Duration;
-import java.time.Instant;
+import java.time.Clock;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Semaphore;
@@ -29,6 +29,7 @@ public final class ReactorSyncWorker implements SmartLifecycle {
   private final Object operations = new Object();
   private final AtomicInteger physical = new AtomicInteger();
   private final Semaphore ownerCapacity;
+  private final Clock clock;
   private volatile boolean stopping;
   private volatile WorkerShutdown shutdown = new WorkerShutdown(WorkerShutdownStatus.NOT_STOPPED, 0, 0, 0, 0);
   private volatile boolean running;
@@ -60,6 +61,15 @@ public final class ReactorSyncWorker implements SmartLifecycle {
       SyncCoordinator coordinator, Scheduler persistence, Scheduler blockingOwner,
       int concurrency, Duration poll, Duration productiveDelay, Duration maximumIdle,
       Duration shutdownTimeout) {
+    this(coordinator, persistence, blockingOwner, concurrency, poll, productiveDelay, maximumIdle,
+        shutdownTimeout, Clock.systemUTC());
+  }
+
+  /** Use the coordinator's clock when constructing a worker with a custom time source. */
+  public ReactorSyncWorker(
+      SyncCoordinator coordinator, Scheduler persistence, Scheduler blockingOwner,
+      int concurrency, Duration poll, Duration productiveDelay, Duration maximumIdle,
+      Duration shutdownTimeout, Clock clock) {
     if (concurrency < 1 || concurrency > 128)
       throw new IllegalArgumentException("Invalid worker bounds");
     new WorkerPacing(productiveDelay, poll, maximumIdle);
@@ -75,6 +85,7 @@ public final class ReactorSyncWorker implements SmartLifecycle {
     this.maximumIdle = maximumIdle;
     this.shutdownTimeout = shutdownTimeout;
     this.ownerCapacity = new Semaphore(concurrency);
+    this.clock = java.util.Objects.requireNonNull(clock);
   }
 
   public Mono<Boolean> tick() {
@@ -163,8 +174,11 @@ public final class ReactorSyncWorker implements SmartLifecycle {
     return Mono.defer(() -> {
       synchronized (operations) {
         if (execution.closed) return Mono.empty();
-      if (!ownerCapacity.tryAcquire()) return Mono.error(new RetryLater(Instant.now().plus(poll)));
       physical.incrementAndGet();
+      }
+      if (!ownerCapacity.tryAcquire()) {
+        try { return Mono.error(new RetryLater(clock.instant().plus(poll))); }
+        finally { physicalDone(); }
       }
       try {
         var future = owner.fetchAsync(prepared.request()).toCompletableFuture();
@@ -190,12 +204,18 @@ public final class ReactorSyncWorker implements SmartLifecycle {
   private <T> T physical(WorkerExecution execution, Callable<T> operation, boolean owner) throws Exception {
     synchronized (operations) {
       if (execution.closed) throw new java.util.concurrent.CancellationException("Worker subscription already closed");
-    if (owner && !ownerCapacity.tryAcquire()) throw new RetryLater(Instant.now().plus(poll));
     physical.incrementAndGet();
     }
-    try { return operation.call(); }
+    boolean permit = false;
+    try {
+      if (owner) {
+        permit = ownerCapacity.tryAcquire();
+        if (!permit) throw new RetryLater(clock.instant().plus(poll));
+      }
+      return operation.call();
+    }
     finally {
-      if (owner) ownerCapacity.release();
+      if (permit) ownerCapacity.release();
       physicalDone();
     }
   }

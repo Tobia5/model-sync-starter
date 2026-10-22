@@ -30,7 +30,7 @@ class AsyncShutdownTest {
     var persistence = Schedulers.newBoundedElastic(1, 8, "async-drain-jdbc");
     var owner = Schedulers.newBoundedElastic(1, 8, "async-drain-owner");
     var worker = new ReactorSyncWorker(coordinator, persistence, owner, 1, Duration.ofMillis(10),
-        Duration.ofMillis(5), Duration.ofMillis(40), Duration.ofMillis(100));
+        Duration.ofMillis(5), Duration.ofMillis(40), Duration.ofMillis(100), f.clock);
     try {
       worker.start();
       long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
@@ -40,6 +40,9 @@ class AsyncShutdownTest {
       deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
       while (worker.activity().deferred() == 0 && System.nanoTime() < deadline) Thread.sleep(5);
       assertTrue(worker.activity().deferred() > 0); assertEquals(1, calls.get());
+      var pending = ((io.modelsync.testkit.MemoryWorkSnapshot) f.store.snapshot()).rows().get(
+          new WorkKey("customer", new SubjectKey("tenant-a", "another")).storageId());
+      assertTrue(pending.due().isBefore(f.clock.instant().plusSeconds(1)), "capacity retry must use the coordinator clock");
       worker.stop(); assertEquals(WorkerShutdownStatus.TIMED_OUT, worker.shutdown().status());
       assertEquals(1, worker.shutdown().ownerOperations()); assertFalse(completion.isDone());
       completion.complete(FetchResult.found("late", null));

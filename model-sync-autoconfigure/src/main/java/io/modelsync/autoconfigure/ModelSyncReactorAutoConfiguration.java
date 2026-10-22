@@ -44,10 +44,11 @@ public class ModelSyncReactorAutoConfiguration {
   ReactorSyncWorker modelSyncWorker(
       SyncCoordinator coordinator,
       ModelSyncProperties p,
+      @Qualifier("modelSyncClock") java.time.Clock clock,
       @Qualifier("modelSyncPersistenceScheduler") Scheduler persistence,
       @Qualifier("modelSyncOwnerScheduler") Scheduler owner) {
     return new ReactorSyncWorker(
         coordinator, persistence, owner, p.getConcurrency(), p.getPollInterval(),
-        p.getProductiveInterval(), p.getMaxIdleInterval(), p.getShutdownTimeout());
+        p.getProductiveInterval(), p.getMaxIdleInterval(), p.getShutdownTimeout(), clock);
   }
 }
