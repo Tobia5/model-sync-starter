@@ -99,8 +99,24 @@ class OracleIoIT {
         lock.setString(1, id(key)); assertEquals(1, lock.executeUpdate());
       }
       long began = System.nanoTime();
-      Future<Integer> blocked = executor.submit(() -> jdbc.update("update SAMPLE_CUSTOMER set display_name='must-rollback' where storage_key=?", id(key)));
-      ExecutionException error = assertThrows(ExecutionException.class, () -> blocked.get(5, TimeUnit.SECONDS));
+      var effectiveTimeout = new java.util.concurrent.atomic.AtomicInteger(-1);
+      Future<Integer> blocked = executor.submit(() -> jdbc.execute("update SAMPLE_CUSTOMER set display_name='must-rollback' where storage_key=?",
+          (org.springframework.jdbc.core.PreparedStatementCallback<Integer>) statement -> {
+            effectiveTimeout.set(statement.getQueryTimeout()); statement.setString(1, id(key)); return statement.executeUpdate();
+          }));
+      ExecutionException error;
+      try { error = assertThrows(ExecutionException.class, () -> blocked.get(5, TimeUnit.SECONDS)); }
+      finally {
+        result.put("elapsed_ms", OracleRecoveryIT.millis(began));
+        result.put("effective_statement_timeout_seconds", effectiveTimeout.get());
+        var stacks = new LinkedHashMap<String, Object>();
+        Thread.getAllStackTraces().forEach((thread, stack) -> {
+          if (thread.getName().equals("modelsync-owned-io-probe") || thread.getName().contains("OracleTimeout"))
+            stacks.put(thread.getName(), java.util.Arrays.stream(stack).limit(20).map(StackTraceElement::toString).toList());
+        });
+        result.put("bounded_test_thread_stacks", stacks); FaultEvidence.write("oracle-io.json", report);
+      }
+      assertEquals(2, effectiveTimeout.get());
       assertTrue(OracleRecoveryIT.millis(began) <= 5000); assertTrue(blocked.isDone());
       Throwable cause = error; while (cause.getCause() != null) cause = cause.getCause();
       assertInstanceOf(java.sql.SQLException.class, cause); assertEquals(1013, ((java.sql.SQLException) cause).getErrorCode());
