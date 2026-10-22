@@ -43,6 +43,8 @@ class RecoveryConfiguration {
     return new HikariDataSource(config);
   }
   @Bean(destroyMethod = "close") HikariDataSource recoveryDataSource(Environment env) {
+    if (!"validate".equals(env.getProperty("spring.jpa.hibernate.ddl-auto")))
+      throw new IllegalStateException("Fault host refuses automatic schema creation/deletion");
     return source(env.getProperty("modelsync.test.jdbc-url", System.getenv("MODELSYNC_ORACLE_URL")), 4);
   }
   @Bean RecoveryControl recoveryControl(Environment env) { return new RecoveryControl(env); }
