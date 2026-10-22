@@ -18,6 +18,41 @@ Source `fad6874c9fa0e0a16ed7d542cace11ea89a991e1`, tree `a530a260738510da84ed7f6
 
 The accepted selector and scoped mixed-transaction milestones remain established and unchanged; all seven atomicity cases passed again. The million-row coordinator sample completed200 during measurement/210 with warmup, not one million. Its direct5ms runOne loops differ from the actual worker/JPA probe. Small local wake/resource budgets do not establish production SLOs or graceful shutdown under I/O. All parent gates remain open and production stays **NO-GO**; no merge or package publication occurred.
 
+### Q5 shutdown, waits and independent-JVM recovery
+
+Final code `8830c3f6d2ac8483c35309e747e896131c64fcea`, tree
+`10cb9835a8f925f9e45a2a437d9f637ee5668ca2`, passed default run
+`47311f17-5b2c-409b-ab19-8b9340fc8af5`:117 JUnit/61 Python guards, no expensive
+default goals. The completed full tested `3564410ad8e884509cecb0e530a8e3c16473eb29`,
+tree`d0af02e4117463eae97a25108b537eb9650fd577`, run
+`d0500d1e-030b-425e-9b49-a35e214f7598`: **FAILED**,119 Surefire/45 Oracle tests,
+two Oracle failures and zero errors/skips. All seven accepted atomicity cases
+and six new independent-JVM checkpoint/crash/recovery cases passed. Eleven of
+twelve I/O cases passed, including controlled shutdown, pool/read/owner bounds
+and both uncertain-COMMIT outcomes. [QM](../QM.md) and [raw evidence](../validation/qualification/2026-10-22-shutdown-recovery/README.md)
+retain exact commands, identities, outcomes and cleanup.
+
+Independent locked JDBC cancellation stayed physically in a socket read after
+5001ms despite an effective2s statement deadline. The unchanged5s/ORA-01013 gate
+failed; a passing network timeout is not a substitute. The existing worker160-row
+measured backlog also exceeded20s in full, after successful warmup; a later
+ten-phase targeted worker diagnostic passed. No SQL/pacing redesign or threshold
+change was made. Final8830c3f changes only failure-interval diagnostics relative
+to that full; its full rerun was **BLOCKED before provisioning** by the unchanged
+18GiB host-memory planning budget (four samples17.49–17.85GiB). All full suites
+for that unexecuted attempt are NOT_RUN, without borrowed earlier reports.
+
+The starter now distinguishes bounded stop from successful physical drain,
+retains owner capacity through late physical completion and refuses restart
+while unresolved. The crash proof uses headless public-coordinator JVMs, not
+continuous-worker pod crashes; direct fixture pool exhaustion does not qualify
+saturated-worker end-to-end recovery. Arbitrary host/network/HTTP-stage behavior,
+multi-process contention, operations/security/consumer and other parent gates
+remain open. All seven session containers/volumes were independently confirmed
+absent. The million-row full fixture completed200 measured reconciliations/210
+including warmup, not one million. Accepted Q4 and prior evidence remain unchanged.
+Production remains **NO-GO**.
+
 ## Historical main assessment
 
 **Date:** 2026-10-20. **Remote baseline:** `a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6`.

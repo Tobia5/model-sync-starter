@@ -1,0 +1,13 @@
+{
+    "scope":  "READ_ONLY_FINAL_RESOURCE_RECHECK_NOT_TEST_EXECUTION",
+    "observed_utc":  "2026-10-22T10:28:38.8439555Z",
+    "source_sha":  "8830c3f6d2ac8483c35309e747e896131c64fcea",
+    "host_available_gib":  16.644,
+    "required_host_available_gib":  18,
+    "oracle_budget_gib":  6,
+    "build_budget_gib":  8,
+    "reserve_gib":  4,
+    "container_created":  false,
+    "volume_created":  false,
+    "status":  "BLOCKED"
+}

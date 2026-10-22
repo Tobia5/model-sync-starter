@@ -1,6 +1,6 @@
 # Production qualification backlog
 
-Reconciled on 2026-10-21 on the review branch against the source-bound qualifications below; the original main assessment was `a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6`.
+Reconciled on 2026-10-22 on the review branch against the source-bound qualifications below; the original main assessment was `a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6`.
 These are **acceptance gates, not a claim that the project is production-ready**.
 Owners below are suggested responsibilities; no person has accepted an assignment.
 See [assessment](docs/PRODUCTION-READINESS.md), [packaging](docs/PACKAGING.md), and [worker task](docs/CODEX-HANDOFF.md).
@@ -14,6 +14,8 @@ See [assessment](docs/PRODUCTION-READINESS.md), [packaging](docs/PACKAGING.md), 
 **Q2:** source `1a9187ce0886912c14a2f77dbcccd3287a37e4a8`, tree `0276124dd146d4fc9ae89dfe5ebddf7154840374`; default run `83d7f773-3c8e-4a21-91a8-d6b90453253f` (61 JUnit tests), full run `8a2204e2-1371-4cce-8b7a-7ee5c573ae14`, attempt `a47ddfb5-db5b-42f9-bb2e-7f2b86b79b2e` (63 Surefire / 13 Oracle tests, zero failures/errors/skips). [Pinned Q2 QM](https://github.com/Tobia5/model-sync-starter/blob/e73b3deba59aab0401512aa73329b14b8adbcadd/QM.md) and [raw artifacts](validation/qualification/2026-10-21-atomicity-queue/README.md) retain Q2, its separate diagnostic and contemporaneous failed attempts. The full configured suite passed; **all parent gates remain open**.
 
 **Q3:** tested code `ede199a33ad3a0ec5c911110bb84fd7407af1c25`, tree `7c9577e9de49a2f96b1093a65673250a46163da6`; default run `d0ef4b54-0ed3-428b-bbd8-1d1b77d62a54` (103 JUnit tests / 55 Python guards), full run `2b75d9cc-8836-4e99-b227-9d836e7e207a`, attempt `c3a564fe-e255-4b85-a209-05244d9b86ec` (105 Surefire / 26 Oracle tests, zero failures/errors/skips). Configured local full PASS; production NO-GO. [QM](QM.md), [current default CI](https://github.com/Tobia5/model-sync-starter/actions/runs/39623846568) and [raw evidence](validation/qualification/2026-10-21-queue-optimization/README.md). Older passes, failures and source-changed attempts remain separate. All R01-R13 parents stay open.
+
+**Q5 shutdown/recovery:** final code `8830c3f6d2ac8483c35309e747e896131c64fcea`, tree `10cb9835a8f925f9e45a2a437d9f637ee5668ca2`, default run `47311f17-5b2c-409b-ab19-8b9340fc8af5` PASS (117 JUnit /61 Python). Completed full tested `3564410ad8e884509cecb0e530a8e3c16473eb29`, tree `d0af02e4117463eae97a25108b537eb9650fd577`, run `d0500d1e-030b-425e-9b49-a35e214f7598`: FAILED,119 Surefire /45 Oracle tests,2 Oracle failures,0 errors/skips. Six process-crash and all seven atomicity cases passed; independent statement cancellation and the worker20s backlog gate failed. A later ten-phase worker diagnostic passed without changing pacing or gates. Final-code full rerun is BLOCKED before provisioning by the unchanged18GiB memory planning budget (17.49–17.85GiB available); no earlier reports are attributed to it. [QM](QM.md), [raw evidence](validation/qualification/2026-10-22-shutdown-recovery/README.md), [final-code default CI](https://github.com/Tobia5/model-sync-starter/actions/runs/39761845131). Accepted Q4 `fad6874` and prior evidence remain unchanged; all parent gates remain open and production remains NO-GO.
 
 - [x] Supply arc42, user handbook, production runbook, explicit job/event/visit APIs and ON_DEMAND recurrence.
 - [x] Supply a read-only PR/main workflow and separate guarded, manual development SNAPSHOT publishing workflow.
@@ -37,11 +39,14 @@ Acceptance: reproducible green Actions run on the review commit and on the merge
 Suggested owner: persistence maintainer + DBA/QA.
 - [x] Two independent Oracle connections coalesce one new subject, and reclaim rejects the old token: B1 `OracleConcurrencyIT`, 2 tests, 0.772 s. This is not independent-process/multi-pod proof.
 - [ ] Independent processes claim different subjects and demonstrate crash/restart fencing under contention.
+- [x] Force termination of owned JVMs at acknowledged durable-claim, owner-response, real projection-flush and committed-completion checkpoints; inspect fresh committed state and recover with a fresh JVM after lease expiry, reject old tokens and preserve newer generations/local revisions: Q5 completed full3564410, six `OracleRecoveryIT` cases PASS/64.32s. This is scoped headless coordinator recovery, not multi-process claim contention or continuous-worker pod-failure qualification.
 - [x] Prove real JPA projection + JDBC ledger rollback after flush, during completion, before commit and at physical Oracle COMMIT, with fresh-connection reads and separate retry metadata; preserve local-version and old-lease checks: Q2 `OracleAtomicityIT`, 7 passed / 11.95 s through the actual starter `JpaTransactionManager`. Repeated unchanged in Q3: seven passed / 13.558 s.
 - [x] Reject a different transaction-manager datasource before schema access: Q2 default `TransactionEnlistmentTest`; six portable H2 atomicity regressions also passed. This is not multi-datasource/XA qualification.
-- [ ] Extend to racing inserts and actual pessimistic/optimistic exception races, independent-process crash/restart and arbitrary supported host configurations.
+- [ ] Extend to racing inserts and actual pessimistic/optimistic exception races, contending independent processes and arbitrary supported host configurations; the six Q5 checkpoint recovery cases above close only their declared scope.
 - [ ] Test quota registration races, shared cooldown and admission across pods; include missing/misconfigured quota and database outage.
 - [ ] Set and test statement, lock and transaction timeouts; a fetch timeout does not bound database waits.
+  - [x] Qualify fixture-owned connection acquisition/read stalls, cooperative transaction rollback, controlled JPA-lock stop and uncertain COMMIT request/acknowledgement outcomes using fresh connections: Q5 full3564410,11/12 `OracleIoIT` cases passed. Direct pool acquisition/reuse is not saturated-worker end-to-end proof.
+  - [ ] Resolve independent locked-JDBC cancellation: effective query timeout2s, physical socket read still active at5001ms against unchanged5s/ORA-01013 gate in Q5 full. Passing2s network timeout does not close this failure.
 Acceptance: all scenarios pass against the deployed Oracle major version/JDBC driver, with bounded completion times. H2 and in-memory synchronization are not substitutes.
 
 ### R03 — Schema migration and rollback/recovery
@@ -67,6 +72,8 @@ Suggested owner: runtime maintainer + performance QA.
 - [ ] Qualify oldest-age/freshness SLOs and sustainable provider/DB economics at production-like statistics/distributions and multi-pod resource bounds; a million seeds and a completed sample do not establish this gate.
 - [x] Inject synthetic 429/timeouts and 5/25 ms latency: B1 Oracle workload (13 rate limits / 8 timeouts); local semantic Gatling cooldown recovery. No real provider or hung-call proof.
 - [ ] Inject hung calls, network reset, database loss, pod kill and shutdown during fetch/commit.
+  - [x] Exercise owned TCP stalls/reset/uncertain COMMIT, forced owned JVM termination and graceful/late-owner/locked-JPA stop with separate physical-operation and cleanup proof: Q5 scoped cases above; six crash cases and11/12 I/O cases PASS in the FAILED full. No database-wide loss or arbitrary partition claim.
+  - [ ] Qualify silent partitions/streaming peers, whole-database loss, contending/multi-pod failures and saturated-worker pool/thread recovery on supported deployment configurations.
 - [ ] Budget physical calls, including adapter-internal retries, MDM lookups and pagination; prove bursts respect the provider's actual contract.
 - [ ] Confirm whether urgent quota reservations and per-owner bulkheads are required. Weighted priority selection alone does not supply these guarantees.
 Acceptance: agreed resource and freshness SLOs met at target volume; no stale lease writes, runaway memory, busy-spin on cooldown or low-priority starvation. Record measured limits instead of inventing throughput guarantees.
@@ -77,6 +84,9 @@ Suggested owner: runtime maintainer + operations.
 - [ ] Add worker liveness/readiness signals and test alerts for stuck work and unavailable DB/provider. Do not fail the entire hosting service merely because one optional owner is down without a deliberate policy.
 - [ ] Provide authorized DEAD inspection/replay with reason, actor and audit, preserving cooldown and source intent.
 - [ ] Test graceful drain/cancellation/lease recovery and connection/thread pool exhaustion.
+  - [x] Implement bounded claim-admission stop/drain with physical lifetime/capacity retained through reactive cancellation and blocked restart while unresolved; Q5 default regressions and controlled full Oracle/owner cases. Late owner stop correctly reported TIMED_OUT with logical0/physical1, then DRAINED after fixture release; no late application.
+  - [x] Verify direct fixture Hikari exhaustion1008ms/reuse and owned process/pool/thread/socket cleanup: Q5 completed full. All seven session containers/volumes independently absent; final blocked attempt created none.
+  - [ ] Complete final8830c3f full qualification after adequate host headroom; resolve statement failure and investigate/repeat the full-context worker backlog gate. Extend beyond direct fixture exhaustion to saturated-worker/shared-host conditions.
 Acceptance: a second operator can diagnose and recover a forced incident from documented metrics/runbooks, without direct ad hoc edits to business tables. Never tag metrics with customer IDs or unbounded tenants.
 
 ### R06 — Trust boundaries and delivery correctness
