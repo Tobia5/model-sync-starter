@@ -83,6 +83,7 @@ class OracleRecoveryIT {
       var checkpoint = FaultEvidence.read(directory.resolve("checkpoint.json"));
       assertEquals(point.name(), checkpoint.get("point"));
       assertEquals(child.process.pid(), ((Number) checkpoint.get("pid")).longValue());
+      assertEquals(id, checkpoint.get("work_id"), "The acknowledged claim must belong to this exact synthetic case");
       var oldLease = new WorkLease(key, (String) checkpoint.get("token"), ((Number) checkpoint.get("generation")).longValue(),
           0, true, Priority.URGENT, Instant.ofEpochMilli(((Number) checkpoint.get("lease_until_ms")).longValue()));
       result.put("checkpoint", checkpoint);
@@ -151,6 +152,14 @@ class OracleRecoveryIT {
     long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(milliseconds);
     while (!condition.getAsBoolean() && System.nanoTime() < deadline) Thread.sleep(10);
     assertTrue(condition.getAsBoolean(), "Acknowledged condition exceeded " + milliseconds + "ms");
+  }
+  @AfterEach void removeOnlyThisCasesWork() {
+    if (jdbc != null) for (String id : ownedIds) {
+      jdbc.update("delete from MS_STATE where work_id=?", id);
+      jdbc.update("delete from MS_WORK where work_id=?", id);
+      jdbc.update("delete from SAMPLE_CUSTOMER where storage_key=?", id);
+    }
+    ownedIds.clear();
   }
   @AfterAll void close() throws Exception {
     if (context != null) {

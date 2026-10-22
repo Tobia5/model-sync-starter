@@ -31,7 +31,7 @@ final class RecoveryControl {
     try {
       Path temporary = directory.resolve("checkpoint.tmp");
       FaultEvidence.write(temporary, Map.of("point", reached.name(), "pid", ProcessHandle.current().pid(),
-          "token", lease.token(), "generation", lease.generation(), "lease_until_ms", lease.expiresAt().toEpochMilli()));
+          "work_id", lease.key().storageId(), "token", lease.token(), "generation", lease.generation(), "lease_until_ms", lease.expiresAt().toEpochMilli()));
       Files.move(temporary, directory.resolve("checkpoint.json"), java.nio.file.StandardCopyOption.ATOMIC_MOVE);
       new CountDownLatch(1).await();
       throw new AssertionError("Only process termination may release a crash checkpoint");

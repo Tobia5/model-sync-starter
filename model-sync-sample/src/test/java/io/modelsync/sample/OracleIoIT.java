@@ -224,7 +224,8 @@ class OracleIoIT {
       blocker.setAutoCommit(false);
       try (var lock = blocker.prepareStatement("update SAMPLE_CUSTOMER set display_name='held' where storage_key=?")) { lock.setString(1, id(key)); lock.executeUpdate(); }
       control.value = "after"; request(key); worker.start();
-      OracleRecoveryIT.await(() -> jdbc.queryForObject("select count(*) from v$session where username=user and event='enq: TX - row lock contention'", Integer.class) > 0, 3000);
+      OracleRecoveryIT.await(() -> jdbc.queryForObject("select count(*) from v$session where username=user and state='WAITING'"
+          + " and blocking_session is not null and event='enq: TX - row lock contention'", Integer.class) > 0, 3000);
       worker.stop(); result.put("stop", worker.shutdown()); assertEquals(WorkerShutdownStatus.TIMED_OUT, worker.shutdown().status());
       assertTrue(worker.shutdown().physicalOperations() > 0); assertTrue(worker.shutdown().elapsedMillis() <= 800);
       blocker.rollback();
