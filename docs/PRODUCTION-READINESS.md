@@ -12,6 +12,12 @@ Current Q3 qualification: source `ede199a33ad3a0ec5c911110bb84fd7407af1c25`, tre
 
 Production remains **NO-GO** while applicable [parent release gates](../TODO.md) remain incomplete. The tested single-datasource rollback gap is closed for the injected cases, including physical Oracle commit rejection, old leases and local revisions. Independent-process/crash/racing-insert proof, production-like capacity/SLOs, real provider budgets, timeouts, operations/security, consumer/compatibility/supply-chain and retention gates remain open. The earlier Q2 selection-cost finding is preserved as history. Q3 does not show uniform improvement: gathered-stat all-future probes used 1859 versus legacy 1710 logical gets. Index/history/polling economics, ambiguous per-cursor reload counters and sustainable multi-pod capacity remain open; use callback selector counts and native session deltas. The test-only owned-schema DDL teardown is not production cleanup performance.
 
+### Q4 continuous-worker qualification
+
+Source `fad6874c9fa0e0a16ed7d542cace11ea89a991e1`, tree `a530a260738510da84ed7f68fd26a8a75b803d67`, full run `1afffb7d-52ca-4d4a-8857-23c3cefb8f4c` passed:113 Surefire/27 Oracle tests, PIT160/162, six semantic Gatling simulations/367 HTTP requests/zero errors. Default local/CI passed111 JUnit tests. The actual auto-configured worker/JPA/JDBC probe completed160 measured reconciliations per mode in18061ms fixed/9467ms bounded pacing. Warmed empty polling15.00→3.99/s and native gets3493→998.75/s; ten phases passed with stable physical-session endpoints. Cursor attribution records1116 valid/42 unattributable intervals, preserving all raw data and prior corrections. [QM](../QM.md) and [raw evidence](../validation/qualification/2026-10-22-worker-pacing/README.md) define the exact scope.
+
+The accepted selector and scoped mixed-transaction milestones remain established and unchanged; all seven atomicity cases passed again. The million-row coordinator sample completed200 during measurement/210 with warmup, not one million. Its direct5ms runOne loops differ from the actual worker/JPA probe. Small local wake/resource budgets do not establish production SLOs or graceful shutdown under I/O. All parent gates remain open and production stays **NO-GO**; no merge or package publication occurred.
+
 ## Historical main assessment
 
 **Date:** 2026-10-20. **Remote baseline:** `a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6`.

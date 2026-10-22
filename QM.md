@@ -1,5 +1,235 @@
 # Model Sync qualification evidence
 
+**2026-10-22. Default: PASS. Configured local full: PASS. Production: NO-GO.**
+
+Tested code **`fad6874c9fa0e0a16ed7d542cace11ea89a991e1`**; tree **`a530a260738510da84ed7f68fd26a8a75b803d67`**; clean change digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`. A later report/documentation commit is not claimed as full-tested.
+
+**First supported scope:** known-ID owner-to-Oracle/JPA reconciliation in one correctly enlisted
+datasource/`JpaTransactionManager`, with application-supplied detached mappings, owner reader,
+authorization and provider policy. All R01-R13 parent gates remain open. No vendor connector,
+inventory, bulk-owner feature, main change, merge or package publication is included.
+
+## Current commands and identity
+
+| Lane | Actual command / identity | Exit / measured outcome |
+|---|---|---|
+| Local default | `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify`; run `4285d942-bb2c-4cd0-b1f0-6ba62e9b1203` | **0 / PASS**, 57.605s supervisor elapsed; 111 JUnit tests, zero failures/errors/skips; 57 Python guards |
+| Targeted worker diagnostic | `python -u scripts/full-oracle-container.py --worker-diagnostic`; run `5e90ca7c-540f-411f-965d-6108c76b6d2c` | **0 / diagnostic PASS**, 156.583s; one JUnit test/ten phases; full **NOT_RUN** for that attempt |
+| Full | `python -u scripts/full-oracle-container.py`; run `1afffb7d-52ca-4d4a-8857-23c3cefb8f4c`; attempt `d61f7d92-b0e8-4604-8823-a817a71f6ee7` | **Maven0 / wrapper0 / supervisor0 / collector0 / PASS**, wrapper7763.45s, supervisor7764.018s including provisioning/cleanup |
+| Default CI | [39682007724](https://github.com/Tobia5/model-sync-starter/actions/runs/39682007724), run `468f0059-d144-4b92-8247-feed6eb6f082` | **PASS**, 111 JUnit; actual merge-test SHA `33e114c25bd42eeaaa0214c6b34d294259955739`, identical tested tree |
+| Offline current-code contracts | Git Bash `bash scripts/test-triggers.sh`, sequentially after full | **0 / PASS**, 86 core / 43 trigger assertions; not additional JUnit tests |
+
+The full wrapper invoked `mvnw.cmd -B -ntp -s <repository>/.mvn/qualification-central.settings.xml
+-Pfull clean verify`. Invocation-only environment: `MODELSYNC_MAVEN_SETTINGS=.mvn/qualification-central.settings.xml`,
+`MODELSYNC_ORACLE_CONTAINER=EXPLICIT_DISPOSABLE`, `MODELSYNC_FULL_ENV_ACK=DISPOSABLE_NONPRODUCTION`.
+Six external Oracle connection variables were cleared. Settings SHA-256
+`ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`; user/global settings, DNS and TLS
+were unchanged. Original Windows Cp1252 log bytes and the normalized UTF8 collector log are retained.
+
+Default recorded 102 plugin goals, none PIT/Gatling/Failsafe. Full retained base checks and produced
+**113 Surefire tests/23 XML +27 Oracle tests/9 XML**, zero failures/errors/skips, six Gatling
+simulations and a passing final evidence gate. No reports were rejected, required tests filtered,
+thresholds lowered or workloads reduced. Full GitHub CI is **NOT_RUN**: the workflow registry
+exposes the default workflow, while the full workflow remains branch-only/unregistered on main.
+No bootstrap or dispatch was performed. Approved local disposable execution supplied this result.
+
+## Actual continuous worker: configuration and measurements
+
+`OracleWorkerIT` starts the actual auto-configured `ReactorSyncWorker` SmartLifecycle bean and
+coordinator with real JPA projection/JDBC ledger+quota implementations, instrumented through
+delegating test ports. The configured manager is `JpaTransactionManager` on the same datasource.
+Four lanes/persistence threads; eight owner threads; queue 64/thread; Hikari 8/maxLifetime 0;
+main-provider spacing 20ms; synthetic owner latency 5ms, one controlled fetch per grant.
+These stub entries are not measurements of real provider HTTP/fanout. Ten actual-worker warmup
+completions and 160 measured completions per mode; fixed mode first, fresh host/pool per mode;
+no global cache flush, retained table/index history. Observation SQL is included in native work.
+
+Auto-configured pacing now waits 5ms after a fetched/application attempt, and 250, 500, then at most
+1000ms after empty, prepare-only/deferred or failed ticks. Fetch resets only that lane. Positive
+delays, four-lane capacity, authoritative distributed admission and persisted failure backoff remain.
+There is no next-due cache. Existing five-argument construction retains its fixed-delay behavior.
+`WorkerActivity` counts scheduling outcomes, not successful committed synchronizations; deferred
+includes RetryLater and prepare-only/already-fresh completion. Quota decisions and persisted
+APPLIED outcomes are counted separately. New pacing is unit/application-tested, outside the
+unchanged eight-class core PIT scope.
+
+| Actual worker phase | ms | Polls / empty / deferred | Callbacks | Grants / denials / stub calls | Committed APPLIED | Completed/s | Native logical gets / physical reads |
+|---|---:|---|---:|---|---:|---:|---|
+| fixed-productive | 18061 | 254 / 94 / 0 | 1319 | 160 / 0 / 160 | 160 | 8.859 | 364697 / 0 |
+| bounded-productive | 9467 | 208 / 48 / 0 | 963 | 160 / 0 / 160 | 160 | 16.901 | 211129 / 0 |
+| fixed-empty | 4000 | 60 / 60 / 0 | 360 | 0 / 0 / 0 | 0 | 0.000 | 13972 / 0 |
+| bounded-empty | 4012 | 16 / 16 / 0 | 128 | 0 / 0 / 0 | 0 | 0.000 | 4007 / 0 |
+| bounded-future | 4011 | 16 / 16 / 0 | 96 | 0 / 0 / 0 | 0 | 0.000 | 3863 / 0 |
+
+Fixed productive configuration: 250ms after every tick. Bounded productive configuration: 5ms
+after fetch, idle cap 1000ms. Both completed 160; elapsed 18061→9467ms within this single controlled
+sample. Native total logical gets364697→211129, while logical gets/s increased20192.5→22301.6
+with productive throughput. This does not promise a uniform resource-rate reduction or production SLO.
+
+After3s idle warmup, the4s empty measurement changed15.00→3.99 polls/s,90.00→31.90 selector
+callbacks/s and3493.00→998.75 native logical gets/s. All-future(1000 rows):3.99 polls/s,
+23.93 callbacks/s,963.10 logical gets/s. All three idle windows had zero grants, denials,
+stub calls and physical reads. Per-poll cost did not uniformly improve; selection SQL is unchanged.
+
+Predeclared local budgets: warmed adaptive idle≤6*t_seconds+4 ticks; control≤18*t_seconds+4;
+selector callbacks≤9*ticks+36; adaptive idle≤100000 logical gets/s; wake probes≤2500ms.
+**Documentation correction:** there are FOUR priorities. The maximum empty path count with two
+bindings can be12 callbacks/tick. The unchanged9*ticks+36 assertion is an aggregate window
+resource allowance, not a mathematical per-tick bound. The earlier three-priority explanation was
+incorrect. No numbers/gates were changed after observing results. Client fetch size/max rows,
+callback counts and this small resource budget do not prove constant database work.
+
+| Wake/recovery probe | Recorded ms / outcome |
+|---|---|
+| Future WAITING becomes due without another enqueue | observed completion upper374 |
+| New local urgent work | conservative completion bracket847–859 |
+| Independent JVM enqueues through public WorkStore | exit0; bracket959–1571; phase1879 includes process startup |
+| Expired lease during main-provider cooldown | observed recovery upper838; returned to WAITING with no main-owner call |
+| Independent provider during cooldown | one committed APPLIED outcome; application reconciliation timestamp lag33 |
+| Cooldown expires | observed completion upper770 after eligibility; two main-provider calls/two APPLIED outcomes |
+
+The other-provider33ms value is MS_STATE's application timestamp before COMMIT, not exact fresh-read
+latency; a fresh committed read verifies its outcome. Other wake fields use observer timestamps;
+cross-process commit bracketing conservatively includes connection/transaction and observation time.
+These are isolated probes, not p50/p95/p99 distributions. Polling awaits are not database statement
+timeouts. All ten phases had identical eight SID/serial pairs at native endpoints, zero benign-probe
+failures and zero measured cancellations. After snapshots precede cancellation; fixtures stop in a
+natural idle gap. This does not qualify shutdown during I/O, hung adapters or general production drain.
+Native worker counters exclude the exited enqueue process's own database work. Scheduling and
+native endpoints are sequential observations with declared boundary allowances.
+
+## Coordinator workload remains a separate measurement
+
+The existing benchmark still uses four direct `runOne` loops with5ms sleep, JDBC projection,
+pool8, owner spacing20ms,5/25ms latency,429 every17th call and timeout every29th. It is not the
+auto-configured worker/JPA probe. One million seeded intents,100k due/900k future,100 hot requests;
+230-call target/150-completion floor retained. Seed6264795ms; ten warmup calls/completions913ms;
+measurement18167ms; owned teardown12372ms, zero ledger rows, FK restored/validated and orphan
+rejection verified against the matching2137ms one-record preflight.
+
+Measured224 ledger attempts /220 grants+stub entries /4 denials /200 persisted completions,
+**11.009 completed/s**; total230 entries/210 projections/completions with warmup,13 rate limits,
+7 synthetic timeouts. Polls3062/empty2838; store selections11968/empty11744; completed selector
+callbacks12457. Native51646 consistent+19201 current=70847 logical gets,239 physical reads,
+18620 executions,19220 parses,3038256 redo bytes,3747 commits,53 sorted rows. The legacy
+`db_session_work=71049` has different endpoints/includes physical reads; it is not the logical sum.
+Claimed p50/p95/p99=44/75/80ms; empty4/4/5ms; overall4/43/64ms. Lag6289465/6301576/6302087ms
+includes the long seed. **One million seeds are not one million completed reconciliations.**
+
+Accepted ede coordinator sample:200 measured completions/11096ms=18.025/s; current200/18167ms.
+Core selector/admission/coordinator code and Oracle caps are unchanged. Seed also slowed from
+4336952 to6264795ms; a bounded liveness snapshot observed checkpoint-incomplete redo switching.
+Do not attribute this cross-run variation to Reactor pacing or infer wall-clock share from logical gets.
+Within the current100k forward/reverse comparison, all eight cases passed: combined native gets/
+completion293.675/285.865 versus baseline154220.378/198739.239, denials5/4 versus83/172;
+selector-only433.765/531.885 gets with507/666 denials; admission-only112659.800/112652.880 gets,
+zero denials. Comparison594.4s. Eight scale populations/48 paired legacy-selected probes passed,
+including gathered statistics; eleven selection cases and three concurrency cases passed. Plans,
+statistics, waits, physical reads and phase costs remain in raw JSON, without reopening accepted SQL.
+
+## Cursor attribution and evidence integrity
+
+Full loaded identity (SQL/child/address/load time/load count) plus monotonic observed counters is
+required for a delta. Reloads, resets, missing-before and disappearing children retain original
+snapshots with UNATTRIBUTABLE/null deltas. An unchanged continuous child has a valid zero delta.
+Six cheap measurement tests cover retained/reset reload counts, regressions and disappearance;
+Python guards reject invented ambiguous counts. LAST-plan discovery is separately labelled when
+its execution window is unattributable; it is not summed as current SQL executions.
+
+Across60 non-overlapping declared coordinator/scale/comparison windows: **1116 VALID interval
+records /42 UNATTRIBUTABLE** (20 load changes,20 missing-before,2 disappeared; no live reset in
+this run). These are selected statement-family interval records, including valid zeros, not distinct
+cursors or execution totals and not all worker SQL. Callback, native-session and cursor counters
+remain separate. The historical invalid reload sum and documented correction remain unchanged.
+
+## Retained safety, mutation and load evidence
+
+Seven `OracleAtomicityIT` cases passed in12.14s through the actual starter/JPA/JDBC manager;
+case source is unchanged from the accepted milestone. Fresh reads verified success, rollback after
+flush, ledger failure, beforeCommit, physical Oracle commit rejection, local-version and stale-lease
+checks. Six portable H2 cases and wrong-datasource startup rejection remain in default.
+
+PIT 1.25.9/JUnit provider 1.2.3 ran with Jupiter/Platform 6.0.3: **160/162 killed=98.765432%**,
+7s,415 internal test invocations (not JUnit counts). Raw KILLED160/SURVIVED1/NO_COVERAGE1;
+timeouts/run errors/memory errors/nonviable zero; unchanged85% killed/all-generated gate and
+eight behavioral classes, all22 provider-scheduler mutations killed. Remaining FreshnessPolicy
+positive(maxAge) removal has the unchanged acceptance-equivalence argument (positive refreshAfter
+and ordering reject invalid maxAge; exception order/messages not equivalent). SyncCoordinator.options
+remains uncovered. Both stay in denominator, no new exclusions, maintainer review open. Java mutations
+do not verify Oracle SQL.
+
+Six in-memory Gatling simulations passed:367 HTTP requests,zero errors,one passing assertion XML
+each. They are semantic checks, not Oracle capacity. Warmup0, max heap1GiB, eight handlers/backlog256.
+
+| Scenario | HTTP requests | HTTP p50/p95/p99 ms | Ledger / stub entries / completed rows | Measurement+drain ms |
+|---|---:|---|---|---:|
+| fresh | 40 | 75/163/163 | 1 / 1 / 0 | 657 |
+| hot | 100 | 192/199/200 | 1 / 1 / 0 | 688 |
+| unsafe | 20 | 57/58/58 | 1 / 0 / 0 | 1189 |
+| event | 4 | 2/22/22 | 1 / 2 / 0 | 486 |
+| cooldown | 3 | 5/23/23 | 1 / 2 / 0 | 429 |
+| leases | 200 | 257/281/285 | 200 / 82 / 82 | 807 |
+
+Fresh's one owner entry is initialization, not a fetch caused by fresh visits. HTTP acceptance,
+owner entries and committed synchronization outcomes remain different quantities.
+
+## Environment, cleanup and preserved attempts
+
+Temurin21.0.12.1 / Maven3.9.9 / Python3.12.10, Windows; Boot4.1.1/Spring7.0.9/Hibernate7.4.5.Final/
+H2 2.4.240; Surefire-Failsafe3.5.3/ArchUnit1.5.0/Gatling3.13.1 plugin4.11.0; Oracle26ai Free/
+ojdbc11 23.26.3.0.0. Pinned image digest
+`6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd`.
+Container6GiB/4CPU; effective FreeDB2CPU, SGA1610612736/PGA536870912 bytes, writer1/two10MiB
+redo groups, unchanged from ede. Docker29.8.2/8CPU/25201700864 bytes engine RAM. Preflight
+25.555GiB free host RAM, C132.749/D1070.142GiB free; planned6Oracle+8build+4reserve. Point
+samples are not peak proof. Workload JVM max16944988160/end-used270380992 bytes,16 visible CPUs;
+pool8/lifetime0 only for bounded measurements. No resource increase or global Docker change.
+
+Full owned container `msq-1927b79e7766`/volume `msq-1927b79e7766-data` were removed and
+independently absent (inspect exits1 with specific not-found responses). Successful/failed diagnostic
+containers/volumes were also independently absent. No residual session resources; public caches
+retained. All512 pre-existing stopped containers and unrelated resources were untouched.
+
+| Preserved attempt | Actual disposition |
+|---|---|
+| Dirty development CLI/StepVerifier/enum-switch-helper checks | FAILED; separate original logs. Unbound/dirty data never qualifies current source |
+| 3a9d641 blocked diagnostic preflight, wrapper014b97a7 | BLOCKED/Oracle NOT_RUN; Cp1252 log decode before provisioning, wrapper2; old supervisor collector then exited1 on absent marker; original exits retained |
+| 3a9d641 diagnostic run dfe0b23e | FAILED, one executed JUnit test; quota RetryLater activity misclassified and stop interrupted Oracle reads. Native comparisons unqualified, partial results retained; cleanup PASS |
+| 9c83934 default | FAILED Python guard positive-fixture error before marker/JUnit; later suites NOT_RUN; corrected in fad6874 |
+| fad6874 default / diagnostic / current full | Separately source/run-bound PASS results above; no historical evidence attributed to them |
+
+## Review, artifact and remaining gates
+
+Responsibility review: ReactorSyncWorker owns bounded async orchestration/activity; WorkerPacing
+owns per-lane delays; core planning, admission, result application and failure policy remain unchanged.
+Counter classification is test-only. Constructor injection and inward dependencies remain; actual
+compiled-output architecture checks and no-hand-written-nested-types rules passed. This review is
+not independent security approval or proof of every SOLID property.
+
+[Raw evidence](validation/qualification/2026-10-22-worker-pacing/README.md):
+**3,607,197 bytes /758 files /13 components**;
+SHA-256 `af3434238eafdd9f3064012a5d41bf7012c19499e02146fadff7072129afe7aa`. Per-file hashes/ZIP CRC and756-input credential-shaped/sensitive-XML
+scan passed with zero findings;11 library JAR hashes only, no binaries. Run-scoped `target/qm/QM.md`
+and all raw reports are archived. The root report preserves the exact previously published ede
+report below, and all three earlier ZIP hashes were verified unchanged.
+
+**Production remains NO-GO.** Parent gates stay open: independent-process crash/restart/racing
+inserts, production DB timeouts, migration interruption/backup/rollback, production-like multi-pod
+capacity/freshness SLOs, future-only/index-history work, slow/hung-provider isolation and physical
+fanout budgets, shutdown/connection exhaustion, authorization/security/operations, independent
+consumers, compatibility/SBOM/supply-chain and retention. Local small-probe budgets and full-profile
+PASS do not close these gates. Full CI registration/protection also remains unresolved. Batching,
+bulk-owner protocol, vendor connectors and inventory were not added.
+
+---
+
+## Historical ede199a qualification report — preserved verbatim
+
+Everything below is the earlier c21d6da report for its explicitly named source/run, not current results.
+
+# Model Sync qualification evidence
+
 **2026-10-21. Default: PASS. Configured local full: PASS. Production: NO-GO.**
 
 Tested code: **`ede199a33ad3a0ec5c911110bb84fd7407af1c25`**; tree: **`7c9577e9de49a2f96b1093a65673250a46163da6`**; clean change digest `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`. The later documentation/artifact commit is not claimed as full-tested source.

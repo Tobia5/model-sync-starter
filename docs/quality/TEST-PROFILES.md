@@ -97,8 +97,10 @@ The original coordinator benchmark retains its direct `runOne` loops and 5 ms sl
 Predeclared local diagnostic budgets: after 3 s idle warmup, observe 4 s of empty/all-future
 polling. Bounded pacing allows 6 ticks/s plus four boundary ticks (expected steady rate about
 4/s for four lanes); fixed control allows 18/s plus four (expected 16/s). Two bindings and
-three priorities permit at most nine completed selector callbacks/tick plus 36 in-flight window
-boundary callbacks. Adaptive idle native logical gets must stay below 100,000/s in this small
+four priorities can require up to twelve completed selector callbacks in an empty tick.
+The unchanged `9*ticks+36` assertion is an aggregate measurement-window resource allowance,
+not a mathematical per-tick bound. The earlier three-priority rationale was incorrect; its
+correction changes no measured numbers, runtime policy or predeclared gate. Adaptive idle native logical gets must stay below 100,000/s in this small
 1000-future-row probe. This deliberately generous diagnostic ceiling allows the previously
 observed index-history costs with headroom; it is not a production capacity/SLO guarantee or
 a proof of constant selector work. Report measured native gets/reads separately. No relative
@@ -127,3 +129,10 @@ replacement-session counters. It is not a production graceful-drain or hung-call
 RetryLater from authoritative admission is classified as deferred; prepare-only/fresh no-fetch
 paths share that scheduling counter. It is not a count of quota denials (the quota port records
 those separately). Benign pacing phases must report zero infrastructure/owner failures.
+
+Current Q4 full result: source `fad6874`, tree `a530a260738510da84ed7f68fd26a8a75b803d67`, run
+`1afffb7d-52ca-4d4a-8857-23c3cefb8f4c`:113 Surefire/27 Oracle, PIT160/162, six Gatling scenarios,
+all ten worker phases PASS. [QM](../../QM.md) reports actual config/resources and scope. The
+other-provider33ms raw field uses application reconciled-at before COMMIT, not exact committed
+observation latency; a fresh committed read verifies the outcome. Other wake fields use observer
+timestamps/commit brackets. Polling helpers do not replace production DB statement timeouts.
