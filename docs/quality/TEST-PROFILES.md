@@ -1,5 +1,24 @@
 # Verification profiles
 
+### Explicit process and I/O fault lane
+
+[The failure contract](FAILURE-CONTRACT.md) precedes this implementation. Default verification
+adds shutdown policy, uncancelled async-stage/physical-capacity and configuration regressions.
+`OracleRecoveryIT` has six independent-JVM cases: four acknowledged crash points, a newer
+request and a concurrent local revision. Only the owned worker JVM is forcibly terminated;
+Oracle remains available to fresh observers and a new worker process. `OracleIoIT` has twelve
+small lock/pool/transport/transaction/shutdown/uncertain-COMMIT cases. Fixture-owned pools,
+loopback relays and synthetic owner sockets provide separate bounds; no host datasource
+configuration is changed. Transport payloads and credentials are never recorded.
+
+`python scripts/full-oracle-container.py --recovery-diagnostic` runs just these eighteen tests,
+after a successful current-source default build and explicit full preflight. It neither seeds
+a million rows nor runs PIT/Gatling; its result is DIAGNOSTIC_ONLY / full NOT_RUN. The complete
+full profile retains all prior workloads and additionally requires both suites and fresh,
+source/run-bound `oracle-recovery.json` / `oracle-io.json`. Partial failed fault measurements
+are collected independently of qualification; missing cases/resource proof cannot qualify.
+See QM for actual executions; test implementation alone is not successful evidence.
+
 The full-only local HTTP harness has eight handler threads and a bounded accept backlog of 256 for the largest declared 200-user burst. A 200-socket regression checks connection refusal without running Gatling. The Gatling fork explicitly uses the performance module as its working directory, placing harness JSON beside that module's reports. Qualification checks both harness outcomes and fresh Gatling request counts/assertion XML; HTTP failures cannot be hidden by passing owner/ledger assertions. Failed-run QM retains request counts and response-time percentiles separately from completed synchronizations.
 
 | Command | Required work | Excluded work |

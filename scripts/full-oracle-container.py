@@ -60,7 +60,7 @@ def maven_command(diagnostic: bool = False) -> list[str]:
             else [*command, '-Pfull', 'clean', 'verify'])
 
 
-def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker: bool = False) -> list[str]:
+def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker: bool = False, recovery: bool = False) -> list[str]:
     """Use only the current successful default build's compiled tests and resolved classpath."""
     current(root)
     for script in ('check-test-reports.py', 'check-default-log.py'):
@@ -86,6 +86,9 @@ def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker
     fresh(compiled, root)
     if worker:
         fresh(root / 'model-sync-sample/target/test-classes/io/modelsync/sample/OracleWorkerIT.class', root)
+    if recovery:
+        for name in ('OracleRecoveryIT', 'OracleIoIT'):
+            fresh(root / f'model-sync-sample/target/test-classes/io/modelsync/sample/{name}.class', root)
     jdbc_tests = root / 'model-sync-persistence-jdbc/target/test-classes'
     fresh(jdbc_tests / ('io/modelsync/jdbc/OracleOptimizationIT.class' if queue_comparison else 'io/modelsync/jdbc/OracleScaleIT.class'), root)
     java_home = os.environ.get('JAVA_HOME')
@@ -93,7 +96,7 @@ def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker
     if not java or not Path(java).is_file():
         raise ValueError('The build JDK is unavailable for diagnostics')
     return [java, f'-Dmodelsync.repository.root={root}',
-            '-Dmodelsync.oracle.diagnostic=' + ('worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale'), '-cp',
+            '-Dmodelsync.oracle.diagnostic=' + ('process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale'), '-cp',
             str(jdbc_tests) + os.pathsep + classpath, 'io.modelsync.sample.OracleDiagnosticRunner']
 
 
@@ -160,19 +163,19 @@ def preflight() -> None:
     docker('info', '--format', '{{.ServerVersion}}')
 
 
-def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool = False) -> int:
-    diagnostic = diagnostic or queue_comparison or worker
+def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool = False, recovery: bool = False) -> int:
+    diagnostic = diagnostic or queue_comparison or worker or recovery
     attempt = {'attempt_id': str(uuid.uuid4()), **identity(ROOT), 'image': IMAGE,
                'runtime_schema': 'MS_TEST_RUNTIME', 'migration_schema': 'MS_TEST_MIGRATION',
                'mode': 'diagnostic' if diagnostic else 'full',
-               'diagnostic_scope': ('worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale') if diagnostic else None,
+               'diagnostic_scope': ('process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale') if diagnostic else None,
                'full_qualification': 'NOT_RUN' if diagnostic else 'REQUIRES_FULL_EVIDENCE'}
     selected = os.environ.get('MODELSYNC_MAVEN_SETTINGS')
     attempt['maven_settings'] = selected or 'USER_DEFAULT'
     if selected == PROJECT_SETTINGS and (ROOT / selected).is_file():
         attempt['maven_settings_sha256'] = hashlib.sha256((ROOT / selected).read_bytes()).hexdigest()
     try:
-        launcher = diagnostic_command(queue_comparison=queue_comparison, worker=worker) if diagnostic else None
+        launcher = diagnostic_command(queue_comparison=queue_comparison, worker=worker, recovery=recovery) if diagnostic else None
         invalidate(ROOT)
         preflight()
     except (ValueError, OSError, ET.ParseError, subprocess.CalledProcessError) as error:
@@ -320,5 +323,7 @@ if __name__ == '__main__':
                             help='Run only queue locking and four-way comparison diagnostics; never qualifies full')
     selections.add_argument('--worker-diagnostic', action='store_true',
                             help='Run only actual auto-configured worker pacing diagnostics; never qualifies full')
+    selections.add_argument('--recovery-diagnostic', action='store_true',
+                            help='Run only independent-JVM and bounded I/O fault diagnostics; never qualifies full')
     args = parser.parse_args()
-    raise SystemExit(main(args.diagnostic, args.queue_diagnostic, args.worker_diagnostic))
+    raise SystemExit(main(args.diagnostic, args.queue_diagnostic, args.worker_diagnostic, args.recovery_diagnostic))

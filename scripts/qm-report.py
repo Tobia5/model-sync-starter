@@ -15,6 +15,7 @@ import subprocess
 import xml.etree.ElementTree as ET
 from run_evidence import current, fresh, reactor_modules
 from gatling_evidence import measured as gatling_measured
+from failure_evidence import collect as collect_fault, SCOPES as FAULT_SCOPES
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -91,7 +92,7 @@ def collect(full: bool, root: Path = ROOT) -> dict:
     executed_oracle = set()
     oracle_modules = {'model-sync-persistence-jdbc': ('OracleSmokeIT', 'OracleConcurrencyIT',
                       'OracleMigrationIT', 'OracleScaleIT', 'OracleCapacityIT', 'OracleSelectionIT', 'OracleOptimizationIT'),
-                      'model-sync-sample': ('OracleAtomicityIT', 'OracleWorkerIT')}
+                      'model-sync-sample': ('OracleAtomicityIT', 'OracleWorkerIT', 'OracleRecoveryIT', 'OracleIoIT')}
     for module, names in (oracle_modules.items() if full else ()):
         if module not in modules:
             continue
@@ -230,7 +231,23 @@ def collect(full: bool, root: Path = ROOT) -> dict:
         if suite and (suite.get('status') == 'FAILED' or any(suite.get(k, 0) for k in ('failures', 'errors', 'skipped'))):
             worker['measurement_report_status'] = worker.get('status')
             worker.update(status='FAILED', reason='Worker suite failed; fresh partial measurements retained')
+    faults = {}
+    if full:
+        for name in FAULT_SCOPES:
+            try:
+                faults[name] = collect_fault(root, name)
+            except (ValueError, OSError, json.JSONDecodeError) as error:
+                faults[name] = {'status': 'REJECTED', 'reason': str(error)}
+            suite_name = 'OracleRecoveryIT' if name == 'oracle-recovery' else 'OracleIoIT'
+            suites = modules.get('model-sync-sample', {}).get('failsafe', {}).get('suites', [])
+            suite = next((s for s in suites if s['name'].rsplit('.', 1)[-1] == suite_name), None)
+            if suite_name in executed_oracle and faults[name] is None:
+                faults[name] = {'status': 'FAILED', 'reason': 'Executed fault suite without fresh measurements'}
+            elif suite and suite.get('status') == 'FAILED' and isinstance(faults[name], dict) and faults[name].get('status') != 'REJECTED':
+                faults[name]['measurement_report_status'] = faults[name].get('status')
+                faults[name].update(status='FAILED', reason='Executed fault suite failed; partial measurements retained')
     return {'modules': modules, 'mutation': mutation, 'gatling': load, 'oracle_scale': scale,
+            'oracle_faults': faults,
             'oracle_worker': worker,
             'oracle_workload': measured, 'oracle_optimization': comparison, 'rejected': log_rejected + [reason for module in modules.values()
                 for suite in module.values() for reason in suite.get('rejected', [])],
@@ -301,6 +318,8 @@ def markdown(data: dict) -> str:
                    ('distributions', 'seed_work', 'cleanup_work', 'table_statistics', 'index_statistics', 'phase_diagnostics')} if item else None
         lines.append(label + ': ' + (json.dumps(summary, sort_keys=True) if summary else 'NOT_RUN.'))
     worker = evidence.get('oracle_worker')
+    for name, value in evidence.get('oracle_faults', {}).items():
+        lines.append(name + ': ' + (str(value.get('status')) + '; see raw JSON for fault points/outcomes/resources.' if value else 'NOT_RUN.'))
     lines.append('Actual Reactor worker: ' + (str(worker.get('status')) + '; see raw oracle-worker.json for phases.' if worker else 'NOT_RUN.'))
     for module_name, module in evidence['modules'].items():
         for runner in ('surefire', 'failsafe'):

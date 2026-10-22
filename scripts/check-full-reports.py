@@ -8,11 +8,12 @@ import xml.etree.ElementTree as ET
 from run_evidence import current, fresh
 from gatling_evidence import measured as gatling_measured
 from queue_evidence import check as check_queue_evidence, optimization as check_optimization, worker as check_worker
+from failure_evidence import qualify as check_failure_evidence
 
 ROOT=Path(__file__).resolve().parents[1]
 SIMULATIONS={'fresh','hot','unsafe','event','cooldown','leases'}
 ORACLE={'OracleSmokeIT','OracleConcurrencyIT','OracleMigrationIT','OracleScaleIT','OracleCapacityIT','OracleSelectionIT','OracleOptimizationIT'}
-ORACLE_MODULES={'model-sync-persistence-jdbc':ORACLE, 'model-sync-sample':{'OracleAtomicityIT', 'OracleWorkerIT'}}
+ORACLE_MODULES={'model-sync-persistence-jdbc':ORACLE, 'model-sync-sample':{'OracleAtomicityIT', 'OracleWorkerIT', 'OracleRecoveryIT', 'OracleIoIT'}}
 
 def oracle_suites(root=ROOT):
     found=set()
@@ -21,7 +22,7 @@ def oracle_suites(root=ROOT):
             fresh(report,root)
             suite=ET.parse(report).getroot()
             name=(suite.get('name') or '').rsplit('.',1)[-1]
-            minimum=7 if name=='OracleAtomicityIT' else 11 if name=='OracleSelectionIT' else 3 if name=='OracleConcurrencyIT' else 1
+            minimum=6 if name=='OracleRecoveryIT' else 12 if name=='OracleIoIT' else 7 if name=='OracleAtomicityIT' else 11 if name=='OracleSelectionIT' else 3 if name=='OracleConcurrencyIT' else 1
             total=int(suite.get('tests','0'))
             bad=sum(int(suite.get(x,'0')) for x in ('errors','failures','skipped'))
             if name in names and total>=minimum and bad==0: found.add(name)
@@ -107,8 +108,9 @@ def check(root=ROOT):
     check_queue_evidence(root,capacity,measured)
     comparison=check_optimization(root)
     worker=check_worker(root)
+    faults=check_failure_evidence(root)
     return {'junit_tests':tests,'oracle_suites':sorted(found),'pit_counts':dict(counts),
-            'pit_score':score,'gatling':load,'oracle_scale':capacity,'oracle_workload':measured,'oracle_optimization':comparison,'oracle_worker':worker}
+            'pit_score':score,'gatling':load,'oracle_scale':capacity,'oracle_workload':measured,'oracle_optimization':comparison,'oracle_worker':worker,'oracle_faults':faults}
 
 if __name__=='__main__':
     try: result=check()

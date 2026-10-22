@@ -1,0 +1,30 @@
+package io.modelsync.sample;
+
+import io.modelsync.core.application.SyncCoordinator;
+import io.modelsync.core.port.BlockingOwner;
+import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+
+/** Owned independent JVM. Oracle and the parent survive Runtime process termination. */
+public final class RecoveryProcess {
+  private RecoveryProcess() {}
+  static org.springframework.context.ConfigurableApplicationContext open(String... args) {
+    return new SpringApplicationBuilder(RecoveryConfiguration.class).web(WebApplicationType.NONE)
+        .profiles("recovery-oracle").properties("spring.jpa.hibernate.ddl-auto=validate", "spring.main.banner-mode=off",
+            "logging.level.root=WARN", "model-sync.enabled=true", "model-sync.worker-enabled=false",
+            "model-sync.aop.enabled=false", "model-sync.lease=5s", "model-sync.fetch-timeout=1s",
+            "model-sync.retry-base=100ms", "model-sync.quotas.recovery-owner=1ms").run(args);
+  }
+  public static void main(String[] args) throws Exception {
+    try (var context = open(args)) {
+      var control = context.getBean(RecoveryControl.class);
+      var coordinator = context.getBean(SyncCoordinator.class);
+      var lease = coordinator.claim().orElseThrow(); control.lease = lease;
+      control.checkpoint(RecoveryPoint.CLAIM_COMMITTED);
+      var prepared = coordinator.prepare(lease).orElseThrow();
+      var result = ((BlockingOwner<?>) prepared.binding().owner()).fetch(prepared.request());
+      control.checkpoint(RecoveryPoint.OWNER_RESPONDED);
+      coordinator.finish(prepared, result);
+    }
+  }
+}
