@@ -64,5 +64,11 @@ def qualify(root: Path):
             if any(by_name[key].get('projection_and_success_atomic') is not True
                    for key in ('uncertain-before-commit', 'uncertain-after-commit')):
                 raise ValueError('Uncertain COMMIT atomic observation absent')
+            for key, expected in [('uncertain-before-commit', 'LEASED'), ('uncertain-after-commit', 'IDLE')]:
+                if by_name[key].get('fresh_work_status') != expected or by_name[key].get('fresh_outcome') != 'APPLIED':
+                    raise ValueError('Uncertain COMMIT persisted status/outcome absent')
+            if any(by_name[key].get('owned_worker_threads_terminated') is not True
+                   for key in ('graceful-owner-drain', 'late-owner-and-bounded-stop', 'locked-jpa-shutdown')):
+                raise ValueError('Physical worker thread termination proof absent')
         result[name] = value
     return result

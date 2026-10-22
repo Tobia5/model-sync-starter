@@ -57,7 +57,7 @@ def maven_command(diagnostic: bool = False) -> list[str]:
             raise ValueError('Reviewed project Maven settings file is absent')
         command.extend(('-s', str(path)))
     return ([*command, '-Pfull', '-N', 'initialize'] if diagnostic
-            else [*command, '-Pfull', 'clean', 'verify'])
+            else [*command, '-fae', '-Pfull', 'clean', 'verify'])
 
 
 def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker: bool = False, recovery: bool = False) -> list[str]:

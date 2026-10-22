@@ -36,6 +36,7 @@ class AsyncShutdownTest {
       long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
       while (worker.activity().failed() == 0 && System.nanoTime() < deadline) Thread.sleep(5);
       assertTrue(worker.activity().failed() > 0); assertFalse(completion.isCancelled());
+      f.clock.advance(Duration.ofMillis(2)); // Provider spacing must not mask the physical-capacity check.
       f.gateway.request("customer", "tenant-a", "another", Priority.URGENT, true);
       deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(2);
       while (worker.activity().deferred() == 0 && System.nanoTime() < deadline) Thread.sleep(5);

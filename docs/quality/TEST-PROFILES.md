@@ -19,6 +19,11 @@ source/run-bound `oracle-recovery.json` / `oracle-io.json`. Partial failed fault
 are collected independently of qualification; missing cases/resource proof cannot qualify.
 See QM for actual executions; test implementation alone is not successful evidence.
 
+The full container entry point uses Maven `-fae -Pfull clean verify` with the same explicit
+settings. Fail-at-end collects independent modules' evidence after a failure; it never skips
+required work or changes a failure into success. The wrapper preserves Maven's failing exit
+and the final full gate still rejects any failed/missing suite. Default commands are unchanged.
+
 The full-only local HTTP harness has eight handler threads and a bounded accept backlog of 256 for the largest declared 200-user burst. A 200-socket regression checks connection refusal without running Gatling. The Gatling fork explicitly uses the performance module as its working directory, placing harness JSON beside that module's reports. Qualification checks both harness outcomes and fresh Gatling request counts/assertion XML; HTTP failures cannot be hidden by passing owner/ledger assertions. Failed-run QM retains request counts and response-time percentiles separately from completed synchronizations.
 
 | Command | Required work | Excluded work |

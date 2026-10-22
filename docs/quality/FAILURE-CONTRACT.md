@@ -81,3 +81,17 @@ API basis: [Reactor future cancellation](https://projectreactor.io/docs/core/rel
 [Oracle statement cancellation limits](https://docs.oracle.com/en/database/oracle/oracle-database/19/jjdbc/JDBC-troubleshooting.html),
 and [Spring JDBC transaction deadlines](https://docs.spring.io/spring-framework/reference/data-access/jdbc/connections.html).
 Driver cancellation attempts are not unconditional physical-operation termination guarantees.
+
+## Retained diagnostic failure
+
+Source `226e4ebc883c6d891c5473efbca4ce8b0912b12f`, diagnostic run
+`87839e65-110e-4086-9aa4-269ed8c1146f`, observed a real locked DML call still in
+an Oracle socket read after 5003ms despite `getQueryTimeout()==2`. This was an
+explicit rollback-only local transaction with a deliberately separate 10000ms
+socket timeout. Earlier autocommit probes also failed. Fixture-only in-band
+cancellation (`oracle.net.disableOob=true`) did not resolve it. Six process
+cases and eleven other I/O cases passed in this diagnostic; full was NOT_RUN.
+The 2s/5s statement gate and required ORA-01013 assertion remain unchanged.
+The successful 2000ms socket-read experiment does not qualify this failed
+independent statement deadline. This remains a release blocker pending actual
+passing evidence; no universal driver cancellation guarantee is claimed.

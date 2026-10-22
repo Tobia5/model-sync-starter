@@ -505,6 +505,8 @@ class QualityGateTests(unittest.TestCase):
         spec.loader.exec_module(module)
         with patch.dict(os.environ, {'MODELSYNC_MAVEN_SETTINGS': module.PROJECT_SETTINGS}):
             command = module.maven_command()
+            self.assertIn('-fae', command)
+            self.assertNotIn('-fae', module.maven_command(True))
         self.assertEqual(['-Pfull', 'clean', 'verify'], command[-3:])
         self.assertEqual(str(ROOT / module.PROJECT_SETTINGS), command[command.index('-s') + 1])
         with patch.dict(os.environ, {'MODELSYNC_MAVEN_SETTINGS': '../unreviewed.xml'}):

@@ -240,8 +240,11 @@ class OracleIoIT {
       result.put("final_stop", worker.shutdown()); result.put("physical_owner_reads", endpoint.calls.get());
       result.put("successful_applications", late ? 0 : 1); result.put("client_active_after", endpoint.activeClients.get());
     } finally { worker.stop(); persistence.dispose(); owners.dispose(); control.ownerOverride = null; }
+    FaultEvidence.awaitNoPoolThreads("modelsync-owned-stop-jpa");
+    FaultEvidence.awaitNoPoolThreads("modelsync-owned-stop-owner");
     assertEquals(0, context.getBean(HikariDataSource.class).getHikariPoolMXBean().getActiveConnections());
-    result.put("owned_schedulers_disposed", persistence.isDisposed() && owners.isDisposed()); pass(result);
+    result.put("owned_schedulers_disposed", persistence.isDisposed() && owners.isDisposed());
+    result.put("owned_worker_threads_terminated", true); pass(result);
   }
 
   @Test void boundedStopDoesNotCallALockedJpaOperationDrained() throws Exception {
@@ -264,6 +267,9 @@ class OracleIoIT {
       // Cancellation may have raced a physical commit; inspect an atomic pair, never infer rollback from CANCEL.
       assertEquals(name(key), validator(key)); result.put("observed_projection", name(key)); result.put("observed_validator", validator(key));
     } finally { worker.stop(); persistence.dispose(); owners.dispose(); }
+    FaultEvidence.awaitNoPoolThreads("modelsync-owned-lock-jpa");
+    FaultEvidence.awaitNoPoolThreads("modelsync-owned-lock-owner");
+    result.put("owned_worker_threads_terminated", true);
     result.put("physical_operations_after", worker.physicalOperations()); pass(result);
   }
 
@@ -288,6 +294,10 @@ class OracleIoIT {
     }
     OracleRecoveryIT.await(() -> (holdUp ? "before" : "after").equals(name(key)), 3000);
     assertEquals(name(key), validator(key)); result.put("fresh_projection", name(key)); result.put("fresh_validator", validator(key));
+    String outcome = jdbc.queryForObject("select outcome from MS_STATE where work_id=?", String.class, id(key));
+    String status = jdbc.queryForObject("select work_status from MS_WORK where work_id=?", String.class, id(key));
+    assertEquals("APPLIED", outcome); assertEquals(holdUp ? "LEASED" : "IDLE", status);
+    result.put("fresh_outcome", outcome); result.put("fresh_work_status", status);
     result.put("projection_and_success_atomic", true);
     if (holdUp) {
       OracleRecoveryIT.await(() -> jdbc.queryForObject("select lease_until_ms from MS_WORK where work_id=?", Long.class, id(key)) < System.currentTimeMillis(), 7000);
