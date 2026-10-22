@@ -44,6 +44,9 @@ class OracleRecoveryIT {
   @BeforeAll void open() throws Exception {
     report = FaultEvidence.report("independent-jvm-oracle-jpa-crash-recovery"); report.put("cases", cases);
     report.put("lease_ms", 5000); report.put("recovery_budget_ms", 30000);
+    report.put("child_max_heap_bytes", 384L * 1024 * 1024); report.put("runtime_pool_size", 4); report.put("observer_pool_size", 2);
+    report.put("owner_fetch_ms", 1000); report.put("driver_read_ms", 2000); report.put("connect_ms", 1500);
+    report.put("oracle_net_disableOob", true);
     setup = RecoveryConfiguration.source(System.getenv("MODELSYNC_ORACLE_URL"), 2);
     jdbc = new JdbcTemplate(setup); jdbc.setQueryTimeout(2);
     assertEquals(0, jdbc.queryForObject("select count(*) from user_tables where table_name='SAMPLE_CUSTOMER'", Integer.class));

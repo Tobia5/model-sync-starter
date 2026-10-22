@@ -44,6 +44,11 @@ class OracleIoIT {
     report = FaultEvidence.report("bounded-owned-oracle-transport-and-shutdown"); report.put("cases", cases);
     report.put("acquisition_ms", 1000); report.put("connect_ms", 1500); report.put("read_ms", 2000);
     report.put("statement_seconds", 2); report.put("transaction_seconds", 2); report.put("jpa_lock_ms", 1000);
+    report.put("oracle_net_disableOob", true); report.put("observer_read_ms", 10000);
+    report.put("runtime_pool_size", 4); report.put("observer_pool_size", 2);
+    report.put("worker_concurrency", 1); report.put("worker_persistence_threads", 1); report.put("worker_owner_threads", 1);
+    report.put("owner_fetch_ms", 300); report.put("owner_socket_timeout_ms", 250);
+    report.put("shutdown_ms", Map.of("cooperative", 1500, "stalled", 300));
     source = RecoveryConfiguration.source(System.getenv("MODELSYNC_ORACLE_URL"), 2, 10000);
     jdbc = new JdbcTemplate(source); jdbc.setQueryTimeout(2);
     assertEquals(0, jdbc.queryForObject("select count(*) from user_tables where table_name='SAMPLE_CUSTOMER'", Integer.class));
@@ -138,15 +143,16 @@ class OracleIoIT {
   }
 
   @Test void unavailableDatabaseConnectionDoesNotWaitIndefinitely() throws Exception {
-    var result = begin("connection-refused"); int port;
-    try (var reserved = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) { port = reserved.getLocalPort(); }
-    String url = "jdbc:oracle:thin:@//127.0.0.1:" + port + "/FREEPDB1";
+    var result = begin("connection-unavailable");
     long began = System.nanoTime();
-    try (var pool = RecoveryConfiguration.source(url, 1)) {
+    try (var proxy = new OracleFaultProxy()) {
+      proxy.rejectConnections();
+      try (var pool = RecoveryConfiguration.source(proxy.url(), 1)) {
       assertThrows(java.sql.SQLException.class, pool::getConnection);
       result.put("acquisition_ms", OracleRecoveryIT.millis(began)); assertTrue(OracleRecoveryIT.millis(began) <= 2500);
+      }
     }
-    result.put("tcp_timeout_scope", "connection refused, not a silent SYN blackhole"); pass(result);
+    result.put("tcp_timeout_scope", "owned loopback listener resets connections; no silent SYN-blackhole proof"); pass(result);
   }
 
   @Test void stalledLoginCleansUpItsPhysicalConnectionAttempt() throws Exception {

@@ -39,6 +39,8 @@ class RecoveryConfiguration {
     config.setValidationTimeout(500); config.setInitializationFailTimeout(-1); config.setMaxLifetime(0);
     config.addDataSourceProperty("oracle.net.CONNECT_TIMEOUT", "1500");
     config.addDataSourceProperty("oracle.jdbc.ReadTimeout", Integer.toString(readTimeout));
+    // The owned TCP relay and Docker forwarding do not relay urgent TCP data.
+    config.addDataSourceProperty("oracle.net.disableOob", "true");
     config.setPoolName("modelsync-fault-owned-" + java.util.UUID.randomUUID());
     return new HikariDataSource(config);
   }

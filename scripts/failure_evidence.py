@@ -9,7 +9,7 @@ SCOPES = {
         'OWNER_RESPONDED-new-generation', 'OWNER_RESPONDED-local-revision'}),
     'oracle-io': ('bounded-owned-oracle-transport-and-shutdown', {
         'pool-exhaustion', 'statement-lock-timeout', 'transaction-deadline', 'database-read-stall',
-        'connection-refused', 'database-login-stall', 'graceful-owner-drain',
+        'connection-unavailable', 'database-login-stall', 'graceful-owner-drain',
         'late-owner-and-bounded-stop', 'owner-socket-timeout', 'locked-jpa-shutdown',
         'uncertain-before-commit', 'uncertain-after-commit'})}
 
