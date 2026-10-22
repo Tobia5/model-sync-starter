@@ -100,15 +100,23 @@ class OracleIoIT {
       }
       long began = System.nanoTime();
       var effectiveTimeout = new java.util.concurrent.atomic.AtomicInteger(-1);
-      Future<Integer> blocked = executor.submit(() -> jdbc.execute("update SAMPLE_CUSTOMER set display_name='must-rollback' where storage_key=?",
+      Future<Integer> blocked = executor.submit(() -> {
+        var local = new TransactionTemplate(new org.springframework.jdbc.datasource.DataSourceTransactionManager(source));
+        return local.execute(status -> {
+          try { return jdbc.execute("update SAMPLE_CUSTOMER set display_name='must-rollback' where storage_key=?",
           (org.springframework.jdbc.core.PreparedStatementCallback<Integer>) statement -> {
+            assertFalse(statement.getConnection().getAutoCommit(), "The ledger contract uses local transactions, never autocommit DML");
             effectiveTimeout.set(statement.getQueryTimeout()); statement.setString(1, id(key)); return statement.executeUpdate();
-          }));
+          }); }
+          finally { status.setRollbackOnly(); }
+        });
+      });
       ExecutionException error;
       try { error = assertThrows(ExecutionException.class, () -> blocked.get(5, TimeUnit.SECONDS)); }
       finally {
         result.put("elapsed_ms", OracleRecoveryIT.millis(began));
         result.put("effective_statement_timeout_seconds", effectiveTimeout.get());
+        result.put("probe_transaction", "explicit local rollback-only JDBC transaction; driver read timeout 10000ms");
         var stacks = new LinkedHashMap<String, Object>();
         Thread.getAllStackTraces().forEach((thread, stack) -> {
           if (thread.getName().equals("modelsync-owned-io-probe") || thread.getName().contains("OracleTimeout"))
