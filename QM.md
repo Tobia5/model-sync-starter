@@ -1,3 +1,248 @@
+# Resumed full qualification after headroom restoration — 2026-10-22
+
+**Default PASS · Full FAILED · Production NO-GO.** The memory prerequisite was
+cleared and the approved full container route actually executed. The remaining
+full failure is independent JDBC statement cancellation. No production code,
+test threshold, required workload, SQL or pacing policy changed in this resume.
+Only Model Sync PR #1's existing review branch was used; no merge, main change,
+workflow dispatch/bootstrap or package publication occurred.
+
+## Source, commands and original exits
+
+Tested source **`08bd1906e54d6a182a1a7d2c9473fc255f7038fa`**, tree
+**`a5f5e717c9fcd3331c139558508c312aff901d60`**, clean change digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+The source stayed frozen through execution, collection and build provenance.
+This subsequent documentation/evidence commit is not claimed as the full-tested source.
+
+| Execution | Identity | Command / actual result |
+|---|---|---|
+| Fresh local default | `2bb7a10f-29a9-4b30-9313-48aa2d1960d9` | `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify`; exit0,65.559s |
+| Full | `e88fc1de-755e-470c-a7f7-15c3c7a4f13d`; container attempt `3dabb75d-761d-427a-88f7-5126042f4b90` | `python -u scripts/full-oracle-container.py`; Maven1/wrapper1/supervisor1, collector0;7698.963s including infrastructure/cleanup |
+| Wrapper's full Maven subprocess | same full identity | `mvnw.cmd -B -ntp -s <repo>/.mvn/qualification-central.settings.xml -fae -Pfull clean verify`; exit1 |
+| Recorded default execution audit | same archived default identity | `python scripts/check-default-log.py <archived-default-log>`; exit0,102 plugin goals, none expensive |
+| Offline contracts after Maven | same clean08bd190 source | `C:/Program Files/Git/bin/bash.exe scripts/test-triggers.sh`; exit0,86 core/43 trigger assertions; not extra JUnit tests |
+
+Full/Oracle execution set only the invocation's
+`MODELSYNC_ORACLE_CONTAINER=EXPLICIT_DISPOSABLE` and
+`MODELSYNC_FULL_ENV_ACK=DISPOSABLE_NONPRODUCTION`, with
+`MODELSYNC_MAVEN_SETTINGS=.mvn/qualification-central.settings.xml`. External
+Oracle credential variables were cleared. Settings SHA256:
+`ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`.
+Public Central was explicitly selected for this project; no user/global settings,
+TLS, DNS or organization controls were changed.
+
+**Default:**117 JUnit tests/25 XML, zero failures/errors/skips;61 Python guards
+(30.302s); architecture/docs/lifecycle checks passed. **Full:**119 Surefire tests/27
+XML, zero failures/errors/skips;45 Oracle Failsafe tests/11 XML, **one failure**,
+zero errors/skips. Full also ran61 Python guards (30.976s). The extra full unit
+tests are in the test-only performance module. Default/full counts are separate.
+The default execution audit found no PIT/Gatling/Failsafe goals. `-fae` retained
+independent module diagnostics while preserving Maven failure. The full report
+gate correctly rejected the failed Oracle suite; collector0 means collection
+succeeded, not qualification. No stale, mismatched or malformed reports were
+accepted (`rejected=[]`). All declared suites executed; none is labelled NOT_RUN.
+
+## Approved disposable infrastructure and cleanup
+
+Read-only resource admission passed at12:08:10UTC with21.648GiB available against
+the unchanged6GiB Oracle +8GiB build +4GiB reserve planning budget. C:123.364GiB,
+D:1070.053GiB were free. The previous resource-blocked attempt remains unchanged
+below; its missing execution is not retroactively converted into this result.
+
+Pinned image:
+`ghcr.io/gvenzl/oracle-free:23.26.3-slim@sha256:6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd`.
+Generated per-run credentials, separate `MS_TEST_RUNTIME` / `MS_TEST_MIGRATION`
+schemas, synthetic data and a new labelled volume were used. The owned container
+`msq-3de5da8e40a9` independently showed6442450944B memory/4000000000 NanoCPUs
+and only `127.0.0.1:56068` published for Oracle. Engine:29.8.2,8CPU,
+25201704960B memory. No unrelated resources or global Docker settings were changed.
+
+Whole-container CPU/memory/I/O and host memory/disk snapshots are retained in
+`session/resources-resume-08bd190.json`. They are sampled infrastructure values,
+not peak guarantees or selector/session/cursor work deltas. No observer queries
+were added to the running benchmark schema. No resources were increased.
+
+Wrapper cleanup passed; independent inspection at**2026-10-22T14:19:00.767065Z**
+confirmed the owned container and `msq-3de5da8e40a9-data` volume absent (both inspect
+exits1). Across this shutdown session all **eight** created container/volume pairs
+have independent absence receipts; no residual session resource was found.
+Test-owned JVMs, pools, schedulers and sockets have their separate case evidence.
+
+Actual tool/runtime versions: Windows11 amd64, Temurin21.0.12.1+1-LTS,
+Maven3.9.9, Python3.12.10; Boot4.1.1, Spring7.0.9, Hibernate7.4.5.Final,
+Reactor3.8.7, ojdbc11 23.26.3.0.0, Jupiter/Platform6.0.3,
+Surefire/Failsafe3.5.3, ArchUnit1.5.0, PIT1.25.9/JUnit provider1.2.3,
+Gatling3.13.1/plugin4.11.0. Oracle identifies as AI Database26ai Free,
+version23.26.3.0.0. Resolved classpaths/effective POMs and eleven fresh library
+JAR hashes are retained; no release artifacts were published.
+
+## Shutdown / I/O outcomes and the remaining failure
+
+The unchanged [failure contract](docs/quality/FAILURE-CONTRACT.md) predates
+implementation. Fixture acquisition1000ms, connect1500ms, runtime read2000ms,
+statement2s, cooperative transaction2s, JPA lock1000ms and owner socket250ms/fetch300ms
+remain distinct. Runtime pool4/observer2; the independent statement probe uses
+observer read10000ms. Worker stop tests use one lane/owned one-thread schedulers
+and1500ms cooperative/300ms stalled drain bounds. No application-owned datasource
+or scheduler defaults were globally reconfigured.
+
+| Full case | Measured outcome | Status |
+|---|---|---|
+| Graceful owner drain | DRAINED15ms; logical/physical/owner0; one read/one application; owned threads ended | PASS |
+| Late owner | TIMED_OUT313ms with logical0/physical1/owner1; after fixture release DRAINED0; one read/zero applications; client/threads ended | PASS |
+| Real JPA row-lock wait during shutdown | TIMED_OUT314ms with physical1; after release physical0; old projection/evidence pair; threads ended | PASS |
+| Direct Hikari pool exhaustion | acquisition1009ms; pool reused after held connections returned | PASS |
+| Owned unavailable/reset endpoint | acquisition1008ms; no silent SYN-blackhole claim | PASS |
+| Owned login stall | acquisition1008ms; acquisition plus pool close2024ms | PASS |
+| Database transport read stall | 2016ms; physical statement ended; pool reused | PASS |
+| Owner socket stall | 254ms; physical client0 and endpoint closed | PASS |
+| Cooperative transaction deadline | 2114ms; earlier local write rolled back | PASS |
+| COMMIT request withheld | uncertain2017ms; fresh old complete pair/LEASED; recovery completed | PASS |
+| COMMIT acknowledgement withheld | uncertain2024ms; fresh new complete pair/IDLE; no repeat required | PASS |
+| Independent statement/lock cancellation | effective queryTimeout2s; still physically reading at5017ms; `Future.get(5s)` raised TimeoutException instead of expected completed execution failure/ORA-01013 | **FAILED** |
+
+`OracleIoIT`:12 executed/one failure,24.268s. The failed probe was an explicit
+rollback-only local transaction; its bounded stack snapshot shows the owned
+thread in Oracle NIO socket read. The original2s/5s/ORA-01013 gate is unchanged.
+Fresh-state assertions after that failed assertion did not execute and are not
+claimed passing. Suite teardown verified owned executor/pool termination.
+Passing socket-read timeout or cooperative transaction expiry does not qualify
+the failed independent statement deadline. This remains a concrete release
+blocker requiring a supported repair/configuration and fresh Oracle evidence.
+No driver/platform change or cancellation root cause is inferred from this run.
+
+These tests prove controlled fixture acquisition/reuse and physical shutdown
+outcomes, not saturated-worker pool/thread exhaustion for arbitrary hosts.
+Reactive cancellation is explicitly distinct from physical I/O completion;
+arbitrary async owners still need a transport-release contract.
+
+## Real process-crash recovery and retained atomicity
+
+All six `OracleRecoveryIT` cases passed in63.011s through actual starter/JPA/JDBC/
+`JpaTransactionManager` configuration. Only acknowledged test-owned child JVMs
+were forcibly terminated; Oracle stayed available. Fresh connections and fresh
+recovery JVMs established committed outcomes after real5s lease expiry.
+
+| Fault point | Fresh post-crash pair/status | Crashed/recovery owner reads* | Recovery ms |
+|---|---|---:|---:|
+| Claim committed | before/before, LEASED | 0/1 | 8510 |
+| Owner responded | before/before, LEASED | 1/1 | 8431 |
+| Projection flushed before COMMIT | before/before, LEASED | 1/1 | 8235 |
+| Completion committed before caller success | after/after, IDLE | 1/0 | 0 (none needed) |
+| Owner responded + newer request | before/before, generation3 retained | 1/1 | 8491 |
+| Owner responded + newer request/local revision | local-edit/before, generation3/local marker retained | 1/1 | 8376 |
+
+*Initial setup reads excluded. Five crashed reads plus five recovery reads,
+six final successful subject rows and five recovery applications are distinct
+counts. All obsolete-token completions were rejected; recovery reached IDLE,
+with no partial projection/success-state commits and local-version/owned-field
+preservation checked. Five kill confirmations were below1ms timer resolution;
+one took89ms. Owned processes exited and pools closed. These are headless public
+coordinator JVMs, not continuous-Reactor pod-crash or multi-process contention proof.
+All seven retained starter JDBC/JPA atomicity cases passed again in13.319s.
+
+## Actual worker: ten phases PASS
+
+The existing four-lane auto-configured Reactor worker/JPA/JDBC measurement passed
+all ten phases in79.547s, pool8/persistence4/owner8/queue64, owner spacing20ms and
+latency5ms. Fixed poll/productive250ms versus productive5ms/idle250–1000ms remained
+unchanged. Both productive phases completed160 measured syncs/160 owner calls:
+**17260ms fixed /9737ms bounded pacing**, within the unchanged20s gate.
+
+Warmed empty polling14.985/3.987 per second and native logical gets3549.451/992.524
+per second remain distinct from productive throughput and DB work. All-future
+polling3.997/s with zero owner calls/permits. Wakeup upper bounds: future due375ms,
+local urgent875ms, independent-process urgent1576ms, expired lease839ms,
+other provider31ms, cooldown expiry771ms. All met the existing local2500ms budget.
+Ten physical-session intervals were VALID; no failed-interval delta was invented.
+Callbacks, native sessions and cursor counters remain separate in the raw evidence.
+
+The earlier full20s backlog failure and later scoped diagnostic PASS remain
+separate. This passing repeat establishes this run's gate, not its earlier root
+cause, a universal speedup or production SLO. Accepted Q4 pacing/SQL/cursor work
+was not redesigned.
+
+## Other full results
+
+PIT **160/162 killed=98.765432%**,8s,394 internal invocations (not extra JUnit
+tests), unchanged eight-class behavioral scope and85% killed/all-generated gate.
+KILLED160/SURVIVED1/NO_COVERAGE1; all other mutation statuses0. XML/HTML and exact
+scope/effective configuration are retained. Remaining `positive(maxAge)` removal
+retains the acceptance-equivalence argument documented below; exception ordering/
+messages are not claimed equivalent. `SyncCoordinator.options` remains uncovered.
+Both remain in the denominator, with maintainer review open. Shutdown code is
+outside that unchanged core mutation scope; no extra mutation-strength claim follows.
+
+Six in-memory semantic Gatling scenarios passed,367 requests/zero HTTP errors:
+
+| Scenario | Requests | HTTP p50/p95/p99 ms |
+|---|---:|---:|
+| Fresh visits | 40 | 70/162/163 |
+| Hot stale key | 100 | 218/225/225 |
+| Unsafe values | 20 | 61/62/62 |
+| Event/job/visit | 4 | 2/24/24 |
+| Cooldown/recovery | 3 | 5/25/25 |
+| Leases/ledger | 200 | 249/275/276 |
+
+The leases harness recorded96 completed rows/96 owner entries from200 accepted
+job requests. Other scenarios retain their own projection/ledger assertions.
+These are in-memory semantics and HTTP latency, not Oracle capacity or completed
+sync counts inferred from HTTP acceptance.
+
+Oracle capacity:1,000,000 intents (100k due/900k scheduled future), four direct
+`runOne` loops/5ms sleeps, pool8, owner spacing20ms/latency5 or25ms. Seed6032657ms;
+warmup922ms/10 completions; measurement11554ms/**200 completions/220 physical
+owner calls**,17.310 completed syncs/s; total210 completions/230 calls.13 synthetic
+429s/7 timeouts.225 ledger attempts/5 quota denials/1969 empty polls/8507 selection
+attempts/9012 selector callbacks are separate counts. Summed native block-work59946
+is not a query count or wall-clock share. runOne p50/p95/p99=4/45/75ms; claimed
+44/76/79ms; lag6069827/6075353/6075864ms includes the long seed. JVM reported
+max heap16944988160B/end-used175254976B, not peak usage. This test-only JDBC
+projection/direct-coordinator sample is not actual-Reactor/JPA million-row
+capacity, a million completed reconciliations or production economics.
+
+The comparison passed518.608s,100k scale757.298s, eleven selection cases0.785s,
+concurrency1.256s, migration3.636s and smoke0.510s. The scale claim took29ms/74
+summed work units; seed200300ms/cleanup155301ms/zero rows remaining. A ledger claim
+is not provider admission. Plans, individual counters/waits, phase costs and
+original cursor-attribution corrections are retained. Same caps/workloads do not
+make these independent runs a controlled wall-clock speedup comparison.
+
+## Evidence, history and remaining gates
+
+[Raw reports/index](validation/qualification/2026-10-22-shutdown-recovery-rerun/README.md):
+ZIP SHA256 `7ce24ee9711e023d5000f0d3ff76b5bad0ad2d71bc4417cfa1b8472631d9db34`,
+7,102,974 bytes/1,972 files/25 components. Per-attempt hashes and ZIP CRC passed;
+bounded disclosure patterns found zero matches. Original binary Gatling logs and
+ICO assets retain their bytes with narrow pinned-header handling; the packaging
+decoder failure/correction is recorded. No JAR/class binaries are included.
+Each component keeps its own source/run/status; earlier counts are not added.
+The run-scoped `target/qm/QM.md` and machine evidence, original failed log/exit,
+343 fresh full files, XML/HTML, fault checkpoints/process logs, resources, eleven
+library hashes and independent cleanup are archived. Default CI for tested08bd190
+[passed](https://github.com/Tobia5/model-sync-starter/actions/runs/39763458161).
+Full GitHub CI was NOT_RUN; this was the approved local route.
+
+The memory prerequisite is closed for this attempt. Independent statement
+cancellation and passing overall full qualification remain open. Existing
+saturated-worker/shared-host recovery, racing inserts/multi-process contention,
+arbitrary transport/host configurations, real provider retry/fanout budgets,
+operations/security/retention and consumer/supply-chain gates remain open.
+All R01–R13 parents remain open. First scope stays known-ID owner-to-Oracle/JPA;
+inventory/brokers/vendor connectors/XA/remote writeback are not added.
+
+The complete previous08bd190 report follows verbatim (canonical Git blob SHA256
+`498310ada2c648c804998424673f1618d9818cdc0632e71a1342725b5cdbabff`,60187bytes).
+It retains the earlier failed full, resource-blocked attempt and accepted Q4
+report. All five preceding evidence ZIPs, including full-tested`fad6874`'s archive,
+remain unchanged. Their historical outcomes are not reattributed to this run.
+
+## Preserved preceding report
+
+
+---
+
 # Shutdown, database waits and process-recovery qualification — 2026-10-22
 
 **Default PASS · Completed full attempt FAILED · Final-source full rerun BLOCKED · Production NO-GO.**

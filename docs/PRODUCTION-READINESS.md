@@ -53,6 +53,36 @@ absent. The million-row full fixture completed200 measured reconciliations/210
 including warmup, not one million. Accepted Q4 and prior evidence remain unchanged.
 Production remains **NO-GO**.
 
+### Q5 resumed full after headroom restoration
+
+The resource prerequisite was cleared at21.648GiB against the unchanged18GiB
+planning budget. Full verification actually ran on source
+`08bd1906e54d6a182a1a7d2c9473fc255f7038fa`, tree
+`a5f5e717c9fcd3331c139558508c312aff901d60`, run
+`e88fc1de-755e-470c-a7f7-15c3c7a4f13d`: **FAILED**, Maven/wrapper exit1,
+119 Surefire/45 Oracle tests,one Oracle failure,zero errors/skips. Fresh local
+default passed117 JUnit/61 Python guards with no expensive goals. The source
+remained frozen through collection; only reports/docs change afterward.
+
+All six independent-JVM crash cases, seven retained atomicity cases and ten
+actual worker phases passed again. The worker completed160 measured syncs in
+17260ms fixed/9737ms bounded pacing within the unchanged20s gate; the earlier
+timeout remains historical evidence. Eleven I/O cases passed, but the independent
+statement probe still physically read after5017ms despite effective2s timeout.
+The unchanged5s/ORA-01013 gate failed, and later assertions in that case are not
+claimed passing. Network timeout success does not replace this failure.
+
+PIT160/162, all six semantic Gatling scenarios/367 requests/zero HTTP errors,
+migration, concurrency, scale and comparison passed. The million-row seed
+produced200 measured reconciliations/210 including warmup, not one million.
+No SQL/pacing, resources, workloads or thresholds changed. The container and
+volume were independently confirmed absent; all eight session pairs have
+absence receipts. [Current QM](../QM.md) and [new raw evidence](../validation/qualification/2026-10-22-shutdown-recovery-rerun/README.md)
+preserve the original failed exit, exact identities, partial results and all
+previous successful/failed/blocked evidence. Memory is no longer the blocker for
+this attempt. Statement cancellation, passing overall full verification and
+other applicable parent release gates remain open; production remains **NO-GO**.
+
 ## Historical main assessment
 
 **Date:** 2026-10-20. **Remote baseline:** `a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6`.
