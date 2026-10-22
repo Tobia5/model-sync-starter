@@ -28,4 +28,8 @@ final class FaultEvidence {
   static void write(String name, Object value) throws Exception {
     write(root().resolve("model-sync-sample/target/qm/" + name), value);
   }
+  static void awaitNoPoolThreads(String poolName) throws Exception {
+    OracleRecoveryIT.await(() -> Thread.getAllStackTraces().keySet().stream()
+        .noneMatch(thread -> thread.isAlive() && thread.getName().startsWith(poolName)), 5000);
+  }
 }

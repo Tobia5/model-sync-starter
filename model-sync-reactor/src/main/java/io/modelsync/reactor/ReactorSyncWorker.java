@@ -81,31 +81,31 @@ public final class ReactorSyncWorker implements SmartLifecycle {
     return trackedAttempt().map(result -> result != WorkerTickResult.EMPTY);
   }
 
-  private Mono<WorkerTickResult> attempt() {
-    return Mono.fromCallable(this::claim)
+  private Mono<WorkerTickResult> attempt(WorkerExecution execution) {
+    return Mono.fromCallable(() -> claim(execution))
         .subscribeOn(persistence)
         .flatMap(
             claim -> {
               if (claim.isEmpty()) return Mono.just(WorkerTickResult.EMPTY);
               WorkLease lease = claim.get();
-              return Mono.fromCallable(() -> physical(() -> coordinator.prepare(lease), false))
+              return Mono.fromCallable(() -> physical(execution, () -> coordinator.prepare(lease), false))
                   .subscribeOn(persistence)
                   .flatMap(
                       plan -> {
                         if (plan.isEmpty()) return Mono.just(WorkerTickResult.DEFERRED);
                         PreparedSync<?> p = plan.get();
-                        return fetch(p)
+                        return fetch(p, execution)
                             .switchIfEmpty(Mono.error(new Permanent("NULL_FETCH")))
                             .timeout(coordinator.options().fetchTimeout())
                             .flatMap(
                                 result ->
-                                    Mono.fromCallable(() -> physical(() -> { coordinator.finish(p, result); return true; }, false))
+                                    Mono.fromCallable(() -> physical(execution, () -> { coordinator.finish(p, result); return true; }, false))
                                         .subscribeOn(persistence)
                                         .thenReturn(WorkerTickResult.FETCHED));
                       })
                   .onErrorResume(
                       error ->
-                          Mono.fromCallable(() -> physical(() -> { coordinator.failed(lease, error); return true; }, false))
+                          Mono.fromCallable(() -> physical(execution, () -> { coordinator.failed(lease, error); return true; }, false))
                               .subscribeOn(persistence)
                               .thenReturn(error instanceof RetryLater ? WorkerTickResult.DEFERRED : WorkerTickResult.FAILED));
             });
@@ -113,12 +113,13 @@ public final class ReactorSyncWorker implements SmartLifecycle {
 
   private Mono<WorkerTickResult> trackedAttempt() {
     return Mono.defer(() -> {
+          WorkerExecution execution = new WorkerExecution();
           synchronized (operations) {
             if (stopping) return Mono.just(WorkerTickResult.EMPTY);
           ticks.incrementAndGet();
           maximumInFlight.accumulateAndGet(inFlight.incrementAndGet(), Math::max);
           }
-          return attempt()
+          return attempt(execution)
         .onErrorResume(error -> {
           log.warn("Model Sync infrastructure error: {}", error.getClass().getSimpleName());
           return Mono.just(WorkerTickResult.FAILED);
@@ -130,9 +131,12 @@ public final class ReactorSyncWorker implements SmartLifecycle {
           else fetched.incrementAndGet();
         })
         .doFinally(signal -> {
-          inFlight.decrementAndGet();
-          if (signal == SignalType.CANCEL) cancelled.incrementAndGet();
-          synchronized (operations) { operations.notifyAll(); }
+          synchronized (operations) {
+            execution.closed = true;
+            inFlight.decrementAndGet();
+            if (signal == SignalType.CANCEL) cancelled.incrementAndGet();
+            operations.notifyAll();
+          }
         });
         });
   }
@@ -150,15 +154,18 @@ public final class ReactorSyncWorker implements SmartLifecycle {
         cancelled.get(), inFlight.get(), maximumInFlight.get());
   }
 
-  private Mono<FetchResult<?>> fetch(PreparedSync<?> prepared) {
+  private Mono<FetchResult<?>> fetch(PreparedSync<?> prepared, WorkerExecution execution) {
     if (prepared.binding().owner() instanceof BlockingOwner<?> owner) {
-      return Mono.<FetchResult<?>>fromCallable(() -> physical(() -> owner.fetch(prepared.request()), true))
+      return Mono.<FetchResult<?>>fromCallable(() -> physical(execution, () -> owner.fetch(prepared.request()), true))
           .subscribeOn(blockingOwner);
     }
     AsyncOwner<?> owner = (AsyncOwner<?>) prepared.binding().owner();
     return Mono.defer(() -> {
+      synchronized (operations) {
+        if (execution.closed) return Mono.empty();
       if (!ownerCapacity.tryAcquire()) return Mono.error(new RetryLater(Instant.now().plus(poll)));
       physical.incrementAndGet();
+      }
       try {
         var future = owner.fetchAsync(prepared.request()).toCompletableFuture();
         future.whenComplete((value, error) -> { ownerCapacity.release(); physicalDone(); });
@@ -171,18 +178,21 @@ public final class ReactorSyncWorker implements SmartLifecycle {
     });
   }
 
-  private Optional<WorkLease> claim() throws Exception {
+  private Optional<WorkLease> claim(WorkerExecution execution) throws Exception {
     synchronized (operations) {
-      if (stopping) return Optional.empty();
+      if (stopping || execution.closed) return Optional.empty();
       physical.incrementAndGet();
     }
     try { return coordinator.claim(); }
     finally { physicalDone(); }
   }
 
-  private <T> T physical(Callable<T> operation, boolean owner) throws Exception {
+  private <T> T physical(WorkerExecution execution, Callable<T> operation, boolean owner) throws Exception {
+    synchronized (operations) {
+      if (execution.closed) throw new java.util.concurrent.CancellationException("Worker subscription already closed");
     if (owner && !ownerCapacity.tryAcquire()) throw new RetryLater(Instant.now().plus(poll));
     physical.incrementAndGet();
+    }
     try { return operation.call(); }
     finally {
       if (owner) ownerCapacity.release();

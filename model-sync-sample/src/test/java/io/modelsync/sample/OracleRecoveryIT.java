@@ -153,7 +153,10 @@ class OracleRecoveryIT {
     assertTrue(condition.getAsBoolean(), "Acknowledged condition exceeded " + milliseconds + "ms");
   }
   @AfterAll void close() throws Exception {
-    if (context != null) context.close();
+    if (context != null) {
+      String poolName = context.getBean(HikariDataSource.class).getPoolName();
+      context.close(); FaultEvidence.awaitNoPoolThreads(poolName);
+    }
     if (setup != null) {
       if (tableOwned) {
         for (String id : ownedIds) { jdbc.update("delete from MS_STATE where work_id=?", id); jdbc.update("delete from MS_WORK where work_id=?", id); }
@@ -161,6 +164,7 @@ class OracleRecoveryIT {
         jdbc.update("delete from MS_QUOTA where quota_group='recovery-owner'");
       }
       assertEquals(0, setup.getHikariPoolMXBean().getActiveConnections()); setup.close();
+      FaultEvidence.awaitNoPoolThreads(setup.getPoolName());
     }
     if (report != null) {
       report.put("status", cases.size() == 6 && cases.stream().allMatch(c -> "PASS".equals(c.get("status"))) ? "PASS" : "FAILED");

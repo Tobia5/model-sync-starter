@@ -278,10 +278,14 @@ class OracleIoIT {
   }
   @AfterAll void close() throws Exception {
     executor.shutdown(); assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
-    if (context != null) context.close();
+    if (context != null) {
+      String poolName = context.getBean(HikariDataSource.class).getPoolName();
+      context.close(); FaultEvidence.awaitNoPoolThreads(poolName);
+    }
     if (source != null) {
       if (tableOwned) { jdbc.execute("drop table SAMPLE_CUSTOMER purge"); jdbc.update("delete from MS_QUOTA where quota_group='recovery-owner'"); }
       assertEquals(0, source.getHikariPoolMXBean().getActiveConnections()); source.close();
+      FaultEvidence.awaitNoPoolThreads(source.getPoolName());
     }
     if (report != null) {
       report.put("status", cases.size() == 12 && cases.stream().allMatch(c -> "PASS".equals(c.get("status"))) ? "PASS" : "FAILED");
