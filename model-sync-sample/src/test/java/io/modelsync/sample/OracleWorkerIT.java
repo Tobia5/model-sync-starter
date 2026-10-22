@@ -97,7 +97,27 @@ class OracleWorkerIT {
     var phase = begin(name);
     phase.put("seed_rows", 160); phase.put("warmup_completions", 10);
     worker.start();
-    await(() -> completed() == 170, 20000);
+    try {
+      await(() -> completed() == 170, 20000);
+    } catch (Exception | AssertionError failure) {
+      // Retain the failed interval before cleanup; diagnostics must not replace its failure.
+      try {
+        phase.put("elapsed_at_failure_ms", (System.nanoTime()
+            - ((Number) phase.get("started_ns")).longValue()) / 1000000);
+        phase.put("scheduling_at_failure", WorkerMeasurements.scheduling(worker, jdbc, owner, quota));
+        phase.put("session_at_failure", WorkerMeasurements.counters(jdbc));
+        phase.put("sessions_at_failure", WorkerMeasurements.sessions(jdbc));
+        phase.put("physical_at_failure", worker.physicalOperations());
+        phase.put("logical_at_failure", worker.activity().inFlight());
+        phase.put("running_at_failure", worker.isRunning());
+        phase.put("work_states_at_failure", jdbc.queryForList(
+            "select work_status,count(*) rows_in_state from MS_WORK where binding_id='worker-main' group by work_status"));
+      } catch (Exception | AssertionError diagnostic) {
+        failure.addSuppressed(diagnostic);
+        phase.put("diagnostic_failure", diagnostic.getClass().getSimpleName());
+      }
+      throw failure;
+    }
     end(phase);
     @SuppressWarnings("unchecked") var counts = (Map<String, Long>) phase.get("scheduling_delta");
     assertEquals(160L, counts.get("completed_syncs"));
