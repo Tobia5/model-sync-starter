@@ -1,4 +1,116 @@
-# Focused JDBC diagnostic preparation — 2026-10-23
+# Focused locked-JDBC execution — 2026-10-23
+
+**Latest default PASS · Executed diagnostic FAILED · Corrected Oracle run BLOCKED / NOT_RUN · New full NOT_RUN · Production NO-GO.**
+The small disposable experiment actually ran. It reproduces the independent
+cancellation failure through direct JDBC as well as Spring/Hikari, and measures
+separate network containment of the same locked DML. Fresh committed-state and
+subsequent-work verification did not execute because the first diagnostic's
+classifier rejected the pinned driver's specific18730 error. This failure is
+retained. The corrected harness is default-green but its Oracle run is blocked
+by memory. No supported production fix or complete containment qualification is
+claimed. The original full gate, historical reports and archives remain unchanged.
+
+## Exact sources, attempts, commands and exits
+
+All three sources below have the clean change digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+The later report commit is not claimed as any tested source.
+
+| Execution | Source/tree and identity | Actual outcome |
+|---|---|---|
+| Default before Oracle | `9b2476653a1f1364ea35d52f916e706910428ff3` / `704b10350a9b6a4b204c9b45daee33c05e7a51ac`; run `32f5ed38-bf92-4013-a803-2dfd6d1210fd` | `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify`; exit0/101.681s, collector0;117 JUnit/25 suites,64 Python; no failures/errors/skips. |
+| Actual small Oracle diagnostic | Same `9b24766` source/tree; run `8bf36376-0d7b-45ef-9c12-c503aacdea5f`, container attempt `e28be974-f96b-4a89-86e7-1f91530dddb4` | `python scripts/full-oracle-container.py --cancellation-diagnostic`; Maven root `-Pfull -N initialize` preflight0, selected launcher1, wrapper1, supervisor1;203.290s. Six tests found/started/FAILED, zero succeeded/skipped/container failures;47.683s suite. Full NOT_RUN. |
+| Corrected-harness default | `6edcf844ff1d9bdae5876d918e22c31b9619a346` / `0c17f0fcb1f40c310334281ed0edfc502e9322c0`; run `76243cef-7f67-4a57-8937-5062c1d70274` | Same default Maven command; exit0/92.497s, collector0;**121 JUnit/26 suites**,64 Python; zero failures/errors/skips. Includes four classifier regressions. |
+| Corrected-harness Oracle preflight | Same `6edcf84` source/tree; capacity attempt `a3348b29-b137-4a90-9c41-5f09f777906b`,2026-10-23T07:32:42–48Z | BLOCKED, Python2/PowerShell1;11.474/11.493/11.477 GiB free versus declared12 GiB. Wrapper NOT_RUN; no new Oracle run ID/resources. Earlier Oracle output is not attributed to this source. |
+
+The earlier `5b898c3` default and18 GiB resource block are preserved below and in
+the original archive. The18 GiB figure budgets for full/PIT/Gatling. Before the
+small run, the diagnostic JVM was explicitly capped at512 MiB heap/128 MiB direct
+memory; scoped planning reserved6 GiB Oracle +2 GiB launcher/runtime +4 GiB host
+reserve. The full18 GiB budget and Oracle6 GiB/4 CPU caps were unchanged. This
+scoped preflight passed with12.316–12.371 GiB free,19.950 GiB Docker capacity
+unused by containers, C93.583/D1069.988 GiB free disk. The later scoped failure
+was not retried unchanged to seek admission. Unrelated resources/global settings
+were never changed. PIT, Gatling, recovery suites and large seeds did not run.
+
+## A/B/C observations: direct JDBC versus Spring/Hikari
+
+Each probe used one locked synthetic row, explicit rollback-only transaction,
+query timeout2s, socket read10s, connect1500ms, existing `disableOob=true`, and a
+5s observation boundary. Oracle confirmed the exact test-owned blocking session
+before manual cancel. C alone used supported `Connection.setNetworkTimeout`3s;
+the driver's effective timeout was verified as3000ms versus10000ms for A/B.
+The measured platform stayed pinned: JDK21.0.12.1+1-LTS, Boot4.1.1,
+Spring JDBC7.0.9, Hikari7.0.2 and ojdbc11 23.26.3.0.0; Oracle reports
+26ai Free23.26.3.0.0. Observer pool size2, measured Hikari pool size1,
+acquisition1000ms, validation500ms and maxLifetime0 were fixture-owned. Direct
+JDBC was unpooled. Each probe owned one execution, one cancel and one network
+executor. The launcher reported max heap536870912 bytes; no platform upgrade
+or application-owned datasource change was made.
+
+| Diagnostic | Direct JDBC | Spring/Hikari | Meaning |
+|---|---|---|---|
+| A automatic query timeout | Client execute exit10007ms; still active at5s |10003ms; still active at5s | **Independent cancellation FAILED** in both paths. Effective query timeout2s. |
+| B manual `Statement.cancel()` once | Invocation at65ms, returned0ms; client execute exit10015ms | Invocation at3ms, returned0ms; client execute exit10017ms | **Independent cancellation FAILED**. A returned cancel call is not physical execution completion;0ms is millisecond-resolution timing. |
+| C same locked DML + network3s | Client execute exit3002ms |3009ms | **Client I/O bound observed**, not independent statement cancellation or complete containment PASS. |
+
+All six executions ended with `SQLRecoverableException`, Oracle18730/SQLState08006,
+through `IOReadTimeoutException` / `SocketTimeoutException`; all physical connections
+were closed. Spring additionally reported failure to roll back the already closed
+connection. This is not successful rollback proof. At5s, the owned execute thread
+was in Oracle NIO socket read and the Oracle timeout monitor existed. Manual cancel
+returned promptly. Direct reproduction rules out Spring/Hikari as a necessary cause;
+the exact driver/server/forwarding cancellation-response failure remains **unknown**.
+
+### Safety and cleanup evidence
+
+No emergency blocker release was needed to make the client calls exit: the locks
+were retained until natural read-timeout/client exit. Their subsequent release is
+not credited as cancellation. Every owned executor ended; measured Hikari pools had
+zero active connections and closed; the observer pool closed; the fixture table
+was dropped and its absence checked. Container `msq-c9233f5409d1` and volume
+`msq-c9233f5409d1-data` were removed by the wrapper and independently confirmed absent
+at2026-10-23T07:31:03.954015Z. No residual session-created Docker resource is known.
+
+**Not verified:** fresh committed row after the failed DML, successful subsequent
+work, and the server request's state before blocker release. All six tests stopped
+at the unexpected-error classifier before those assertions. The intermediate raw
+C field `layered_containment=PASS` describes only the observed client bound;
+the case is INCOMPLETE and JUnit FAILED. It is **not** qualification. Raw evidence
+is unchanged. Corrected source narrowly recognizes documented recoverable18730/17002
+only with a socket-timeout cause, tests rejection of arbitrary errors, moves fresh
+state/recovery before classification, and records exact Oracle SID/serial state.
+That Oracle execution is NOT_RUN; none of these new checks is claimed passing.
+
+## Proposed contract and remaining prerequisite
+
+[The explicit containment draft](docs/quality/JDBC-CONTAINMENT-PROPOSAL.md) is
+**NOT APPROVED / NOT IMPLEMENTED**. It would replace independent ORA-01013 proof in
+this locked-DML fixture with query2s plus network3s, physical client exit within5s,
+mandatory connection disposal and fresh-state/recovery proof, while keeping server
+work separately accounted for. Oracle documents [cancellation limits](https://docs.oracle.com/en/database/oracle/oracle-database/19/jjdbc/JDBC-troubleshooting.html)
+and [error18730](https://docs.oracle.com/en/error-help/db/ora-18730/). The draft requires
+the missing safety measurements before acceptance; a read-timeout exception alone
+cannot approve it. All existing product/quality gates remain intact.
+
+**Next action:** free at least0.53 GiB to restore the declared12 GiB diagnostic
+headroom, then execute the corrected focused candidate once. No new generic local
+run approval is needed. Do not run full until the original issue is resolved or
+an explicit replacement contract is approved and implemented. Production remains
+NO-GO; accepted atomicity, selector, pacing and cursor milestones are not reopened.
+
+[Raw execution evidence](validation/qualification/2026-10-23-jdbc-cancellation/README.md):
+`execution-evidence.zip`,154 files/289658 bytes, SHA-256
+`8533f34c4b64e25c3f294976aeaabd262341ded358256aba369ccfb72dcfcb40`.
+Original exits/logs and source/run-bound partial JSON are retained alongside both
+defaults, scoped capacity receipts and independent cleanup. CRC/per-file equality
+and input hashes verified; bounded generated-credential/XML-property scans found0.
+The initial archive and earlier full/Q4 ZIP hashes were independently rechecked.
+No merge, main change, workflow dispatch or package publication occurred.
+
+---
+
+# Focused JDBC diagnostic preparation — 2026-10-23 (earlier attempt)
 
 **Default PASS · Focused Oracle diagnostic BLOCKED / NOT_RUN · New full NOT_RUN · Production NO-GO.**
 No Oracle diagnostic was executed in this attempt: available host memory after
