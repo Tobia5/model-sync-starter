@@ -33,6 +33,7 @@ public final class OracleDiagnosticRunner {
       case "queue-comparison" -> List.of("io.modelsync.jdbc.OracleSelectionIT", "io.modelsync.jdbc.OracleOptimizationIT");
       case "worker-pacing" -> List.of("io.modelsync.sample.OracleWorkerIT");
       case "process-recovery-and-io" -> List.of("io.modelsync.sample.OracleRecoveryIT", "io.modelsync.sample.OracleIoIT");
+      case "jdbc-cancellation" -> List.of("io.modelsync.sample.OracleCancellationDiagnostic");
       default -> throw new IllegalArgumentException("Unknown diagnostic scope");
     };
     report.put("selected_classes", suites);
@@ -42,7 +43,7 @@ public final class OracleDiagnosticRunner {
       launcher.registerTestExecutionListeners(listener);
       launcher.execute(LauncherDiscoveryRequestBuilder.request().selectors(selectClass(name)).build());
       var summary = listener.getSummary();
-      long expected = name.endsWith("OracleRecoveryIT") ? 6 : name.endsWith("OracleIoIT") ? 12
+      long expected = name.endsWith("OracleCancellationDiagnostic") ? 6 : name.endsWith("OracleRecoveryIT") ? 6 : name.endsWith("OracleIoIT") ? 12
           : name.endsWith("OracleAtomicityIT") ? 7 : name.endsWith("OracleSelectionIT") ? 11 : 1;
       boolean success = summary.getTestsFoundCount() == expected
           && summary.getTestsSucceededCount() == expected && summary.getTestsSkippedCount() == 0

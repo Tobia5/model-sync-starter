@@ -2,6 +2,20 @@
 
 ### Explicit process and I/O fault lane
 
+`python scripts/full-oracle-container.py --cancellation-diagnostic` explicitly selects
+six one-row locked-DML probes: automatic query timeout, one cross-thread manual cancel,
+and layered `Connection.setNetworkTimeout`, each through direct JDBC and Spring/Hikari.
+It retains query 2s/read 10s/observation 5s, with separately configured network 3s for
+containment only. Oracle must confirm the exact test-owned blocking session before
+manual cancel. The lock stays held through observation and natural read-timeout cleanup;
+emergency unlock can never earn cancellation credit. Physical execution, cancel invocation,
+rollback/disposal, subsequent committed work and owned-resource termination are separate
+measurements. Later cleanup observations do not extend the 5s gate. The diagnostic class
+matches neither default Surefire nor full Failsafe patterns and runs only via this explicit
+launcher. It does not replace or change `OracleIoIT` or any full gate, seed a large workload,
+run PIT/Gatling or qualify full. JUnit success means the diagnostic was collected and checked;
+per-probe cancellation/containment outcomes remain explicit in the run-bound JSON.
+
 [The failure contract](FAILURE-CONTRACT.md) precedes this implementation. Default verification
 adds shutdown policy, uncancelled async-stage/physical-capacity and configuration regressions.
 `OracleRecoveryIT` has six independent-JVM cases: four acknowledged crash points, a newer
