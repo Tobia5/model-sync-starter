@@ -1,3 +1,85 @@
+# Focused JDBC diagnostic preparation — 2026-10-23
+
+**Default PASS · Focused Oracle diagnostic BLOCKED / NOT_RUN · New full NOT_RUN · Production NO-GO.**
+No Oracle diagnostic was executed in this attempt: available host memory after
+Maven exited was **12.185 GiB**, below the retained **18 GiB** session planning
+budget (6 GiB Oracle + 8 GiB build/runtime + 4 GiB reserve). No session container,
+volume, database or schema was created. No unrelated resources or global settings
+were changed. The original failing statement gate and every earlier report/archive
+remain unchanged. This is not new runtime evidence about the reviewed full failure.
+
+## Exact tested source and execution
+
+Tested clean source **`5b898c3694ef6f9a287e2d2bba0bcde955181deb`**, tree
+**`8d28ebead9413f98af9dc6a4385ed90b0c78f919`**, change digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+The later report commit is not claimed as this tested source.
+
+| Check | Actual result |
+|---|---|
+| `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify` | PASS, exit0; supervisor106.067s; run `177ed7a8-1c51-459f-913b-74a22f48ecf9`; 117 JUnit tests /25 XML suites, zero failures/errors/skips;64 Python guards. Collector exit0. No expensive goals executed. |
+| Standalone Python guards / architecture / docs | All PASS, exit0;64 guards in51.479s;15-module graph and16 Markdown documents checked. |
+| `bash scripts/test-triggers.sh` | Initial WSL bash exit1 (`javac` absent); explicit Git Bash with existing Windows JDK exit0,86 core /43 trigger assertions. These are not additional JUnit tests. |
+| Resource preflight after default | BLOCKED, Python exit2 (PowerShell pipeline exit1); attempt `ed85ad37-0c24-4f7f-9ff4-da8951a58446`,2026-10-23T07:17:23.6328513Z,12.185 GiB available. Earlier concurrent-build samples11.259–12.798 GiB retained separately. |
+| `python scripts/full-oracle-container.py --cancellation-diagnostic` | **NOT_RUN**; provisioning prevented by resource preflight. No diagnostic run ID or measured cancellation/containment result exists. |
+| Full / PIT / Gatling / large Oracle workloads | **NOT_RUN** in this attempt. Earlier full failure remains in the unchanged report below. |
+
+Maven uses only the reviewed project-scoped Central settings, SHA-256
+`ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`;
+user/global settings were not modified. The resolved default classpath records
+JDK21.0.12.1+1-LTS, Boot4.1.1, Spring JDBC7.0.9, Hikari7.0.2,
+ojdbc11 23.26.3.0.0 and JUnit Platform6.0.3. The compiled candidate retains
+these versions. Docker
+preflight observed server29.8.2,8 CPUs,25201692672 configured bytes; free disk
+C93.607/D1069.990 GiB. Seven running containers were counted without inspecting or
+changing them. This is not permission to remove another project's resources.
+
+## Diagnostic candidate, configurations and unknowns
+
+The explicit launcher compiles six one-row probes, with direct JDBC and the existing
+Spring `JdbcTemplate` / `DataSourceTransactionManager` / Hikari path for each case.
+It selects no other Oracle suite, PIT, Gatling or million-row fixture. JUnit success
+would mean checked evidence collection; individual deadline/containment outcomes
+are reported separately and cannot qualify the original full gate.
+
+| Case | Configuration prepared | Observed outcome |
+|---|---|---|
+| A automatic timeout | Query2s, socket read10s, observation5s; existing in-band cancellation setting | NOT_RUN |
+| B manual cancel | Same configuration; confirm exact test-owned Oracle row-lock wait, invoke `Statement.cancel()` once from separate owned thread | NOT_RUN |
+| C layered containment | Same locked DML/query2s/read10s; separately set JDBC `Connection.setNetworkTimeout`3s, observation5s | NOT_RUN; never independent statement-cancellation PASS |
+
+The candidate records cancel invocation duration, physical execute exit, transaction
+cleanup, connection disposal/reuse, fresh committed state, subsequent committed work,
+pool/thread termination and emergency unlock independently. Post-boundary cleanup
+observation cannot extend the5s gate; releasing the blocker earns no cancellation
+credit. No physical-completion, rollback or containment claim can yet be made.
+
+Oracle documents that query timeout uses cancellation and that cancellation depends
+on a database/network response ([driver troubleshooting](https://docs.oracle.com/en/database/oracle/oracle-database/19/jjdbc/JDBC-troubleshooting.html)).
+`setNetworkTimeout` is a separate JDBC connection control
+([Oracle API](https://docs.oracle.com/en/database/oracle/oracle-database/26/jajdb/oracle/jdbc/OracleConnection.html)).
+These API contracts do not establish the cause of this particular failure. That
+cause, direct-versus-Spring comparison and a supported fix or measured replacement
+contract remain **unknown pending execution**. No replacement contract is proposed
+as measured or implemented, and the original failing gate is unchanged.
+
+**Next prerequisite:** restore at least18 GiB available host memory without changing
+the approved caps or unrelated resources. Then execute the focused candidate;
+do not repeat full until the issue is resolved under the existing contract or an
+explicitly approved replacement. Accepted architecture/atomicity/SQL/pacing/cursor
+milestones and all parent production release gates are unchanged.
+
+[Source-bound raw evidence and resource receipts](validation/qualification/2026-10-23-jdbc-cancellation/README.md)
+include the original default log, fresh reports, supervisor, manifests and both
+capacity observations. ZIP SHA-256
+`038fa5790cf7d98eb862336977f252542577ddbe67f061d1683a07779c3165a7`;
+137653 bytes /73 files; ZIP CRC and per-file digests verified. Bounded scans found
+zero generated48-hex credential-shaped values or nonempty secret-like XML properties;
+this is not a universal secret-detection guarantee. No merge, main change,
+workflow dispatch or package publication occurred.
+
+---
+
 # Resumed full qualification after headroom restoration — 2026-10-22
 
 **Default PASS · Full FAILED · Production NO-GO.** The memory prerequisite was
