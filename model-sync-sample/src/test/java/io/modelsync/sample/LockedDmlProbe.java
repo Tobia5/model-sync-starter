@@ -21,6 +21,7 @@ final class LockedDmlProbe {
   volatile long startedNs;
   volatile long exitedNs;
   volatile int sid;
+  volatile int serial;
   volatile int effectiveQuerySeconds;
   volatile int effectiveNetworkMs;
   volatile Throwable failure;
@@ -82,9 +83,10 @@ final class LockedDmlProbe {
     physicalConnection = connection.unwrap(Connection.class);
     if (networkMs > 0) connection.setNetworkTimeout(networkExecutor, networkMs);
     effectiveNetworkMs = connection.getNetworkTimeout();
-    try (var check = connection.createStatement(); var rows = check.executeQuery("select sys_context('USERENV','SID') from dual")) {
+    try (var check = connection.createStatement(); var rows = check.executeQuery("select sid,serial# from v$session where sid=to_number(sys_context('USERENV','SID'))")) {
       if (!rows.next()) throw new SQLException("Missing test session identity");
       sid = rows.getInt(1);
+      serial = rows.getInt(2);
     }
   }
 

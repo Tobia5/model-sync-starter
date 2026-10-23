@@ -74,6 +74,7 @@ class OracleCancellationDiagnostic {
     var probe = new LockedDmlProbe(key, mode.equals("layered-network-containment") ? 3000 : 0, network);
     boolean emergencyUnlock = false;
     boolean executionDone = false;
+    boolean validated = false;
     try (var blocker = observer.getConnection()) {
       blocker.setAutoCommit(false);
       try (var lock = blocker.prepareStatement("update MS_CANCEL_DIAG set display_value='held' where fixture_id=?")) {
@@ -93,8 +94,8 @@ class OracleCancellationDiagnostic {
       try {
         assertTrue(probe.entered.await(3, TimeUnit.SECONDS), "Physical statement did not enter");
         OracleRecoveryIT.await(() -> jdbc.queryForObject(
-            "select count(*) from v$session where sid=? and event='enq: TX - row lock contention' and state='WAITING' and blocking_session=?",
-            Integer.class, probe.sid, blockerSid) == 1, 1500);
+            "select count(*) from v$session where sid=? and serial#=? and event='enq: TX - row lock contention' and state='WAITING' and blocking_session=?",
+            Integer.class, probe.sid, probe.serial, blockerSid) == 1, 1500);
         result.put("lock_wait_confirmed", true);
         result.put("lock_wait_confirmation_ms", elapsed(probe.startedNs));
         result.put("effective_query_timeout_seconds", probe.effectiveQuerySeconds);
@@ -104,8 +105,8 @@ class OracleCancellationDiagnostic {
         var cancelEvidence = new java.util.concurrent.ConcurrentHashMap<String, Object>();
         if (mode.equals("explicit-cancel-once")) {
           result.put("manual_cancel", cancelEvidence);
-          cancelEvidence.put("invocations", 1);
           canceller.submit(() -> {
+            cancelEvidence.put("invocations", 1);
             long began = System.nanoTime(); cancelEvidence.put("entered_after_execution_ms", elapsed(probe.startedNs));
             try { probe.statement.cancel(); cancelEvidence.put("outcome", "RETURNED"); }
             catch (SQLException error) { cancelEvidence.put("outcome", errors(error)); }
@@ -129,18 +130,22 @@ class OracleCancellationDiagnostic {
         result.put("execution_errors", errors(probe.failure));
         result.put("rollback_errors", errors(probe.rollbackFailure));
         boolean statementCancelled = Boolean.TRUE.equals(result.get("physical_exit_by_5s"))
-            && hasSqlCode(probe.failure, 1013) && !emergencyUnlock;
+            && LockedDmlOutcome.hasSqlCode(probe.failure, 1013) && !emergencyUnlock;
         result.put("independent_statement_cancellation", mode.equals("layered-network-containment") ? "NOT_APPLICABLE_CONTAINMENT_ONLY" : statementCancelled ? "PASS" : "FAILED");
         result.put("layered_containment", mode.equals("layered-network-containment")
-            ? Boolean.TRUE.equals(result.get("physical_exit_by_5s")) && !emergencyUnlock ? "PASS" : "FAILED" : "NOT_RUN");
-        // Recognize only Oracle cancellation or the driver's documented I/O timeout, not arbitrary errors.
-        assertTrue(hasSqlCode(probe.failure, 1013) || hasSqlCode(probe.failure, 17002)
-            && (hasCause(probe.failure, java.net.SocketTimeoutException.class)
-                || hasCause(probe.failure, java.io.InterruptedIOException.class)), "Unexpected locked-DML outcome");
+            ? "PENDING_SAFETY_CHECKS" : "NOT_RUN");
         assertTrue(executionDone);
-        if (mode.equals("layered-network-containment") && !hasSqlCode(probe.failure, 1013))
-          assertTrue(probe.connectionClosedAfter, "Timed-out physical connection must be discarded");
+        result.put("server_session_before_blocker_release", jdbc.queryForList(
+            "select status,event,state from v$session where sid=? and serial#=?", probe.sid, probe.serial));
+        result.put("server_lock_wait_before_blocker_release", jdbc.queryForObject(
+            "select count(*) from v$session where sid=? and serial#=? and event='enq: TX - row lock contention' and state='WAITING'",
+            Integer.class, probe.sid, probe.serial) > 0);
+        long releaseStart = System.nanoTime();
         blocker.rollback();
+        OracleRecoveryIT.await(() -> jdbc.queryForObject(
+            "select count(*) from v$session where sid=? and serial#=? and event='enq: TX - row lock contention' and state='WAITING'",
+            Integer.class, probe.sid, probe.serial) == 0, 3000);
+        result.put("server_lock_settled_after_blocker_release_ms", elapsed(releaseStart));
       } finally {
         result.put("emergency_unlock", emergencyUnlock || !executionDone);
         result.put("blocker_release_credited_as_cancellation", false);
@@ -157,7 +162,16 @@ class OracleCancellationDiagnostic {
         next.commit();
       }
       assertEquals("recovered", jdbc.queryForObject("select display_value from MS_CANCEL_DIAG where fixture_id=?", String.class, key));
-      result.put("subsequent_committed_work", true); result.put("status", "OBSERVED");
+      result.put("subsequent_committed_work", true);
+      // Collect state/recovery even for an unexpected exception, then fail narrowly.
+      assertTrue(LockedDmlOutcome.hasSqlCode(probe.failure, 1013) || LockedDmlOutcome.readTimeout(probe.failure), "Unexpected locked-DML outcome");
+      if (LockedDmlOutcome.readTimeout(probe.failure))
+        assertTrue(probe.connectionClosedAfter, "Timed-out physical connection must be discarded");
+      if (mode.equals("explicit-cancel-once")) {
+        @SuppressWarnings("unchecked") var cancel = (Map<String, Object>) result.get("manual_cancel");
+        assertEquals(1, cancel.get("invocations")); assertEquals(true, cancel.get("returned"));
+      }
+      validated = true;
     } finally {
       execution.shutdown(); canceller.shutdown(); network.shutdown();
       result.put("execution_thread_terminated", execution.awaitTermination(5, TimeUnit.SECONDS));
@@ -172,6 +186,14 @@ class OracleCancellationDiagnostic {
       assertEquals(true, result.get("execution_thread_terminated"));
       assertEquals(true, result.get("cancel_thread_terminated"));
       assertEquals(true, result.get("network_executor_terminated"));
+      if (pool != null) assertEquals(0, result.get("pool_active_after"));
+      if (validated) {
+        result.put("status", "OBSERVED");
+        if (mode.equals("layered-network-containment"))
+          result.put("layered_containment", !emergencyUnlock && Boolean.TRUE.equals(result.get("physical_exit_by_5s"))
+              && LockedDmlOutcome.readTimeout(probe.failure) ? "CLIENT_IO_CONTAINMENT_PASS" : "NOT_DEMONSTRATED");
+      }
+      write();
     }
   }
 
@@ -183,16 +205,6 @@ class OracleCancellationDiagnostic {
     return DriverManager.getConnection(System.getenv("MODELSYNC_ORACLE_URL"), properties);
   }
   private static long elapsed(long start) { return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start); }
-  private static boolean hasSqlCode(Throwable error, int code) {
-    for (Throwable current = error; current != null; current = current.getCause())
-      if (current instanceof SQLException sql && sql.getErrorCode() == code) return true;
-    return false;
-  }
-  private static boolean hasCause(Throwable error, Class<? extends Throwable> type) {
-    for (Throwable current = error; current != null; current = current.getCause())
-      if (type.isInstance(current)) return true;
-    return false;
-  }
   private static List<Map<String, Object>> errors(Throwable error) {
     List<Map<String, Object>> values = new ArrayList<>();
     for (Throwable current = error; current != null && values.size() < 8; current = current.getCause()) {
