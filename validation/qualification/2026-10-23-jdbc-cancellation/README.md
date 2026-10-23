@@ -1,4 +1,53 @@
-# Actual focused locked-JDBC diagnostic — 2026-10-23
+# Corrected diagnostic completed — 2026-10-23
+
+**Default PASS; diagnostic evidence6/6 collected; independent cancellation FAILED;
+network client containment observed; server termination unqualified; full NOT_RUN;
+production NO-GO.**
+
+Exact clean source `2c39b759cd9295c35eeddf6587094816950ccdf3`, tree
+`03f1aa3e069863207151b28f2389f899f089e7fb`, change digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+Default command `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify`:
+run `2ceaca58-96aa-4e1b-984d-5be4869b1d84`, exit0/113.698s, collector0;
+121 JUnit/26 suites,64 Python; zero failures/errors/skips.
+
+`python scripts/full-oracle-container.py --cancellation-diagnostic`:
+run `31f8e5ee-aa5f-4ec3-920d-4b952f90c089`, attempt
+`56d20d55-638d-40ff-8357-0c720951467f`,175.557s; Maven initialize preflight,
+launcher, wrapper and supervisor exit0. Six diagnostic evidence checks passed
+in48.145s, none failed/skipped. This is not a passing cancellation/full gate.
+
+| Probe, same one-row locked DML | Direct JDBC client exit | Spring/Hikari client exit |
+|---|---|---|
+| A query2s/read10s/observation5s |10007ms, FAILED |10013ms, FAILED |
+| B same + manual cancel once |10017ms;cancel returned0ms |10008ms;cancel returned0ms |
+| C same + network3s |3007ms, client bound |3016ms, client bound |
+
+All physical connections closed after recoverable18730/socket timeout. Oracle's
+exact session still waited on the row lock after client exit in6/6. Cleanup
+released the blocker; the wait was no longer observed4–9ms later. That is not
+independent server termination. Fresh committed row stayed `before` and subsequent
+new-connection updates committed in6/6. All owned executors/pools ended, table
+absence checked, container `msq-f6dafe3a2248` /volume `msq-f6dafe3a2248-data`
+independently absent at2026-10-23T07:46:35.755316Z. No unlock earned cancellation
+credit. No full/PIT/Gatling/large seed ran;6 GiB/4 CPU caps unchanged.
+
+[Corrected evidence](corrected-evidence.zip):86 files/158481 bytes,
+SHA-256 `392741498cbbfbf1a38b56e37b88497ff319eccc6c77a935c8de8a88b6605f25`.
+Fresh raw reports/logs, source/run and file manifests, capacity/cleanup receipts,
+`corrected-summary.json` and run-scoped `corrected-QM.md` are retained. The latter
+is also generated at `target/qm/QM.md`. CRC/per-file equality verified; bounded
+generated48-hex/XML-secret-property scan found0 (not a universal secret audit).
+Original038fa579 and first-execution8533f34c ZIPs below remain unchanged.
+
+The [contract draft](../../../docs/quality/JDBC-CONTAINMENT-PROPOSAL.md) remains
+unapproved/unimplemented and explicitly separates client containment from the
+unqualified server bound. [Current QM](../../../QM.md) records the actual source,
+platform/configuration and unresolved cause. No merge, main change or publication.
+
+---
+
+# Actual focused locked-JDBC diagnostic — 2026-10-23 (earlier attempt)
 
 **Latest default PASS; actual Oracle diagnostic FAILED; corrected Oracle run
 BLOCKED / NOT_RUN; new full NOT_RUN; production NO-GO.**

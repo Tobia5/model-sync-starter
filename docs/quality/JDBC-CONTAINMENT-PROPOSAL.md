@@ -4,7 +4,36 @@
 [failure contract](FAILURE-CONTRACT.md) and original `OracleIoIT` gate are unchanged.
 This proposal does not authorize full qualification or claim production readiness.
 
-## Measured basis and limits
+## Current measured basis and limits
+
+Corrected diagnostic source `2c39b759cd9295c35eeddf6587094816950ccdf3`, tree
+`03f1aa3e069863207151b28f2389f899f089e7fb`, run
+`31f8e5ee-aa5f-4ec3-920d-4b952f90c089`, completed six evidence checks successfully.
+Default121 JUnit/64 Python also passed at this exact source. Query2s/read10s/
+observation5s and the pinned platform were retained; C alone set network3s.
+
+| Case | Direct JDBC client exit | Spring/Hikari client exit |
+|---|---|---|
+| A automatic |10007ms, cancellation FAILED |10013ms, cancellation FAILED |
+| B explicit cancel once |10017ms;cancel returned0ms |10008ms;cancel returned0ms |
+| C network3s |3007ms, client I/O contained |3016ms, client I/O contained |
+
+Every connection was disposed after recoverable18730/socket-timeout. **Oracle
+remained ACTIVE/WAITING on the exact session's row lock after client exit in all
+six cases.** After the fixture released the blocker, the lock wait was no longer
+observed within4–9ms; that is release-assisted cleanup, not independent server
+termination. Fresh committed state stayed `before` and subsequent healthy-connection
+updates committed in6/6. All owned executors/pools closed, the table was removed,
+and both current and first-attempt containers/volumes were independently absent.
+
+Thus network timeout supplies **measured client containment and verified recovery
+after cleanup**, with no independent server-cancellation bound. It is not a complete
+replacement for physical database termination. The existing contract is still
+FAILED. No full qualification was run. A changed contract requires explicit review;
+the unresolved server lifecycle must not disappear from qualification or DRAINED
+claims. [QM](../../QM.md) retains exact commands, exits and raw artifacts.
+
+## Earlier attempt retained
 
 Source `9b2476653a1f1364ea35d52f916e706910428ff3`, diagnostic run
 `8bf36376-0d7b-45ef-9c12-c503aacdea5f`, used one locked synthetic row per probe,
@@ -22,16 +51,17 @@ Those outcomes and server-side execution exit are **not verified**. Pools/thread
 ended, the table was removed, and the owned container/volume were independently
 confirmed absent. No competing-lock release is credited as cancellation success.
 
-Corrected source `6edcf844ff1d9bdae5876d918e22c31b9619a346` adds four default
+Intermediate source `6edcf844ff1d9bdae5876d918e22c31b9619a346` adds four default
 classifier regressions and collects fresh state before classifying errors. It
 also observes the exact Oracle SID/serial before blocker release, separating
 client exit from a possible residual server lock wait. Default121 JUnit/64 Python
-passed; this source's Oracle execution is BLOCKED by11.474–11.493 GiB free versus
-the declared12 GiB scoped budget. No passing containment qualification exists yet.
+passed; this source's Oracle execution was BLOCKED by11.474–11.493 GiB free versus
+the declared12 GiB scoped budget. The later source/run above completed the corrected
+measurements after capacity recovered; these earlier receipts remain unchanged.
 
 ## Proposed replacement for the statement/row-lock qualification row
 
-Subject to explicit review **after the missing safety checks execute**, replace
+Subject to explicit review of the measured client/server distinction, replace
 the requirement for independent ORA-01013 cancellation in this locked-DML case with:
 
 1. Configure the fixture-owned connection with query timeout2s and a separately
@@ -63,10 +93,12 @@ NO-GO while applicable parent gates are open.
 
 ## What must happen next
 
-Restore the scoped12 GiB headroom and execute the corrected diagnostic once to
-complete fresh-state, server-wait and subsequent-work proof. Preserve the failing
-first attempt. Review this proposed contract against those results; do not change
-the original failing gate or run full merely because a client read timeout fired.
+Review whether the explicit client-containment contract is acceptable, including
+the residual server wait. An independent server cleanup/recovery bound remains
+unqualified; lock release is not its solution. The first failure and intermediate
+resource blocks are preserved. Do not change the original failing gate or run full
+until the original issue is resolved or a replacement contract is explicitly
+approved and implemented. This document does not approve that change.
 
 Oracle documents [cancellation's dependency on a server/network response](https://docs.oracle.com/en/database/oracle/oracle-database/19/jjdbc/JDBC-troubleshooting.html),
 [error18730](https://docs.oracle.com/en/error-help/db/ora-18730/), and the

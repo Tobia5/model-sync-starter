@@ -1,4 +1,116 @@
-# Focused locked-JDBC execution — 2026-10-23
+# Corrected focused JDBC diagnostic completed — 2026-10-23
+
+**Default PASS; six diagnostic evidence checks PASS. Independent cancellation
+FAILED; network client containment measured. Oracle server work remained waiting.
+Full NOT_RUN; production NO-GO.** The corrected experiment completed after headroom
+recovered. It verifies committed state, connection disposal, subsequent work and
+owned-resource cleanup. It does not resolve the existing independent cancellation
+gate or demonstrate a server-termination bound. No full run was repeated.
+
+## Exact tested source and execution
+
+Both current executions tested clean source
+**`2c39b759cd9295c35eeddf6587094816950ccdf3`**, tree
+**`03f1aa3e069863207151b28f2389f899f089e7fb`**, change digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+This later documentation/evidence commit is not claimed as tested code.
+
+| Execution | Identity / command | Actual result |
+|---|---|---|
+| Default | Run `2ceaca58-96aa-4e1b-984d-5be4869b1d84`; `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify` | Exit0/113.698s, collector0;121 JUnit/26 suites,64 Python guards; zero failures/errors/skips. No expensive execution. |
+| Focused diagnostic | Run `31f8e5ee-aa5f-4ec3-920d-4b952f90c089`, container attempt `56d20d55-638d-40ff-8357-0c720951467f`; `python scripts/full-oracle-container.py --cancellation-diagnostic` | Root Maven `-Pfull -N initialize` preflight0; launcher/wrapper/supervisor0;175.557s overall,48.145s suite;6 found/started/succeeded,0 failures/skips/container failures. **Evidence collection only**, not cancellation/full qualification. |
+
+The initial failed classifier run and both intermediate resource blocks remain
+below with unchanged raw artifacts. No report from those attempts supplies a
+passing result to this run. The corrected run first obtained a fresh default at
+the current head. Its scoped capacity receipt observed13.244–13.425 GiB free,
+19.950 GiB Docker capacity unused by containers, C87.561/D1069.993 GiB free disk.
+Declared planning remained12 GiB for the small launcher (6 Oracle +2 runtime +4
+reserve),18 GiB for full. Oracle stayed6 GiB/4 CPU; JVM512 MiB heap/128 MiB direct.
+No unrelated resource/global setting changes were made.
+
+## Configurations and A/B/C outcomes
+
+Pinned JDK21.0.12.1+1-LTS, Boot4.1.1, Spring JDBC7.0.9, Hikari7.0.2,
+ojdbc11/Oracle Free23.26.3.0.0. Generated runtime/migration schemas, synthetic
+one-row fixtures and loopback ports used the existing digest-pinned container
+entry point. Maven Central settings/digest remain those recorded below. Observer
+pool2, measured Hikari pool1, acquisition1000ms, validation500ms, maxLifetime0;
+direct JDBC unpooled. Query timeout2s, socket read10s, connect1500ms,
+`disableOob=true`, observation boundary5s. C alone set network timeout3s and
+verified the driver's effective timeout as3000ms. No deadline/platform change.
+
+| Probe | Direct JDBC | Existing Spring/Hikari path | Outcome |
+|---|---|---|---|
+| A automatic timeout | Client exit10007ms |10013ms | Both still executing at5s: independent cancellation **FAILED**. |
+| B cancel once after confirmed lock wait | Cancel invoked at50ms, returned0ms; client exit10017ms | At23ms, returned0ms; client exit10008ms | Independent cancellation **FAILED**.0ms has millisecond resolution; return is not completion. |
+| C same locked DML + network3s | Client exit3007ms |3016ms | Client I/O containment **PASS in this fixture**; not independent statement/server cancellation. |
+
+All six returned recoverable18730/SQLState08006 with
+`IOReadTimeoutException` / `SocketTimeoutException`, and their physical
+connections were closed. Spring's attempted rollback on a closed connection
+failed; this alone proves no transaction outcome. Fresh reads after cleanup
+observed the unchanged committed row in6/6, and new healthy-connection updates
+committed successfully in6/6. Broken connections were disposed, not reused.
+
+### Server work and physical completion
+
+**After client exit, all six exact Oracle SID/serial sessions were still
+ACTIVE / WAITING on `enq: TX - row lock contention`.** Client execution exit
+and connection disposal therefore do not prove server-side cancellation or
+successful physical database drain. Direct reproduction establishes that
+Spring/Hikari is not necessary for this failure. The exact driver/server/
+forwarding cancellation-response cause remains unknown; no specific defect is
+asserted. At5s the owned client thread was in Oracle NIO socket read and the
+timeout monitor existed.
+
+The competing lock stayed held until client exit. Cleanup then rolled it back;
+the server lock wait was no longer observed4–9ms later. Those observations are
+**release-assisted cleanup**, not independent server-exit/cancellation evidence.
+No emergency unlock was required to make a client call exit, and no blocker
+release was credited as cancellation. An independent server cleanup bound
+remains unqualified. The existing failing gate is unchanged.
+
+All owned executors terminated; measured Hikari pools returned to0 active and
+closed; the observer pool closed; the fixture table was removed and absence
+checked. Wrapper cleanup removed `msq-f6dafe3a2248` and
+`msq-f6dafe3a2248-data`; independent exact-name inspections confirmed both absent
+at2026-10-23T07:46:35.755316Z. The first attempt's pair was independently absent
+as well. No residual session-created Docker resources are known.
+
+## Contract review and remaining gates
+
+[The explicit proposal](docs/quality/JDBC-CONTAINMENT-PROPOSAL.md) remains
+**NOT APPROVED / NOT IMPLEMENTED**. It proposes query2s plus network3s with
+mandatory disposal/fresh-state/recovery proof, while retaining separate server
+work accounting and an open server cleanup/recovery bound. The measured
+alternative contains client I/O; it does not replace physical server termination.
+Oracle documents [cancellation's response dependency](https://docs.oracle.com/en/database/oracle/oracle-database/19/jjdbc/JDBC-troubleshooting.html)
+and [error18730](https://docs.oracle.com/en/error-help/db/ora-18730/). No arbitrary
+exception, timeout extension, skip, lower mutation gate or smaller required full
+workload was accepted to obtain these results.
+
+Do not run full until the issue is resolved under the existing contract or an
+explicit replacement is approved and implemented. Default PASS and diagnostic
+collection PASS are not full qualification. Production remains **NO-GO**; prior
+accepted atomicity/selection/pacing/cursor milestones and other parent gates are
+unchanged. No merge, main change, workflow dispatch or publication occurred.
+
+## Raw evidence
+
+[Corrected evidence and preserved earlier attempts](validation/qualification/2026-10-23-jdbc-cancellation/README.md):
+`corrected-evidence.zip`,86 files/158481 bytes, SHA-256
+`392741498cbbfbf1a38b56e37b88497ff319eccc6c77a935c8de8a88b6605f25`.
+Includes current default/diagnostic original logs and manifests, source/run JSON,
+capacity and independent cleanup receipts, and run-scoped Markdown copied to
+`target/qm/QM.md`. Per-file hashes, ZIP CRC and archived byte equality verified;
+bounded generated-credential/XML-property scans found0, not a universal secret
+guarantee. Earlier038fa579/8533f34c archives and reviewed baseline ZIPs are
+unchanged. Original failures and resource blocks follow as history.
+
+---
+
+# Focused locked-JDBC execution — 2026-10-23 (earlier attempt)
 
 **Latest default PASS · Executed diagnostic FAILED · Corrected Oracle run BLOCKED / NOT_RUN · New full NOT_RUN · Production NO-GO.**
 The small disposable experiment actually ran. It reproduces the independent
