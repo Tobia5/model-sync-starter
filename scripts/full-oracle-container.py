@@ -97,7 +97,7 @@ def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker
     java = str(Path(java_home) / 'bin' / ('java.exe' if os.name == 'nt' else 'java')) if java_home else shutil.which('java')
     if not java or not Path(java).is_file():
         raise ValueError('The build JDK is unavailable for diagnostics')
-    return [java, f'-Dmodelsync.repository.root={root}',
+    return [java, *(['-Xmx512m', '-XX:MaxDirectMemorySize=128m'] if cancellation else []), f'-Dmodelsync.repository.root={root}',
             '-Dmodelsync.oracle.diagnostic=' + ('jdbc-cancellation' if cancellation else 'process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale'), '-cp',
             str(jdbc_tests) + os.pathsep + classpath, 'io.modelsync.sample.OracleDiagnosticRunner']
 

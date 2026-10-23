@@ -47,6 +47,7 @@ class OracleCancellationDiagnostic {
       report.put("database", connection.getMetaData().getDatabaseProductVersion());
     }
     report.put("jdk", System.getProperty("java.runtime.version"));
+    report.put("max_heap_bytes", Runtime.getRuntime().maxMemory());
     report.put("spring", org.springframework.core.SpringVersion.getVersion());
     report.put("hikari", HikariDataSource.class.getPackage().getImplementationVersion());
     write();

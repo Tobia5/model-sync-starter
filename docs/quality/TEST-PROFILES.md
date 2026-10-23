@@ -15,6 +15,12 @@ matches neither default Surefire nor full Failsafe patterns and runs only via th
 launcher. It does not replace or change `OracleIoIT` or any full gate, seed a large workload,
 run PIT/Gatling or qualify full. JUnit success means the diagnostic was collected and checked;
 per-probe cancellation/containment outcomes remain explicit in the run-bound JSON.
+The cancellation-only JVM is capped at512 MiB heap/128 MiB direct memory. Local
+planning reserves6 GiB for Oracle,2 GiB for this small launcher/runtime and4 GiB
+host reserve (12 GiB available before provisioning). The prior18 GiB full-pipeline
+planning budget, Oracle6 GiB/4 CPU caps and all qualification gates are unchanged;
+this diagnostic launches neither PIT/Gatling nor a large workload. Retain every
+earlier blocked capacity observation separately.
 
 [The failure contract](FAILURE-CONTRACT.md) precedes this implementation. Default verification
 adds shutdown policy, uncancelled async-stage/physical-capacity and configuration regressions.
