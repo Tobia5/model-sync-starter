@@ -1,5 +1,20 @@
 # Verification profiles
 
+### Shared quota contention (explicit, small)
+
+After a matching green default and the existing12 GiB diagnostic admission, use
+`python scripts/full-oracle-container.py --quota-diagnostic` with the same project
+Maven settings, disposable acknowledgments and Oracle6 GiB/4 CPU limits. Its single
+selected OracleQuotaContentionIT has six cases, two independent actual starter
+applications/pools and small synthetic rows. JVM512 MiB/128 MiB direct caps remain.
+It never selects the prototype, cancellation A/B/C, million-row seed or full/PIT/load.
+The normal default compiles this code but executes only the cheap quota/configuration
+and failure-policy contracts plus strict evidence negative guards. Full-only Failsafe
+and report validation add the six tests/detailed run-bound report without removing
+any existing requirement. Original plain-UPDATE failure/gate remains unchanged for
+unprotected reachable paths. The accepted subset is mapped in LOCK-POLICY-DECISION.md;
+complete bounded persistence and final full remain blocked by applicable gaps.
+
 ### Production Oracle point-lock integration (opt-in)
 
 Ordinary default verification compiles the new integration suite and runs cheap

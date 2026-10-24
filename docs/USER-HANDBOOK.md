@@ -136,6 +136,36 @@ contract still requires explicit review; production remains NO-GO.
 
 ## 4. Define the model, owner and local mapping
 
+### Shared quota existing-row lock policy
+
+`model-sync.jdbc.quota-lock-policy=ORACLE_NOWAIT` independently opts the default
+JdbcQuotaGate bean into Oracle NOWAIT for its existing-row admission and cooldown
+SELECT locks. The compatible default and registration INSERT remain unchanged.
+Replacement gates choose their own constructor policy. This is not an instruction
+to append NOWAIT to every DML statement or to change datasource/global timeouts.
+
+Admission is returned only after its independent transaction commits. Lock refusal
+rolls back before LocalContention reaches the caller; no owner invocation is allowed
+on that exception. The coordinator persists a separate bounded LOCAL_CONTENTION
+retry when the work row is writable. Cooldown returns normally only after its
+transaction commits, uses max(previous,requested), and never reports an uncommitted
+extension as persisted. A refused cooldown propagates once with the original owner
+failure retained; it does not recursively retry or falsely persist DEFERRED metadata.
+The durable lease remains recoverable; its attempt count cannot advance without a
+metadata commit. Recovery may repeat a read and spend a new admission. A failed
+cooldown is an operational failure requiring monitoring, not distributed assurance
+that all other instances know the requested extension. Existing committed cooldown
+and spent admission are retained. There is no global finite-attempt promise across
+permanently unavailable persistence.
+
+The owner accepted the earlier existing-work/JPA subset in the
+[scoped decision](quality/LOCK-POLICY-DECISION.md). First inserts, quota, additional
+flush targets and transport/uncertain COMMIT were not waived. New quota measurements
+are reported separately in QM; implementation alone is not qualification.
+See [supported writers](quality/SUPPORTED-WRITERS.md): concurrent compliant instances
+remain in scope, arbitrary external starter-table writers/triggers do not. Legitimate
+first work/projection/state/quota insert paths remain in the coverage matrix.
+
 The minimal application integration has three responsibilities: read the owner, map a local projection, and declare their binding.
 
 A domain DTO contains the owner-controlled fields:

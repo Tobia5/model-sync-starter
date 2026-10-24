@@ -10,11 +10,12 @@ from gatling_evidence import measured as gatling_measured
 from queue_evidence import check as check_queue_evidence, optimization as check_optimization, worker as check_worker
 from failure_evidence import qualify as check_failure_evidence
 from lock_policy_evidence import qualify as check_lock_policy
+from quota_evidence import qualify as check_quota
 
 ROOT=Path(__file__).resolve().parents[1]
 SIMULATIONS={'fresh','hot','unsafe','event','cooldown','leases'}
 ORACLE={'OracleSmokeIT','OracleConcurrencyIT','OracleMigrationIT','OracleScaleIT','OracleCapacityIT','OracleSelectionIT','OracleOptimizationIT'}
-ORACLE_MODULES={'model-sync-persistence-jdbc':ORACLE, 'model-sync-sample':{'OracleAtomicityIT', 'NowaitOracleAtomicityIT', 'OracleWorkerIT', 'OracleRecoveryIT', 'OracleIoIT', 'OracleLockPolicyIT'}}
+ORACLE_MODULES={'model-sync-persistence-jdbc':ORACLE, 'model-sync-sample':{'OracleAtomicityIT', 'NowaitOracleAtomicityIT', 'OracleWorkerIT', 'OracleRecoveryIT', 'OracleIoIT', 'OracleLockPolicyIT', 'OracleQuotaContentionIT'}}
 
 def oracle_suites(root=ROOT):
     found=set()
@@ -23,7 +24,7 @@ def oracle_suites(root=ROOT):
             fresh(report,root)
             suite=ET.parse(report).getroot()
             name=(suite.get('name') or '').rsplit('.',1)[-1]
-            minimum=6 if name=='OracleRecoveryIT' else 12 if name=='OracleIoIT' else 7 if name in {'OracleAtomicityIT','NowaitOracleAtomicityIT','OracleLockPolicyIT'} else 11 if name=='OracleSelectionIT' else 3 if name=='OracleConcurrencyIT' else 1
+            minimum=6 if name in {'OracleRecoveryIT','OracleQuotaContentionIT'} else 12 if name=='OracleIoIT' else 7 if name in {'OracleAtomicityIT','NowaitOracleAtomicityIT','OracleLockPolicyIT'} else 11 if name=='OracleSelectionIT' else 3 if name=='OracleConcurrencyIT' else 1
             total=int(suite.get('tests','0'))
             bad=sum(int(suite.get(x,'0')) for x in ('errors','failures','skipped'))
             if name in names and total>=minimum and bad==0: found.add(name)
@@ -65,6 +66,7 @@ def check(root=ROOT):
             raise ValueError(f'Full-only {name} absent, failed or skipped')
     found=oracle_suites(root)
     check_lock_policy(root)
+    check_quota(root)
     counts,score=pit_counts(root)
     load={}
     for mode in SIMULATIONS:

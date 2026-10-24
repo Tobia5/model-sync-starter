@@ -60,7 +60,7 @@ def maven_command(diagnostic: bool = False) -> list[str]:
             else [*command, '-fae', '-Pfull', 'clean', 'verify'])
 
 
-def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False) -> list[str]:
+def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False, quota: bool = False) -> list[str]:
     """Use only the current successful default build's compiled tests and resolved classpath."""
     current(root)
     for script in ('check-test-reports.py', 'check-default-log.py'):
@@ -96,14 +96,16 @@ def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker
     if lock_policy:
         fresh(root / 'model-sync-sample/target/test-classes/io/modelsync/sample/OracleLockPolicyIT.class', root)
         fresh(root / 'model-sync-sample/target/test-classes/io/modelsync/sample/NowaitOracleAtomicityIT.class', root)
+    if quota:
+        fresh(root / 'model-sync-sample/target/test-classes/io/modelsync/sample/OracleQuotaContentionIT.class', root)
     jdbc_tests = root / 'model-sync-persistence-jdbc/target/test-classes'
     fresh(jdbc_tests / ('io/modelsync/jdbc/OracleOptimizationIT.class' if queue_comparison else 'io/modelsync/jdbc/OracleScaleIT.class'), root)
     java_home = os.environ.get('JAVA_HOME')
     java = str(Path(java_home) / 'bin' / ('java.exe' if os.name == 'nt' else 'java')) if java_home else shutil.which('java')
     if not java or not Path(java).is_file():
         raise ValueError('The build JDK is unavailable for diagnostics')
-    return [java, *(['-Xmx512m', '-XX:MaxDirectMemorySize=128m'] if cancellation or nowait or lock_policy else []), f'-Dmodelsync.repository.root={root}',
-            '-Dmodelsync.oracle.diagnostic=' + ('production-lock-policy' if lock_policy else 'database-nowait' if nowait else 'jdbc-cancellation' if cancellation else 'process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale'), '-cp',
+    return [java, *(['-Xmx512m', '-XX:MaxDirectMemorySize=128m'] if cancellation or nowait or lock_policy or quota else []), f'-Dmodelsync.repository.root={root}',
+            '-Dmodelsync.oracle.diagnostic=' + ('shared-quota' if quota else 'production-lock-policy' if lock_policy else 'database-nowait' if nowait else 'jdbc-cancellation' if cancellation else 'process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale'), '-cp',
             str(jdbc_tests) + os.pathsep + classpath, 'io.modelsync.sample.OracleDiagnosticRunner']
 
 
@@ -170,19 +172,19 @@ def preflight() -> None:
     docker('info', '--format', '{{.ServerVersion}}')
 
 
-def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False) -> int:
-    diagnostic = diagnostic or queue_comparison or worker or recovery or cancellation or nowait or lock_policy
+def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False, quota: bool = False) -> int:
+    diagnostic = diagnostic or queue_comparison or worker or recovery or cancellation or nowait or lock_policy or quota
     attempt = {'attempt_id': str(uuid.uuid4()), **identity(ROOT), 'image': IMAGE,
                'runtime_schema': 'MS_TEST_RUNTIME', 'migration_schema': 'MS_TEST_MIGRATION',
                'mode': 'diagnostic' if diagnostic else 'full',
-               'diagnostic_scope': ('production-lock-policy' if lock_policy else 'database-nowait' if nowait else 'jdbc-cancellation' if cancellation else 'process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale') if diagnostic else None,
+               'diagnostic_scope': ('shared-quota' if quota else 'production-lock-policy' if lock_policy else 'database-nowait' if nowait else 'jdbc-cancellation' if cancellation else 'process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale') if diagnostic else None,
                'full_qualification': 'NOT_RUN' if diagnostic else 'REQUIRES_FULL_EVIDENCE'}
     selected = os.environ.get('MODELSYNC_MAVEN_SETTINGS')
     attempt['maven_settings'] = selected or 'USER_DEFAULT'
     if selected == PROJECT_SETTINGS and (ROOT / selected).is_file():
         attempt['maven_settings_sha256'] = hashlib.sha256((ROOT / selected).read_bytes()).hexdigest()
     try:
-        launcher = diagnostic_command(queue_comparison=queue_comparison, worker=worker, recovery=recovery, cancellation=cancellation, nowait=nowait, lock_policy=lock_policy) if diagnostic else None
+        launcher = diagnostic_command(queue_comparison=queue_comparison, worker=worker, recovery=recovery, cancellation=cancellation, nowait=nowait, lock_policy=lock_policy, quota=quota) if diagnostic else None
         invalidate(ROOT)
         preflight()
     except (ValueError, OSError, ET.ParseError, subprocess.CalledProcessError) as error:
@@ -338,5 +340,7 @@ if __name__ == '__main__':
                             help='Run only the small JDBC/JPA database-refusal prototype; never qualifies full')
     selections.add_argument('--lock-policy-diagnostic', action='store_true',
                             help='Run only production adapter lock-policy integration and retained atomicity; never qualifies full')
+    selections.add_argument('--quota-diagnostic', action='store_true',
+                            help='Run only small shared-quota contention integration; never qualifies full')
     args = parser.parse_args()
-    raise SystemExit(main(args.diagnostic, args.queue_diagnostic, args.worker_diagnostic, args.recovery_diagnostic, args.cancellation_diagnostic, args.nowait_diagnostic, args.lock_policy_diagnostic))
+    raise SystemExit(main(args.diagnostic, args.queue_diagnostic, args.worker_diagnostic, args.recovery_diagnostic, args.cancellation_diagnostic, args.nowait_diagnostic, args.lock_policy_diagnostic, args.quota_diagnostic))

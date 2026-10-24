@@ -180,7 +180,7 @@ class QualityGateTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'OracleWorkerIT'):
                 gate.oracle_suites(root)
             worker.write_text('<testsuite name="OracleWorkerIT" tests="1" failures="0" errors="0" skipped="0"/>')
-            for name, count in [('OracleRecoveryIT', 6), ('OracleIoIT', 12), ('OracleLockPolicyIT', 7), ('NowaitOracleAtomicityIT', 7)]:
+            for name, count in [('OracleRecoveryIT', 6), ('OracleIoIT', 12), ('OracleLockPolicyIT', 7), ('NowaitOracleAtomicityIT', 7), ('OracleQuotaContentionIT', 6)]:
                 (worker.parent / f'TEST-{name}.xml').write_text(f'<testsuite name="{name}" tests="{count}" failures="0" errors="0" skipped="0"/>')
             self.assertIn('OracleAtomicityIT', gate.oracle_suites(root))
             selection = root / 'model-sync-persistence-jdbc/target/failsafe-reports/TEST-OracleSelectionIT.xml'

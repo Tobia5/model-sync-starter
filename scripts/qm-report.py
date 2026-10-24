@@ -17,6 +17,7 @@ from run_evidence import current, fresh, reactor_modules
 from gatling_evidence import measured as gatling_measured
 from failure_evidence import collect as collect_fault, SCOPES as FAULT_SCOPES
 from lock_policy_evidence import collect as collect_lock_policy
+from quota_evidence import collect as collect_quota
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -93,7 +94,7 @@ def collect(full: bool, root: Path = ROOT) -> dict:
     executed_oracle = set()
     oracle_modules = {'model-sync-persistence-jdbc': ('OracleSmokeIT', 'OracleConcurrencyIT',
                       'OracleMigrationIT', 'OracleScaleIT', 'OracleCapacityIT', 'OracleSelectionIT', 'OracleOptimizationIT'),
-                      'model-sync-sample': ('OracleAtomicityIT', 'NowaitOracleAtomicityIT', 'OracleWorkerIT', 'OracleRecoveryIT', 'OracleIoIT', 'OracleLockPolicyIT')}
+                      'model-sync-sample': ('OracleAtomicityIT', 'NowaitOracleAtomicityIT', 'OracleWorkerIT', 'OracleRecoveryIT', 'OracleIoIT', 'OracleLockPolicyIT', 'OracleQuotaContentionIT')}
     for module, names in (oracle_modules.items() if full else ()):
         if module not in modules:
             continue
@@ -234,6 +235,16 @@ def collect(full: bool, root: Path = ROOT) -> dict:
             worker.update(status='FAILED', reason='Worker suite failed; fresh partial measurements retained')
     faults = {}
     if full:
+        try:
+            faults['oracle-quota-contention'] = collect_quota(root)
+        except (ValueError, OSError, json.JSONDecodeError) as error:
+            faults['oracle-quota-contention'] = {'status': 'REJECTED', 'reason': str(error)}
+        quota_suite = next((s for s in modules.get('model-sync-sample', {}).get('failsafe', {}).get('suites', [])
+                            if s['name'].rsplit('.', 1)[-1] == 'OracleQuotaContentionIT'), None)
+        if faults['oracle-quota-contention'] is None and 'OracleQuotaContentionIT' in executed_oracle:
+            faults['oracle-quota-contention'] = {'status': 'FAILED', 'reason': 'Executed quota suite without fresh measurements'}
+        elif quota_suite and any(quota_suite.get(k, 0) for k in ('failures', 'errors', 'skipped')) and isinstance(faults['oracle-quota-contention'], dict) and faults['oracle-quota-contention'].get('status') != 'REJECTED':
+            faults['oracle-quota-contention'].update(status='FAILED', reason='Executed quota suite failed; partial measurements retained')
         try:
             faults['oracle-lock-policy'] = collect_lock_policy(root)
         except (ValueError, OSError, json.JSONDecodeError) as error:

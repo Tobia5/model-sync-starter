@@ -53,9 +53,10 @@ public class ModelSyncJdbcAutoConfiguration {
       PlatformTransactionManager manager,
       @Qualifier("modelSyncClock") Clock clock,
       ModelSyncProperties properties,
+      ModelSyncJdbcProperties jdbcProperties,
       ModelRegistry registry) {
     validateTransactionDataSource(dataSource, manager);
-    JdbcQuotaGate gate = new JdbcQuotaGate(new JdbcTemplate(dataSource), manager, clock);
+    JdbcQuotaGate gate = new JdbcQuotaGate(new JdbcTemplate(dataSource), manager, clock, jdbcProperties.getQuotaLockPolicy());
     properties.getQuotas().forEach(gate::register);
     for (ModelBinding<?> b : registry.all())
       if (!properties.getQuotas().containsKey(b.quota()))

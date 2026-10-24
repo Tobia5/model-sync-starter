@@ -9,6 +9,23 @@ import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
 class ContentionPolicyTest {
+  @Test void refusedCooldownIsReportedOnceAndDurableLeaseRemainsRecoverable() {
+    var f = new CoreFixture(); var gate = new RefusingCooldownGate(f.gate);
+    var coordinator = new SyncCoordinator(f.registry, f.store, f.tx, gate, f.clock,
+        f.coordinator.options(), WeightedPriorities.defaults(), () -> 0.5);
+    f.enqueue(); var lease = coordinator.claim().orElseThrow();
+    coordinator.prepare(lease).orElseThrow(); assertEquals(1, f.gate.grants());
+    var rateLimited = new RateLimitedAfter(Duration.ofSeconds(30));
+    var failure = assertThrows(LocalContention.class, () -> coordinator.failed(lease, rateLimited));
+    assertArrayEquals(new Throwable[] {rateLimited}, failure.getSuppressed());
+    assertEquals(1, gate.writes); assertEquals("LEASED", f.store.inspect(f.key).status());
+    assertEquals(lease.token(), f.store.inspect(f.key).token()); assertEquals(0, f.store.inspect(f.key).attempts());
+    gate.refuse = false; coordinator.failed(lease, rateLimited);
+    assertEquals(2, gate.writes); assertEquals("DEFERRED", f.store.inspect(f.key).lastCode());
+    assertEquals("WAITING", f.store.inspect(f.key).status());
+    assertEquals(f.clock.instant().plusSeconds(30), f.gate.acquire("owner").retryAt());
+    assertEquals(1, f.gate.grants()); assertEquals(0, f.calls.get());
+  }
   @Test void localContentionHasDistinctCodeBoundedBackoffAndAttemptLimit() {
     var f = new CoreFixture();
     var c = new SyncCoordinator(f.registry, f.store, f.tx, f.gate, f.clock,

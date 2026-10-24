@@ -35,7 +35,7 @@ class CancellationDiagnosticTests(unittest.TestCase):
         self.assertIn('blocking_session=?', source)
         self.assertIn('"blocker_release_credited_as_cancellation", false', source)
         container = (ROOT / 'scripts/full-oracle-container.py').read_text()
-        self.assertIn("['-Xmx512m', '-XX:MaxDirectMemorySize=128m'] if cancellation or nowait or lock_policy else []", container)
+        self.assertIn("['-Xmx512m', '-XX:MaxDirectMemorySize=128m'] if cancellation or nowait or lock_policy or quota else []", container)
 
     def test_cli_diagnostic_selection_is_exclusive(self):
         import subprocess
