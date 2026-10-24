@@ -3,7 +3,7 @@ import json
 from run_evidence import current, fresh
 
 DEFAULT = {f'{kind}-default-{resolution}' for kind in ('work', 'quota') for resolution in ('commit', 'rollback')}
-NATIVE = {f'{kind}-native-{resolution}' for kind in ('work', 'quota') for resolution in ('commit', 'rollback')}
+NATIVE = {f'{kind}-native-{resolution}' for kind in ('work', 'quota', 'passive') for resolution in ('commit', 'rollback')}
 FENCED = {'projection-state-fence-commit', 'projection-state-fence-rollback'}
 CASES = DEFAULT | NATIVE | FENCED
 

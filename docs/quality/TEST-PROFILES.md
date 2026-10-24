@@ -4,8 +4,8 @@
 
 `python scripts/full-oracle-container.py --creation-diagnostic` selects only
 OracleFirstCreationIT after matching default and the existing12 GiB admission.
-The final candidate has10 cases: four observed DEFAULT insert waits, four explicit
-Oracle26 work/quota INSERT refusals, two projection/state work-fence cases. A is
+The final candidate has12 cases: four observed DEFAULT insert waits, six explicit
+Oracle26 explicit/passive work and quota INSERT refusals, two projection/state work-fence cases. A is
 paused after actual insert/before commit, then commit/rollback is selected explicitly.
 DEFAULT completion following A resolution is not bounded mitigation/cancellation.
 No out-of-protocol starter writer, prototype, A/B/C, load or million-row seed runs.

@@ -25,7 +25,7 @@ def oracle_suites(root=ROOT):
             fresh(report,root)
             suite=ET.parse(report).getroot()
             name=(suite.get('name') or '').rsplit('.',1)[-1]
-            minimum=10 if name=='OracleFirstCreationIT' else 6 if name in {'OracleRecoveryIT','OracleQuotaContentionIT'} else 12 if name=='OracleIoIT' else 7 if name in {'OracleAtomicityIT','NowaitOracleAtomicityIT','OracleLockPolicyIT'} else 11 if name=='OracleSelectionIT' else 3 if name=='OracleConcurrencyIT' else 1
+            minimum=12 if name=='OracleFirstCreationIT' else 6 if name in {'OracleRecoveryIT','OracleQuotaContentionIT'} else 12 if name=='OracleIoIT' else 7 if name in {'OracleAtomicityIT','NowaitOracleAtomicityIT','OracleLockPolicyIT'} else 11 if name=='OracleSelectionIT' else 3 if name=='OracleConcurrencyIT' else 1
             total=int(suite.get('tests','0'))
             bad=sum(int(suite.get(x,'0')) for x in ('errors','failures','skipped'))
             if name in names and total>=minimum and bad==0: found.add(name)

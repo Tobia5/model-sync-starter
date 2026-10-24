@@ -67,6 +67,7 @@ class OracleFirstCreationIT {
   }
   private SubjectKey key() {var key=new SubjectKey("synthetic-creation",UUID.randomUUID().toString());owned.add(CustomerJpaMapping.storageId(key));return key;}
   private String request(ConfigurableApplicationContext app,SubjectKey key) {return app.getBean(SyncGateway.class).request("customer",key.tenant(),key.id(),Priority.URGENT,true);}
+  private String refresh(ConfigurableApplicationContext app,SubjectKey key) {return app.getBean(SyncGateway.class).model("customer",Customer.class).requestRefresh(key.tenant(),key.id(),Priority.URGENT).orElseThrow();}
   private <T> T tx(ConfigurableApplicationContext app,String name,Callable<T> action) {
     var tx=new TransactionTemplate(app.getBean(JpaTransactionManager.class));tx.setName(name);
     return tx.execute(status->{try{return action.call();}catch(RuntimeException e){throw e;}catch(Exception e){throw new IllegalStateException(e);}});
@@ -118,19 +119,22 @@ class OracleFirstCreationIT {
     result.put("physical_after_resolution",physical.get());write();
   }
   private void work(boolean rollback,boolean nativeInsert) throws Exception {
-    String name="work-"+(nativeInsert?"native":"default")+"-"+(rollback?"rollback":"commit");boot(name,nativeInsert,"creationWork");
+    work(rollback,nativeInsert,false);
+  }
+  private void work(boolean rollback,boolean nativeInsert,boolean passive) throws Exception {
+    String name=(passive?"passive":"work")+"-"+(nativeInsert?"native":"default")+"-"+(rollback?"rollback":"commit");boot(name,nativeInsert,"creationWork");
     var key=key();var guard=key();String id=CustomerJpaMapping.storageId(key);
     a.verifyInserted=()->{assertEquals(1,a.jdbc.queryForObject("select count(*) from MS_WORK where work_id=?",Integer.class,id));assertEquals(0,view.queryForObject("select count(*) from MS_WORK where work_id=?",Integer.class,id));};
     var first=start(a,()->tx(appA,"creationWork",()->request(appA,key)));Future<CreationAttempt> second=null;
     try {
-      ready();result.put("a_ticket_provisional",true);second=start(b,()->tx(appB,"creationWork",()->{request(appB,guard);return request(appB,key);}));
+      ready();result.put("a_ticket_provisional",true);second=start(b,()->tx(appB,"creationWork",()->{request(appB,guard);return passive?refresh(appB,key):request(appB,key);}));
       if(nativeInsert) {refused(finished(second,"b_before_a_resolution"));assertEquals(0,view.queryForObject("select count(*) from MS_WORK where work_id=?",Integer.class,CustomerJpaMapping.storageId(guard)));}
       else waiting(second);
       assertEquals(0,view.queryForObject("select count(*) from MS_WORK where work_id=?",Integer.class,id));resolve(first,rollback);
-      if(nativeInsert)second=start(b,()->tx(appB,"creationWork",()->request(appB,key)));
+      if(nativeInsert)second=start(b,()->tx(appB,"creationWork",()->passive?refresh(appB,key):request(appB,key)));
       var done=finished(second,"b_after_resolution");assertNull(done.failure());assertEquals(id,done.ticket());assertEquals("COMMITTED",done.evidence().get("completion"));
       var row=view.queryForMap("select generation,priority,force_refresh,work_status,tenant_id,subject_id from MS_WORK where work_id=?",id);
-      assertEquals(rollback?1L:2L,((Number)row.get("GENERATION")).longValue());assertEquals(Priority.URGENT.ordinal(),((Number)row.get("PRIORITY")).intValue());assertEquals(1,((Number)row.get("FORCE_REFRESH")).intValue());
+      assertEquals(rollback||passive?1L:2L,((Number)row.get("GENERATION")).longValue());assertEquals(Priority.URGENT.ordinal(),((Number)row.get("PRIORITY")).intValue());assertEquals(rollback&&passive?0:1,((Number)row.get("FORCE_REFRESH")).intValue());
       assertEquals(key.tenant(),row.get("TENANT_ID"));assertEquals(key.id(),row.get("SUBJECT_ID"));assertEquals("WAITING",row.get("WORK_STATUS"));result.put("committed_work",row);
       result.put("classification",nativeInsert?"MEASURED_INSERT_REFUSAL":"UNBOUNDED_DEFAULT_WAIT");
     }finally{emergency(first,second);}pass();
@@ -190,6 +194,8 @@ class OracleFirstCreationIT {
   @Test void nativeWorkRollback() throws Exception {work(true,true);}
   @Test void nativeQuotaCommit() throws Exception {quota(false,true);}
   @Test void nativeQuotaRollback() throws Exception {quota(true,true);}
+  @Test void nativePassiveCreationCommit() throws Exception {work(false,true,true);}
+  @Test void nativePassiveCreationRollback() throws Exception {work(true,true,true);}
   @Test void firstProjectionAndStateCommitAreFenced() throws Exception {fence(false);}
   @Test void firstProjectionAndStateRollbackAreFenced() throws Exception {fence(true);}
 
