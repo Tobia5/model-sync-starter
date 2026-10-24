@@ -1,5 +1,12 @@
 # Path-scoped Oracle lock-policy proposal
 
+**Current decision:** the owner accepted only the existing-row subset evidenced
+at source2eea1d8, as recorded in [the scoped decision](LOCK-POLICY-DECISION.md).
+The original reviewed text below is preserved. Its pending-review statements are
+historical for that accepted subset; they still apply to unaccepted extensions.
+No complete-persistence waiver or removal of the original failing UPDATE gate
+was accepted.
+
 **REVIEW REQUIRED - NOT A CHANGE TO THE ACTIVE QUALIFICATION CONTRACT.**
 Implementation authorization does not approve replacement of the original failing
 statement-cancellation gate. The plain-UPDATE reproducer, OracleIoIT requirement,

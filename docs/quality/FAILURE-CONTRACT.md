@@ -15,6 +15,14 @@ an exception nor cancellation establishes whether COMMIT happened.
 
 ## Allowed outcomes and bounds
 
+The [2026-10-24 scoped decision](LOCK-POLICY-DECISION.md) accepts database refusal
+instead of independent cancellation only for the qualified opted-in existing
+MS_WORK point lock and JPA lookup/retained-lock refresh paths, with rollback,
+preserved intent and physical/server/resource proof. The table and original
+plain-UPDATE failure below remain applicable to unprotected reachable operations;
+first inserts, quota, additional flush targets, transport and uncertain COMMIT
+are not waived. No existing full test is removed or relabelled PASS.
+
 | Situation | Required outcome | Qualification budget (small local synthetic fixture) |
 |---|---|---|
 | Graceful stop | Close new worker admission first. Allow admitted work to finish. Report DRAINED only after logical work and tracked physical operations finish. Cancel remaining subscriptions at the drain deadline and report TIMED_OUT if unresolved. | Configurable drain, default 5s; return within drain +500ms dispatch allowance. A timed-out operation is not drained. |
