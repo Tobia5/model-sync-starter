@@ -34,7 +34,9 @@ class LockPolicyTests(unittest.TestCase):
         self.assertNotIn('NowaitPointJdbcTemplate', source)
         self.assertNotIn('NowaitSqlProbe', source)
         capture = (ROOT/'model-sync-sample/src/test/java/io/modelsync/sample/LockPolicyObservation.java').read_text()
-        self.assertIn('sql.add(statement); return statement;', capture)
+        self.assertIn('sql.add(statement);', capture)
+        self.assertIn('return statement;', capture)
+        self.assertNotIn('.replace(', capture)
         for module in ('model-sync-persistence-jdbc', 'model-sync-persistence-jpa'):
             for path in (ROOT/module/'src/main/java').rglob('*.java'):
                 self.assertNotIn('StatementInspector', path.read_text())

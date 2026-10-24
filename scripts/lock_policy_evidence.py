@@ -56,6 +56,8 @@ def qualify(root):
                 or not any(e.get('oracle_code') == 54 for e in errors)):
             raise ValueError('Database refusal/rollback/session proof missing: ' + name)
     worker = by_name['actual-worker-contention-exhaustion']
+    if by_name['enabled-safety-controls'].get('refresh_lock_retained_before_flush') is not True:
+        raise ValueError('Lookup lock retention through actual refresh not verified')
     if (worker.get('owner_calls') != 3 or worker.get('completed_syncs') != 0
             or worker.get('worker_physical_after_stop') != 0
             or worker.get('durable', {}).get('WORK_STATUS') != 'DEAD'

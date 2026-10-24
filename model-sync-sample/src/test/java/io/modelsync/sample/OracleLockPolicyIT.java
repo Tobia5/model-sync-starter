@@ -15,6 +15,7 @@ import java.time.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -224,7 +225,8 @@ class OracleLockPolicyIT {
     } finally { release(blocker); }
     // Remove only the guard control, not target intent; later admission/retry deadlines expire naturally.
     view.update("delete from MS_WORK where work_id=?", guard.key().storageId());
-    OracleRecoveryIT.await(() -> coordinator.runOne(), 5000);
+    var ran = new AtomicBoolean();
+    OracleRecoveryIT.await(() -> { if (!ran.get()) ran.set(coordinator.runOne()); return ran.get(); }, 5000);
     assertEquals(2, probe.ownerCalls.get()); assertEquals("after", view.queryForObject("select display_name from SAMPLE_CUSTOMER where storage_key=?", String.class, prepared.lease().key().storageId()));
     assertThrows(LeaseLost.class, () -> coordinator.finish(prepared, FetchResult.found(new Customer("obsolete", "ACTIVE"), "obsolete")));
     result.put("later_completed_syncs", 1); result.put("repeated_owner_reads", 1); healthy(); pass();
@@ -262,11 +264,22 @@ class OracleLockPolicyIT {
   @Test void enabledSuccessRetainsRefreshGenerationFencingAndLocalRevision() throws Exception {
     boot("enabled-safety-controls", true, false); var key = key(); seed(key); var prepared = prepare(key);
     gateway.request("customer", key.tenant(), key.id(), Priority.URGENT, true); probe.sql.clear();
-    coordinator.finish(prepared, FetchResult.found(new Customer("after", "ACTIVE"), "after"));
+    probe.beforeProjectionUpdate = () -> {
+      try (var c = observer.getConnection(); var s = c.prepareStatement("select storage_key from SAMPLE_CUSTOMER where storage_key=? for update nowait")) {
+        c.setAutoCommit(false); s.setString(1, prepared.lease().key().storageId());
+        var refusal = assertThrows(SQLException.class, s::executeQuery);
+        assertEquals(54, refusal.getErrorCode(), "The lookup lock must remain held through the actual refresh");
+        c.rollback(); result.put("refresh_lock_retained_before_flush", true);
+      } catch (SQLException error) { throw new IllegalStateException("Refresh lock observation failed", error); }
+    };
+    try { coordinator.finish(prepared, FetchResult.found(new Customer("after", "ACTIVE"), "after")); }
+    finally { probe.beforeProjectionUpdate = null; }
     result.put("successful_lookup_refresh_sql", List.copyOf(probe.sql));
     var locking = probe.sql.stream().filter(s -> s.toLowerCase(Locale.ROOT).contains("for update")).toList();
-    assertTrue(locking.size() >= 2); assertTrue(locking.stream().allMatch(s -> s.toLowerCase(Locale.ROOT).endsWith("nowait")));
-    assertTrue(locking.stream().anyMatch(s -> s.contains("display_name")), "Actual store refresh must carry per-operation NOWAIT");
+    assertEquals(1, locking.size(), "Pinned Hibernate elides a redundant refresh lock when an exclusive lookup lock is held");
+    assertTrue(locking.getFirst().toLowerCase(Locale.ROOT).endsWith("nowait"));
+    assertTrue(probe.sql.stream().anyMatch(s -> s.startsWith("select ") && s.contains("display_name") && !s.contains("for update")));
+    assertEquals(true, result.get("refresh_lock_retained_before_flush"));
     assertEquals("WAITING", view.queryForObject("select work_status from MS_WORK where work_id=?", String.class, prepared.lease().key().storageId()));
     assertThrows(LeaseLost.class, () -> coordinator.finish(prepared, FetchResult.found(new Customer("obsolete", "ACTIVE"), "obsolete")));
     var newer = coordinator.prepare(coordinator.claim().orElseThrow()).orElseThrow();

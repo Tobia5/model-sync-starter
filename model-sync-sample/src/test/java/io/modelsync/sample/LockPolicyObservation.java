@@ -13,6 +13,7 @@ final class LockPolicyObservation implements StatementInspector {
   final List<String> sql = new CopyOnWriteArrayList<>();
   final AtomicInteger ownerCalls = new AtomicInteger();
   final List<Map<String, Integer>> runtimeSessions = new ArrayList<>();
+  Runnable beforeProjectionUpdate;
   LockPolicyObservation(DataSource source) throws SQLException {
     List<Connection> connections = new ArrayList<>();
     try {
@@ -26,5 +27,10 @@ final class LockPolicyObservation implements StatementInspector {
       }
     } finally { for (Connection connection : connections) connection.close(); }
   }
-  @Override public String inspect(String statement) { sql.add(statement); return statement; }
+  @Override public String inspect(String statement) {
+    sql.add(statement);
+    if (beforeProjectionUpdate != null && statement.toLowerCase(Locale.ROOT).startsWith("update sample_customer"))
+      beforeProjectionUpdate.run();
+    return statement;
+  }
 }
