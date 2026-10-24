@@ -1,3 +1,14 @@
+## Current accepted named configuration - 2026-10-24
+
+The owner approved [QUALIFICATION-TARGET](QUALIFICATION-TARGET.md) and its exact
+[executable inventory](qualification-target.json). It supersedes only the earlier
+pending/applicability statements for the named Oracle26 NOWAIT/INSERT configuration.
+All other applicable requirements and the historical plain-UPDATE cancellation
+FAILED result remain. An unexecuted current characterization is NOT_RUN.
+DEFAULT, older Oracle lines and arbitrary replacement mappings are not qualified
+by this decision. Failed cooldown publication/recovery and other parent release
+gates remain open. The earlier text below is preserved as decision history.
+
 # Accepted existing-row criterion - 2026-10-24
 
 The owner explicitly accepted the following subset of the proposal at report

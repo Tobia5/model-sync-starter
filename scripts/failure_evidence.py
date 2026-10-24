@@ -8,7 +8,7 @@ SCOPES = {
         'CLAIM_COMMITTED', 'OWNER_RESPONDED', 'PROJECTION_FLUSHED', 'COMPLETION_COMMITTED',
         'OWNER_RESPONDED-new-generation', 'OWNER_RESPONDED-local-revision'}),
     'oracle-io': ('bounded-owned-oracle-transport-and-shutdown', {
-        'pool-exhaustion', 'statement-lock-timeout', 'transaction-deadline', 'database-read-stall',
+        'pool-exhaustion', 'transaction-deadline', 'database-read-stall',
         'connection-unavailable', 'database-login-stall', 'graceful-owner-drain',
         'late-owner-and-bounded-stop', 'owner-socket-timeout', 'locked-jpa-shutdown',
         'uncertain-before-commit', 'uncertain-after-commit'})}
@@ -28,7 +28,8 @@ def collect(root: Path, name: str):
     cases = value.get('cases')
     if value.get('status') not in {'PASS', 'FAILED'} or not isinstance(cases, list):
         raise ValueError(f'Malformed fault evidence status/cases: {name}')
-    if any(not isinstance(case, dict) or case.get('name') not in SCOPES[name][1]
+    allowed = SCOPES[name][1] | ({'statement-lock-timeout'} if name == 'oracle-io' else set())
+    if any(not isinstance(case, dict) or case.get('name') not in allowed
            or case.get('status') not in {'PASS', 'FAILED'} for case in cases):
         raise ValueError(f'Malformed fault case: {name}')
     return value

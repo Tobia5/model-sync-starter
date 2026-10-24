@@ -30,4 +30,7 @@ class OracleSelectionIT extends QueueClaimChecks {
   @AfterAll void closePool() { if (pool != null) pool.close(); }
 
   @Override protected DataSource source() { return pool; }
+  @Override protected JdbcWorkStore workStore(org.springframework.jdbc.core.JdbcTemplate template) {
+    return OracleQualificationStores.work(template);
+  }
 }

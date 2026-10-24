@@ -16,6 +16,12 @@ public final class RecoveryProcess {
         "model-sync.retry-base=100ms", "model-sync.quotas.recovery-owner=1ms"}) {
       int separator = value.indexOf('='); values.put(value.substring(0, separator), value.substring(separator + 1));
     }
+    if ("oracle26-nowait-ledger-first-v1".equals(System.getenv("MODELSYNC_QUALIFICATION_TARGET"))) {
+      values.put("model-sync.jdbc.point-lock-policy", "ORACLE_NOWAIT");
+      values.put("model-sync.jdbc.quota-lock-policy", "ORACLE_NOWAIT");
+      values.put("model-sync.jdbc.insert-policy", "ORACLE_26_NOWAIT");
+      values.put("model-sync.jpa.lock-policy", "ORACLE_NOWAIT");
+    }
     for (String argument : args) {
       if (!argument.startsWith("--") || !argument.contains("=")) throw new IllegalArgumentException("Explicit test setting required");
       int separator = argument.indexOf('='); values.put(argument.substring(2, separator), argument.substring(separator + 1));
@@ -23,8 +29,14 @@ public final class RecoveryProcess {
     return values.entrySet().stream().map(entry -> "--" + entry.getKey() + "=" + entry.getValue()).toArray(String[]::new);
   }
   static org.springframework.context.ConfigurableApplicationContext open(String... args) {
-    return new SpringApplicationBuilder(RecoveryConfiguration.class).web(WebApplicationType.NONE)
+    var context = new SpringApplicationBuilder(RecoveryConfiguration.class).web(WebApplicationType.NONE)
         .profiles("recovery-oracle").run(settings(args));
+    try {
+      boolean physicalStallControl = java.util.Arrays.asList(args).contains("--modelsync.fixture.role=physical-stall-control");
+      if (QualificationTargetAssertions.named() && !physicalStallControl)
+        QualificationTargetAssertions.host(context, "recovery-host");
+      return context;
+    } catch (RuntimeException | AssertionError failure) { context.close(); throw failure; }
   }
   public static void main(String[] args) throws Exception {
     try (var context = open(args)) {

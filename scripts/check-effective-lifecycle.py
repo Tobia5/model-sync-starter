@@ -48,5 +48,6 @@ spec = spec_from_file_location('profile_rules', ROOT / 'scripts/check-profiles.p
 rules = module_from_spec(spec)
 spec.loader.exec_module(rules)
 rules.compiled_failsafe_classpath(ET.parse(output).getroot(), ROOT / 'model-sync-sample/target/classes')
+rules.named_failsafe_target(ET.parse(output).getroot())
 print('EFFECTIVE LIFECYCLE PASS: default parent has no expensive goals; full retains default and adds Failsafe')
 print('EFFECTIVE SAMPLE CLASSPATH PASS: Failsafe uses compiled application classes after Boot repackaging')

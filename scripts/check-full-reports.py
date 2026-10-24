@@ -12,11 +12,12 @@ from failure_evidence import qualify as check_failure_evidence
 from lock_policy_evidence import qualify as check_lock_policy
 from quota_evidence import qualify as check_quota
 from creation_evidence import qualify as check_creation
+from qualification_target import manifest as target_manifest, qualify as check_target
 
 ROOT=Path(__file__).resolve().parents[1]
 SIMULATIONS={'fresh','hot','unsafe','event','cooldown','leases'}
 ORACLE={'OracleSmokeIT','OracleConcurrencyIT','OracleMigrationIT','OracleScaleIT','OracleCapacityIT','OracleSelectionIT','OracleOptimizationIT'}
-ORACLE_MODULES={'model-sync-persistence-jdbc':ORACLE, 'model-sync-sample':{'OracleAtomicityIT', 'NowaitOracleAtomicityIT', 'OracleWorkerIT', 'OracleRecoveryIT', 'OracleIoIT', 'OracleLockPolicyIT', 'OracleQuotaContentionIT', 'OracleFirstCreationIT'}}
+ORACLE_MODULES={module:set(suites) for module,suites in target_manifest()['mandatory'].items()}
 
 def oracle_suites(root=ROOT):
     found=set()
@@ -25,10 +26,13 @@ def oracle_suites(root=ROOT):
             fresh(report,root)
             suite=ET.parse(report).getroot()
             name=(suite.get('name') or '').rsplit('.',1)[-1]
-            minimum=12 if name=='OracleFirstCreationIT' else 6 if name in {'OracleRecoveryIT','OracleQuotaContentionIT'} else 12 if name=='OracleIoIT' else 7 if name in {'OracleAtomicityIT','NowaitOracleAtomicityIT','OracleLockPolicyIT'} else 11 if name=='OracleSelectionIT' else 3 if name=='OracleConcurrencyIT' else 1
+            required=target_manifest()['mandatory'][module].get(name, [])
+            minimum=len(required)
             total=int(suite.get('tests','0'))
             bad=sum(int(suite.get(x,'0')) for x in ('errors','failures','skipped'))
-            if name in names and total>=minimum and bad==0: found.add(name)
+            actual=[case.get('name','').removesuffix('()') for case in suite.findall('testcase')]
+            case_bad=any(case.find(tag) is not None for case in suite.findall('testcase') for tag in ('failure','error','skipped'))
+            if name in names and total==minimum and bad==0 and not case_bad and sorted(actual)==sorted(required): found.add(name)
         if names-found:
             raise ValueError(f'Oracle suites missing, empty, failed or skipped in {module}: {sorted(names-found)}')
     return found
@@ -66,6 +70,7 @@ def check(root=ROOT):
         if int(performance_suite.get('tests','0'))<1 or any(int(performance_suite.get(k,'0')) for k in ('errors','failures','skipped')):
             raise ValueError(f'Full-only {name} absent, failed or skipped')
     found=oracle_suites(root)
+    target=check_target(root)
     check_lock_policy(root)
     check_quota(root)
     check_creation(root)
@@ -115,7 +120,7 @@ def check(root=ROOT):
     comparison=check_optimization(root)
     worker=check_worker(root)
     faults=check_failure_evidence(root)
-    return {'junit_tests':tests,'oracle_suites':sorted(found),'pit_counts':dict(counts),
+    return {'qualification_target':target,'junit_tests':tests,'oracle_suites':sorted(found),'pit_counts':dict(counts),
             'pit_score':score,'gatling':load,'oracle_scale':capacity,'oracle_workload':measured,'oracle_optimization':comparison,'oracle_worker':worker,'oracle_faults':faults}
 
 if __name__=='__main__':

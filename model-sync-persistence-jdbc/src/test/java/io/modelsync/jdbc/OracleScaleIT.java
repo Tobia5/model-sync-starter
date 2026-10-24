@@ -72,7 +72,7 @@ class OracleScaleIT {
             + " from user_tab_statistics where table_name='MS_WORK'"));
         report.put("index_statistics", jdbc.queryForList("select index_name,num_rows,leaf_blocks,clustering_factor,to_char(last_analyzed,'YYYY-MM-DD\"T\"HH24:MI:SS') last_analyzed_db_local"
             + " from user_indexes where table_name='MS_WORK' order by index_name"));
-        var store = new JdbcWorkStore(jdbc);
+        var store = OracleQualificationStores.work(jdbc);
         store.verifySchema();
         for (String distribution : List.of("all-due", "due-future", "expired-future", "mixed", "all-future",
             "all-due-with-stats", "mixed-with-stats", "all-future-with-stats")) {

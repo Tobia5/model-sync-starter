@@ -8,6 +8,7 @@ import io.modelsync.core.application.ModelBinding;
 import io.modelsync.core.domain.Digests;
 import io.modelsync.core.domain.FreshnessPolicy;
 import io.modelsync.jpa.JpaProjectionStore;
+import io.modelsync.jpa.JpaLockPolicy;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.Duration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -50,8 +51,8 @@ class RecoveryConfiguration {
     return source(env.getProperty("modelsync.test.jdbc-url", System.getenv("MODELSYNC_ORACLE_URL")), 4);
   }
   @Bean RecoveryControl recoveryControl(Environment env) { return new RecoveryControl(env); }
-  @Bean ModelBinding<Customer> recoveryBinding(EntityManagerFactory emf, RecoveryControl control) {
-    var projection = new JpaProjectionStore<>(SharedEntityManagerCreator.createSharedEntityManager(emf), new RecoveryJpaMapping());
+  @Bean ModelBinding<Customer> recoveryBinding(EntityManagerFactory emf, RecoveryControl control, JpaLockPolicy policy) {
+    var projection = new JpaProjectionStore<>(SharedEntityManagerCreator.createSharedEntityManager(emf), new RecoveryJpaMapping(), policy);
     return ModelBinding.builder("customer", Customer.class).boundary("synthetic-recovery")
         .owner("synthetic-recovery-owner", request -> {
           if (TransactionSynchronizationManager.isActualTransactionActive()) throw new AssertionError("Owner inside transaction");

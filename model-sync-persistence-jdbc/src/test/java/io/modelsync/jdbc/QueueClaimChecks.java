@@ -22,12 +22,13 @@ abstract class QueueClaimChecks {
   private final String binding = "queue-check-" + UUID.randomUUID();
   private final Instant now = Instant.parse("2026-10-01T00:00:00Z");
   protected abstract DataSource source();
+  protected JdbcWorkStore workStore(JdbcTemplate template) { return new JdbcWorkStore(template); }
 
   @BeforeEach void setupQueue() {
     source = source();
     jdbc = new JdbcTemplate(source);
     tx = new TransactionTemplate(new DataSourceTransactionManager(source));
-    store = new JdbcWorkStore(jdbc);
+    store = workStore(jdbc);
   }
 
   @AfterEach void cleanupQueue() {

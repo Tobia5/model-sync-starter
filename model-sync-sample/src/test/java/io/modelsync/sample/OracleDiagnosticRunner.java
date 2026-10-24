@@ -38,6 +38,7 @@ public final class OracleDiagnosticRunner {
       case "production-lock-policy" -> List.of("io.modelsync.sample.OracleLockPolicyIT", "io.modelsync.sample.OracleAtomicityIT", "io.modelsync.sample.NowaitOracleAtomicityIT");
       case "shared-quota" -> List.of("io.modelsync.sample.OracleQuotaContentionIT");
       case "first-creation" -> List.of("io.modelsync.sample.OracleFirstCreationIT");
+      case "statement-characterization" -> List.of("io.modelsync.sample.OracleIoIT");
       default -> throw new IllegalArgumentException("Unknown diagnostic scope");
     };
     report.put("selected_classes", suites);
@@ -45,10 +46,14 @@ public final class OracleDiagnosticRunner {
       var listener = new SummaryGeneratingListener();
       var launcher = LauncherFactory.create();
       launcher.registerTestExecutionListeners(listener);
-      launcher.execute(LauncherDiscoveryRequestBuilder.request().selectors(selectClass(name)).build());
+      boolean characterization = "statement-characterization".equals(System.getProperty("modelsync.oracle.diagnostic"));
+      launcher.execute(LauncherDiscoveryRequestBuilder.request().selectors(characterization
+          ? org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod(name, "realStatementLockWaitCancelsAndRollsBack")
+          : selectClass(name)).build());
       var summary = listener.getSummary();
       long expected = name.endsWith("OracleFirstCreationIT") ? 12 : name.endsWith("OracleQuotaContentionIT") ? 6 : name.endsWith("OracleLockPolicyIT") || name.endsWith("OracleNowaitDiagnostic") ? 7 : name.endsWith("OracleCancellationDiagnostic") ? 6 : name.endsWith("OracleRecoveryIT") ? 6 : name.endsWith("OracleIoIT") ? 12
           : name.endsWith("OracleAtomicityIT") ? 7 : name.endsWith("OracleSelectionIT") ? 11 : 1;
+      if (characterization) expected = 1;
       boolean success = summary.getTestsFoundCount() == expected
           && summary.getTestsSucceededCount() == expected && summary.getTestsSkippedCount() == 0
           && summary.getTestsFailedCount() == 0 && summary.getContainersFailedCount() == 0;

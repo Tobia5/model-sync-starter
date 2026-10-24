@@ -9,6 +9,10 @@ import io.modelsync.core.domain.Digests;
 import io.modelsync.core.domain.FreshnessPolicy;
 import io.modelsync.jdbc.JdbcQuotaGate;
 import io.modelsync.jdbc.JdbcWorkStore;
+import io.modelsync.jdbc.JdbcPointLockPolicy;
+import io.modelsync.jdbc.JdbcQuotaLockPolicy;
+import io.modelsync.jdbc.JdbcInsertPolicy;
+import io.modelsync.jpa.JpaLockPolicy;
 import io.modelsync.jpa.JpaProjectionStore;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.Clock;
@@ -57,11 +61,11 @@ class WorkerRuntimeConfiguration {
 
   @Bean WorkerJdbcTemplate workerJdbc(HikariDataSource source) { return new WorkerJdbcTemplate(source); }
   @Bean JdbcWorkStore workerStore(WorkerJdbcTemplate jdbc) {
-    var store = new JdbcWorkStore(jdbc); store.verifySchema(); return store;
+    var store = new JdbcWorkStore(jdbc, JdbcPointLockPolicy.ORACLE_NOWAIT, JdbcInsertPolicy.ORACLE_26_NOWAIT); store.verifySchema(); return store;
   }
   @Bean WorkerQuota workerQuota(WorkerJdbcTemplate jdbc, PlatformTransactionManager manager,
       @Qualifier("modelSyncClock") Clock clock, ModelSyncProperties properties) {
-    var gate = new JdbcQuotaGate(jdbc, manager, clock);
+    var gate = new JdbcQuotaGate(jdbc, manager, clock, JdbcQuotaLockPolicy.ORACLE_NOWAIT, JdbcInsertPolicy.ORACLE_26_NOWAIT);
     properties.getQuotas().forEach(gate::register);
     return new WorkerQuota(gate);
   }
@@ -75,7 +79,7 @@ class WorkerRuntimeConfiguration {
   private ModelBinding<Customer> binding(String id, String quota, EntityManagerFactory emf, WorkerOwner owner) {
     return ModelBinding.builder(id, Customer.class).boundary("synthetic-worker")
         .owner("synthetic-" + id, owner)
-        .replica(new JpaProjectionStore<>(SharedEntityManagerCreator.createSharedEntityManager(emf), new CustomerJpaMapping()))
+        .replica(new JpaProjectionStore<>(SharedEntityManagerCreator.createSharedEntityManager(emf), new CustomerJpaMapping(), JpaLockPolicy.ORACLE_NOWAIT))
         .repairFromOwner().fingerprint(c -> Digests.sha256Fields(c.displayName(), c.status()))
         .quota(quota).refreshMode(RefreshMode.ON_DEMAND)
         .freshness(new FreshnessPolicy(Duration.ofHours(1), Duration.ofDays(1), Duration.ofDays(2))).build();

@@ -1,3 +1,15 @@
+## Current named full target
+
+The full profile now qualifies only `oracle26-nowait-ledger-first-v1`, as explicitly
+approved by the owner. [Contract and applicability](QUALIFICATION-TARGET.md) and
+[77-method Oracle inventory](qualification-target.json) retain every applicable
+suite and separate exactly one preserved plain-UPDATE driver characterization.
+Runtime policy/platform/mapping/enlistment receipts are mandatory. Compatibility
+controls remain; their results cannot qualify DEFAULT bounded behavior.
+Independent cancellation is historically FAILED; current NOT_RUN unless executed.
+Default remains cheap; full remains manual/explicit with unchanged18GiB admission
+and6GiB/4CPU Oracle limits. No full execution result is inferred from this change.
+
 # Verification profiles
 
 ### Compliant first creation (small, explicit)

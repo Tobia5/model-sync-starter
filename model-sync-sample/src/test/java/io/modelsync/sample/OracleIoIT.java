@@ -43,7 +43,9 @@ class OracleIoIT {
   @BeforeAll void open() throws Exception {
     report = FaultEvidence.report("bounded-owned-oracle-transport-and-shutdown"); report.put("cases", cases);
     report.put("acquisition_ms", 1000); report.put("connect_ms", 1500); report.put("read_ms", 2000);
-    report.put("statement_seconds", 2); report.put("transaction_seconds", 2); report.put("jpa_lock_ms", 1000);
+    report.put("statement_seconds", 2); report.put("transaction_seconds", 2); report.put("jpa_lock_ms", 0);
+    report.put("qualification_target", System.getProperty("modelsync.qualification.target", "NONE"));
+    report.put("independent_cancellation_current", "NOT_RUN");
     report.put("oracle_net_disableOob", true); report.put("observer_read_ms", 10000);
     report.put("runtime_pool_size", 4); report.put("observer_pool_size", 2);
     report.put("worker_concurrency", 1); report.put("worker_persistence_threads", 1); report.put("worker_owner_threads", 1);
@@ -91,6 +93,7 @@ class OracleIoIT {
     assertEquals(0, source.getHikariPoolMXBean().getActiveConnections()); result.put("pool_recovered", true); pass(result);
   }
 
+  @Tag("modelsync-driver-characterization")
   @Test void realStatementLockWaitCancelsAndRollsBack() throws Exception {
     var result = begin("statement-lock-timeout"); var key = seed();
     try (var blocker = source.getConnection()) {
@@ -249,6 +252,15 @@ class OracleIoIT {
 
   @Test void boundedStopDoesNotCallALockedJpaOperationDrained() throws Exception {
     var result = begin("locked-jpa-shutdown"); var key = seed();
+    // Preserve this deliberate physical-wait shutdown control, including its original assertions.
+    // It is not evidence of bounded-policy locking or qualification of DEFAULT.
+    String previousPool = context.getBean(HikariDataSource.class).getPoolName();
+    context.close(); FaultEvidence.awaitNoPoolThreads(previousPool);
+    context = RecoveryProcess.open("--model-sync.fetch-timeout=300ms", "--model-sync.jpa.lock-policy=DEFAULT",
+        "--modelsync.fixture.role=physical-stall-control",
+        "--modelsync.recovery.directory=" + FaultEvidence.root().resolve("model-sync-sample/target/qm/io-parent"));
+    coordinator = context.getBean(SyncCoordinator.class); control = context.getBean(RecoveryControl.class);
+    result.put("fixture_role", "DEFAULT retained physical-stall shutdown control; not bounded-policy evidence");
     var persistence = Schedulers.newBoundedElastic(1, 8, "modelsync-owned-lock-jpa");
     var owners = Schedulers.newBoundedElastic(1, 8, "modelsync-owned-lock-owner");
     var worker = new ReactorSyncWorker(coordinator, persistence, owners, 1, Duration.ofMillis(10),
@@ -329,7 +341,11 @@ class OracleIoIT {
       FaultEvidence.awaitNoPoolThreads(source.getPoolName());
     }
     if (report != null) {
-      report.put("status", cases.size() == 12 && cases.stream().allMatch(c -> "PASS".equals(c.get("status"))) ? "PASS" : "FAILED");
+      int expected = "statement-characterization".equals(System.getProperty("modelsync.oracle.diagnostic")) ? 1
+          : "oracle26-nowait-ledger-first-v1".equals(System.getProperty("modelsync.qualification.target")) ? 11 : 12;
+      report.put("independent_cancellation_current", cases.stream().filter(c -> "statement-lock-timeout".equals(c.get("name")))
+          .map(c -> c.get("status")).findFirst().orElse("NOT_RUN"));
+      report.put("status", cases.size() == expected && cases.stream().allMatch(c -> "PASS".equals(c.get("status"))) ? "PASS" : "FAILED");
       report.put("owned_executor_terminated", executor.isTerminated()); report.put("owned_pool_closed", source != null && source.isClosed());
       FaultEvidence.write("oracle-io.json", report);
     }

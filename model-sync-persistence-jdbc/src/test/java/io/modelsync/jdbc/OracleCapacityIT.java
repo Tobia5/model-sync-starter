@@ -94,8 +94,8 @@ class OracleCapacityIT {
         assertEquals(DUE, jdbc.queryForObject("select count(*) from MS_WORK where binding_id=? and next_at_ms=0", Integer.class, binding));
         var manager = new DataSourceTransactionManager(source);
         var tx = new SpringLocalTransactions(manager);
-        var store = new CountedWorkStore(new JdbcWorkStore(jdbc));
-        var quota = new JdbcQuotaGate(jdbc, manager, Clock.systemUTC());
+        var store = new CountedWorkStore(OracleQualificationStores.work(jdbc));
+        var quota = OracleQualificationStores.quota(jdbc, manager, Clock.systemUTC());
         quota.register(quotaGroup, Duration.ofMillis(20)); // 50 physical calls/s, shared by all workers.
         var measuredQuota = new MeasuredQuotaGate(quota);
         AtomicInteger ownerCalls = new AtomicInteger();

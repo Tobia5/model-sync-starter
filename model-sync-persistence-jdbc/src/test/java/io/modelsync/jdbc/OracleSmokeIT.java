@@ -34,7 +34,7 @@ class OracleSmokeIT {
         0L,
         jdbc.queryForObject("select count(*) from MS_WORK", Long.class),
         "Use an empty dedicated ledger schema");
-    var store = new JdbcWorkStore(jdbc);
+    var store = OracleQualificationStores.work(jdbc);
     store.verifySchema();
     var clock = new DatabaseClock(jdbc);
     WorkKey key = new WorkKey("oracle-it-" + UUID.randomUUID(), new SubjectKey("test", "1"));

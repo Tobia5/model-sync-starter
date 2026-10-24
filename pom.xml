@@ -127,6 +127,14 @@
             <!-- Boot executable JARs keep application classes under BOOT-INF/classes. -->
             <classesDirectory>${project.build.outputDirectory}</classesDirectory>
             <includes><include>**/*IT.java</include></includes><failIfNoTests>false</failIfNoTests>
+            <!-- Exactly one preserved driver characterization; see qualification-target.json. -->
+            <excludedGroups>modelsync-driver-characterization</excludedGroups>
+            <systemPropertyVariables>
+              <modelsync.qualification.target>oracle26-nowait-ledger-first-v1</modelsync.qualification.target>
+            </systemPropertyVariables>
+            <environmentVariables>
+              <MODELSYNC_QUALIFICATION_TARGET>oracle26-nowait-ledger-first-v1</MODELSYNC_QUALIFICATION_TARGET>
+            </environmentVariables>
           </configuration>
         </plugin>
       </plugins></build>

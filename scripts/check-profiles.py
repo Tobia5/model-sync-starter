@@ -23,6 +23,17 @@ def compiled_failsafe_classpath(node, expected):
     if value != str(expected):
         raise ValueError(f'Failsafe must load compiled application classes: expected {expected}, got {value}')
 
+
+def named_failsafe_target(node):
+    from qualification_target import TARGET, TAG
+    plugin = node.find("m:build/m:plugins/m:plugin[m:artifactId='maven-failsafe-plugin']", NS)
+    config = None if plugin is None else plugin.find('m:configuration', NS)
+    if (config is None or config.findtext('m:excludedGroups', namespaces=NS) != TAG
+            or config.findtext('m:systemPropertyVariables/m:modelsync.qualification.target', namespaces=NS) != TARGET
+            or config.findtext('m:environmentVariables/m:MODELSYNC_QUALIFICATION_TARGET', namespaces=NS) != TARGET
+            or config.find('m:excludes', NS) is not None):
+        raise ValueError('Effective Failsafe named target/exact characterization selection changed')
+
 def check(root=ROOT):
     pom = ET.parse(root / 'pom.xml').getroot()
     base = plugins(pom)
@@ -31,6 +42,7 @@ def check(root=ROOT):
         raise ValueError('Missing explicit full profile')
     full = profiles['full']
     compiled_failsafe_classpath(full, '${project.build.outputDirectory}')
+    named_failsafe_target(full)
     if full.find('m:activation', NS) is not None:
         raise ValueError('Full profile must be explicitly selected, never activated implicitly')
     for item in base:

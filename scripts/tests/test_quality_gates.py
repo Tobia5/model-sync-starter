@@ -163,7 +163,9 @@ class QualityGateTests(unittest.TestCase):
                 report = root / 'model-sync-persistence-jdbc/target/failsafe-reports' / f'TEST-{name}.xml'
                 report.parent.mkdir(parents=True, exist_ok=True)
                 count = 11 if name == "OracleSelectionIT" else 3 if name == "OracleConcurrencyIT" else 1
-                report.write_text(f'<testsuite name="{name}" tests="{count}" failures="0" errors="0" skipped="0"/>')
+                methods = gate.target_manifest()['mandatory']['model-sync-persistence-jdbc'][name]
+                report.write_text(f'<testsuite name="{name}" tests="{count}" failures="0" errors="0" skipped="0">'
+                    + ''.join(f'<testcase name="{method}"/>' for method in methods) + '</testsuite>')
             with self.assertRaisesRegex(ValueError, 'OracleAtomicityIT'):
                 gate.oracle_suites(root)
             report = root / 'model-sync-sample/target/failsafe-reports/TEST-OracleAtomicityIT.xml'
@@ -175,13 +177,20 @@ class QualityGateTests(unittest.TestCase):
             self.assertEqual('FAILED', collected['status'])
             self.assertEqual(7, collected['tests'])
             self.assertEqual(1, collected['failures'])
-            report.write_text('<testsuite name="OracleAtomicityIT" tests="7" failures="0" errors="0" skipped="0"/>')
+            report.write_text('<testsuite name="OracleAtomicityIT" tests="7" failures="0" errors="0" skipped="0">'
+                + ''.join(f'<testcase name="{method}"/>' for method in gate.target_manifest()['mandatory']['model-sync-sample']['OracleAtomicityIT']) + '</testsuite>')
             worker = root / 'model-sync-sample/target/failsafe-reports/TEST-OracleWorkerIT.xml'
             with self.assertRaisesRegex(ValueError, 'OracleWorkerIT'):
                 gate.oracle_suites(root)
             worker.write_text('<testsuite name="OracleWorkerIT" tests="1" failures="0" errors="0" skipped="0"/>')
             for name, count in [('OracleRecoveryIT', 6), ('OracleIoIT', 12), ('OracleLockPolicyIT', 7), ('NowaitOracleAtomicityIT', 7), ('OracleQuotaContentionIT', 6), ('OracleFirstCreationIT', 12)]:
                 (worker.parent / f'TEST-{name}.xml').write_text(f'<testsuite name="{name}" tests="{count}" failures="0" errors="0" skipped="0"/>')
+            # A suite count alone is insufficient: every mandatory method must be discovered.
+            for module_name, suites in gate.target_manifest()['mandatory'].items():
+                for suite_name, methods in suites.items():
+                    destination = root / module_name / 'target/failsafe-reports' / f'TEST-{suite_name}.xml'
+                    destination.write_text(f'<testsuite name="{suite_name}" tests="{len(methods)}" failures="0" errors="0" skipped="0">'
+                        + ''.join(f'<testcase name="{method}"/>' for method in methods) + '</testsuite>')
             self.assertIn('OracleAtomicityIT', gate.oracle_suites(root))
             selection = root / 'model-sync-persistence-jdbc/target/failsafe-reports/TEST-OracleSelectionIT.xml'
             selection.write_text('<testsuite name="OracleSelectionIT" tests="10" failures="0" errors="0" skipped="0"/>')

@@ -51,7 +51,7 @@ class OracleOptimizationIT {
       report.put("cache_control","Same physical table/index catalog; no shared/global cache flush; 10 owner-entry warmup per variant; forward/reverse order; touched rows reset between variants");
       List<Map<String,Object>> results=new ArrayList<>();report.put("results",results);
       try {
-        new JdbcWorkStore(jdbc).verifySchema();
+        OracleQualificationStores.work(jdbc).verifySchema();
         report.put("empty_queue_results", emptyQueue(jdbc,binding));
         OracleMeasurements.write(REPORT,report);
         var seedBefore=OracleMeasurements.snapshot(jdbc);long seedStart=System.nanoTime();
@@ -120,9 +120,9 @@ class OracleOptimizationIT {
     var manager=new DataSourceTransactionManager(jdbc.getDataSource());
     for(String variant:FORWARD) {
       String group="empty-"+UUID.randomUUID();
-      var gate=new JdbcQuotaGate(jdbc,manager,Clock.systemUTC());gate.register(group,Duration.ofMillis(20));
+      var gate=OracleQualificationStores.quota(jdbc,manager,Clock.systemUTC());gate.register(group,Duration.ofMillis(20));
       var quota=new MeasuredQuotaGate(gate,variant.equals("admission-only")||variant.equals("combined"));
-      WorkStore selected=new JdbcWorkStore(jdbc);
+      WorkStore selected=OracleQualificationStores.work(jdbc);
       if(variant.equals("baseline")||variant.equals("admission-only"))selected=new LegacyOracleWorkStore(jdbc,selected);
       var counted=new CountedWorkStore(selected);
       var model=ModelBinding.builder(binding,String.class).boundary("oracle-comparison").owner("must-not-call",r->{throw new AssertionError("Empty queue called owner");})
@@ -148,10 +148,10 @@ class OracleOptimizationIT {
     String group="comparison-"+UUID.randomUUID();
     var manager=new DataSourceTransactionManager(jdbc.getDataSource());
     var tx=new SpringLocalTransactions(manager);
-    WorkStore selected=new JdbcWorkStore(jdbc);
+    WorkStore selected=OracleQualificationStores.work(jdbc);
     if(variant.equals("baseline")||variant.equals("admission-only"))selected=new LegacyOracleWorkStore(jdbc,selected);
     var store=new CountedWorkStore(selected);
-    var gate=new JdbcQuotaGate(jdbc,manager,Clock.systemUTC());gate.register(group,Duration.ofMillis(20));
+    var gate=OracleQualificationStores.quota(jdbc,manager,Clock.systemUTC());gate.register(group,Duration.ofMillis(20));
     var quota=new MeasuredQuotaGate(gate,variant.equals("admission-only")||variant.equals("combined"));
     var calls=new AtomicInteger();var limited=new AtomicInteger();var timeouts=new AtomicInteger();
     try {

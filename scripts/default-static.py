@@ -10,6 +10,7 @@ COMMANDS = [
     [sys.executable, 'scripts/check-architecture.py'],
     [sys.executable, 'scripts/check-docs.py'],
     [sys.executable, 'scripts/check-profiles.py'],
+    [sys.executable, 'scripts/qualification_target.py'],
     [sys.executable, 'scripts/check-effective-lifecycle.py'],
     [sys.executable, '-m', 'unittest', 'discover', '-s', 'scripts/tests', '-p', 'test_*.py'],
 ]

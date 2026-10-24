@@ -19,6 +19,7 @@ from failure_evidence import collect as collect_fault, SCOPES as FAULT_SCOPES
 from lock_policy_evidence import collect as collect_lock_policy
 from quota_evidence import collect as collect_quota
 from creation_evidence import collect as collect_creation
+from qualification_target import collect as collect_target, characterization
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -95,7 +96,7 @@ def collect(full: bool, root: Path = ROOT) -> dict:
     executed_oracle = set()
     oracle_modules = {'model-sync-persistence-jdbc': ('OracleSmokeIT', 'OracleConcurrencyIT',
                       'OracleMigrationIT', 'OracleScaleIT', 'OracleCapacityIT', 'OracleSelectionIT', 'OracleOptimizationIT'),
-                      'model-sync-sample': ('OracleAtomicityIT', 'NowaitOracleAtomicityIT', 'OracleWorkerIT', 'OracleRecoveryIT', 'OracleIoIT', 'OracleLockPolicyIT', 'OracleQuotaContentionIT', 'OracleFirstCreationIT')}
+                      'model-sync-sample': ('OracleAtomicityIT', 'NowaitOracleAtomicityIT', 'OracleWorkerIT', 'OracleRecoveryIT', 'OracleIoIT', 'OracleLockPolicyIT', 'OracleQuotaContentionIT', 'OracleFirstCreationIT', 'OracleQualificationTargetIT')}
     for module, names in (oracle_modules.items() if full else ()):
         if module not in modules:
             continue
@@ -279,7 +280,13 @@ def collect(full: bool, root: Path = ROOT) -> dict:
             elif suite and suite.get('status') == 'FAILED' and isinstance(faults[name], dict) and faults[name].get('status') != 'REJECTED':
                 faults[name]['measurement_report_status'] = faults[name].get('status')
                 faults[name].update(status='FAILED', reason='Executed fault suite failed; partial measurements retained')
+    target = {'status': 'NOT_RUN'}
+    if full:
+        try: target = collect_target(root)
+        except (ValueError, OSError, json.JSONDecodeError) as error:
+            target = {'status': 'REJECTED', 'reason': str(error)}
     return {'modules': modules, 'mutation': mutation, 'gatling': load, 'oracle_scale': scale,
+            'qualification_target': target, 'independent_cancellation': characterization(faults.get('oracle-io')),
             'oracle_faults': faults,
             'oracle_worker': worker,
             'oracle_workload': measured, 'oracle_optimization': comparison, 'rejected': log_rejected + [reason for module in modules.values()
@@ -338,6 +345,9 @@ def markdown(data: dict) -> str:
     lines += ['', '## Measured evidence', '',
               f"Surefire: {unit['tests']} tests, {unit['failures']} failures, {unit['errors']} errors, {unit['skipped']} skipped across {sum(v['surefire']['files'] for v in evidence['modules'].values())} XML files.",
               f"Failsafe: {integration['tests']} tests, {integration['failures']} failures, {integration['errors']} errors, {integration['skipped']} skipped across {sum(v['failsafe']['files'] for v in evidence['modules'].values())} XML files."]
+    target = evidence.get('qualification_target', {'status': 'NOT_RUN'})
+    lines.append('Named configuration: ' + str(target.get('qualification_target', 'oracle26-nowait-ledger-first-v1')) + '; ' + target['status'] + '; never DEFAULT/all-configuration qualification.')
+    lines.append('Independent plain-UPDATE cancellation: ' + json.dumps(evidence.get('independent_cancellation', characterization(None)), sort_keys=True))
     pit = evidence['mutation']
     lines.append('PIT: ' + (f"{pit['status']}; {pit['generated']} mutations; {pit['counts']}; killed/generated {pit['killed_over_generated_percent']}%." if 'generated' in pit else pit['status'] + '.'))
     lines.append('Gatling: ' + (', '.join(f"{name}={item['status']}" for name, item in sorted(evidence['gatling'].items())) + ' in-memory semantic scenarios.' if evidence['gatling'] else 'NOT_RUN; no latency percentiles or completed-throughput measurement.'))

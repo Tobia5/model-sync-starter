@@ -4,6 +4,8 @@ import io.modelsync.core.Priority;
 import io.modelsync.core.domain.SubjectKey;
 import io.modelsync.core.domain.WorkKey;
 import io.modelsync.jdbc.JdbcWorkStore;
+import io.modelsync.jdbc.JdbcPointLockPolicy;
+import io.modelsync.jdbc.JdbcInsertPolicy;
 import java.time.Instant;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
@@ -18,7 +20,7 @@ public final class WorkerEnqueueProcess {
       throw new IllegalStateException("Disposable schema acknowledgment required");
     var source = new DriverManagerDataSource(System.getenv("MODELSYNC_ORACLE_URL"),
         System.getenv("MODELSYNC_ORACLE_USER"), System.getenv("MODELSYNC_ORACLE_PASSWORD"));
-    var store = new JdbcWorkStore(new JdbcTemplate(source));
+    var store = new JdbcWorkStore(new JdbcTemplate(source), JdbcPointLockPolicy.ORACLE_NOWAIT, JdbcInsertPolicy.ORACLE_26_NOWAIT);
     long before = System.currentTimeMillis();
     new TransactionTemplate(new DataSourceTransactionManager(source)).executeWithoutResult(status ->
         store.enqueue(new WorkKey("worker-main", new SubjectKey("synthetic-worker", "external")),

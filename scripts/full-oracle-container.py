@@ -60,7 +60,7 @@ def maven_command(diagnostic: bool = False) -> list[str]:
             else [*command, '-fae', '-Pfull', 'clean', 'verify'])
 
 
-def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False, quota: bool = False, creation: bool = False) -> list[str]:
+def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False, quota: bool = False, creation: bool = False, characterization: bool = False) -> list[str]:
     """Use only the current successful default build's compiled tests and resolved classpath."""
     current(root)
     for script in ('check-test-reports.py', 'check-default-log.py'):
@@ -106,8 +106,8 @@ def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker
     java = str(Path(java_home) / 'bin' / ('java.exe' if os.name == 'nt' else 'java')) if java_home else shutil.which('java')
     if not java or not Path(java).is_file():
         raise ValueError('The build JDK is unavailable for diagnostics')
-    return [java, *(['-Xmx512m', '-XX:MaxDirectMemorySize=128m'] if cancellation or nowait or lock_policy or quota or creation else []), f'-Dmodelsync.repository.root={root}',
-            '-Dmodelsync.oracle.diagnostic=' + ('first-creation' if creation else 'shared-quota' if quota else 'production-lock-policy' if lock_policy else 'database-nowait' if nowait else 'jdbc-cancellation' if cancellation else 'process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale'), '-cp',
+    return [java, *(['-Xmx512m', '-XX:MaxDirectMemorySize=128m'] if cancellation or nowait or lock_policy or quota or creation or characterization else []), f'-Dmodelsync.repository.root={root}',
+            '-Dmodelsync.oracle.diagnostic=' + ('statement-characterization' if characterization else 'first-creation' if creation else 'shared-quota' if quota else 'production-lock-policy' if lock_policy else 'database-nowait' if nowait else 'jdbc-cancellation' if cancellation else 'process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale'), '-cp',
             str(jdbc_tests) + os.pathsep + classpath, 'io.modelsync.sample.OracleDiagnosticRunner']
 
 
@@ -174,19 +174,20 @@ def preflight() -> None:
     docker('info', '--format', '{{.ServerVersion}}')
 
 
-def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False, quota: bool = False, creation: bool = False) -> int:
-    diagnostic = diagnostic or queue_comparison or worker or recovery or cancellation or nowait or lock_policy or quota or creation
+def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False, quota: bool = False, creation: bool = False, characterization: bool = False) -> int:
+    diagnostic = diagnostic or queue_comparison or worker or recovery or cancellation or nowait or lock_policy or quota or creation or characterization
     attempt = {'attempt_id': str(uuid.uuid4()), **identity(ROOT), 'image': IMAGE,
                'runtime_schema': 'MS_TEST_RUNTIME', 'migration_schema': 'MS_TEST_MIGRATION',
                'mode': 'diagnostic' if diagnostic else 'full',
-               'diagnostic_scope': ('first-creation' if creation else 'shared-quota' if quota else 'production-lock-policy' if lock_policy else 'database-nowait' if nowait else 'jdbc-cancellation' if cancellation else 'process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale') if diagnostic else None,
-               'full_qualification': 'NOT_RUN' if diagnostic else 'REQUIRES_FULL_EVIDENCE'}
+               'diagnostic_scope': ('statement-characterization' if characterization else 'first-creation' if creation else 'shared-quota' if quota else 'production-lock-policy' if lock_policy else 'database-nowait' if nowait else 'jdbc-cancellation' if cancellation else 'process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale') if diagnostic else None,
+               'full_qualification': 'NOT_RUN' if diagnostic else 'REQUIRES_FULL_EVIDENCE',
+               'qualification_target': None if diagnostic else 'oracle26-nowait-ledger-first-v1'}
     selected = os.environ.get('MODELSYNC_MAVEN_SETTINGS')
     attempt['maven_settings'] = selected or 'USER_DEFAULT'
     if selected == PROJECT_SETTINGS and (ROOT / selected).is_file():
         attempt['maven_settings_sha256'] = hashlib.sha256((ROOT / selected).read_bytes()).hexdigest()
     try:
-        launcher = diagnostic_command(queue_comparison=queue_comparison, worker=worker, recovery=recovery, cancellation=cancellation, nowait=nowait, lock_policy=lock_policy, quota=quota, creation=creation) if diagnostic else None
+        launcher = diagnostic_command(queue_comparison=queue_comparison, worker=worker, recovery=recovery, cancellation=cancellation, nowait=nowait, lock_policy=lock_policy, quota=quota, creation=creation, characterization=characterization) if diagnostic else None
         invalidate(ROOT)
         preflight()
     except (ValueError, OSError, ET.ParseError, subprocess.CalledProcessError) as error:
@@ -346,5 +347,7 @@ if __name__ == '__main__':
                             help='Run only small shared-quota contention integration; never qualifies full')
     selections.add_argument('--creation-diagnostic', action='store_true',
                             help='Run only small compliant first-creation races; never qualifies full')
+    selections.add_argument('--statement-characterization', action='store_true',
+                            help='Execute the preserved exact plain-UPDATE driver characterization, never full qualification')
     args = parser.parse_args()
-    raise SystemExit(main(args.diagnostic, args.queue_diagnostic, args.worker_diagnostic, args.recovery_diagnostic, args.cancellation_diagnostic, args.nowait_diagnostic, args.lock_policy_diagnostic, args.quota_diagnostic, args.creation_diagnostic))
+    raise SystemExit(main(args.diagnostic, args.queue_diagnostic, args.worker_diagnostic, args.recovery_diagnostic, args.cancellation_diagnostic, args.nowait_diagnostic, args.lock_policy_diagnostic, args.quota_diagnostic, args.creation_diagnostic, args.statement_characterization))

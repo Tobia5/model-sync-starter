@@ -1,3 +1,12 @@
+## Named qualification configuration (review branch)
+
+[The accepted target](quality/QUALIFICATION-TARGET.md) requires all four Oracle
+NOWAIT options together, a qualified mapping consuming JPA options, supported
+ledger-first writers and correctly enlisted local transactions. DEFAULT remains
+compatible without the same bounded-wait guarantee. Only the exact independent
+plain-UPDATE cancellation mechanism changes gate applicability; its historical
+failure remains. Configured full evidence is separate from production approval.
+
 # Model Sync user handbook
 
 **Edition:** job, event and age-on-visit extension — 2026-10-20.
