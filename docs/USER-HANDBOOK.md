@@ -117,13 +117,13 @@ a larger business transaction remains provisional until that transaction commits
 `runOne()` returning true means an attempt ran, not that synchronization completed.
 
 **This is not complete bounded persistence.** Missing work/projection/state inserts,
-quota registration/update, extra flush targets and custom SQL are unchanged and
+quota registration, extra flush targets and custom SQL are unchanged and
 can still wait. Known external IDs do not remove local first-insert conflicts.
 Oracle26 native INSERT/UPDATE NOWAIT remains a separate, unshipped capability;
 the test-only rewriting interceptor is not a consumer feature. Configure and
 qualify connection/acquisition, transport, transaction and shutdown controls
 separately. See the [coverage matrix](quality/LOCK-POLICY-COVERAGE.md),
-[pending path-scoped proposal](quality/JDBC-CONTAINMENT-PROPOSAL.md) and
+[accepted path-scoped decision](quality/LOCK-POLICY-DECISION.md) and
 [current QM](../QM.md). The original cancellation failure/gate remains unchanged.
 
 Measured review source `2eea1d849dfd8d5f7f0ee1ee6f3386412b282477` passed
@@ -132,11 +132,10 @@ the same seven atomicity assertions in DEFAULT and ORACLE_NOWAIT. Run
 `d7f2d3fe-348c-41a5-89b3-0f7ed0785200` retains actual SQL, exact sessions,
 rollback/recovery and cleanup. This is existing-row/single-mapping evidence,
 not complete persistence containment or full release qualification. The active
-contract still requires explicit review; production remains NO-GO.
+existing-row criterion was subsequently accepted as recorded in the decision;
+the unprotected plain-UPDATE requirement remains active. Production remains NO-GO.
 
-## 4. Define the model, owner and local mapping
-
-### Shared quota existing-row lock policy
+### 3.2 Shared quota existing-row lock policy
 
 `model-sync.jdbc.quota-lock-policy=ORACLE_NOWAIT` independently opts the default
 JdbcQuotaGate bean into Oracle NOWAIT for its existing-row admission and cooldown
@@ -165,6 +164,16 @@ are reported separately in QM; implementation alone is not qualification.
 See [supported writers](quality/SUPPORTED-WRITERS.md): concurrent compliant instances
 remain in scope, arbitrary external starter-table writers/triggers do not. Legitimate
 first work/projection/state/quota insert paths remain in the coverage matrix.
+
+Clean source4057535/tree4bfbfae passed default149 JUnit/76 Python and six focused
+Oracle quota tests (run35ead9f5-f6af-4c49-a323-4ad149737b85). Two independent starter
+applications observed eight held-blocker refusals, rollback and healthy pools;
+three synthetic owner reads produced two completed reconciliations after recovery.
+One case injects RateLimitedAfter after a successful synthetic read; it is not an
+HTTP429 transport test. Concurrent first registration stays unqualified. Full/PIT/
+load were not run; see [current QM](../QM.md) for exact commands, source and raw data.
+
+## 4. Define the model, owner and local mapping
 
 The minimal application integration has three responsibilities: read the owner, map a local projection, and declare their binding.
 

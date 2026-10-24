@@ -1,3 +1,167 @@
+# Accepted existing-row criterion and shared-quota integration - 2026-10-24
+
+**Default PASS; focused Oracle quota6/6 PASS; full NOT_RUN; production NO-GO.**
+The owner accepted the work/JPA subset from report74916ce/source2eea1d8.
+That decision is recorded, not requested again. New quota regression evidence
+does not claim complete bounded persistence or waive legitimate first inserts,
+transport, uncertain COMMIT or other applicable release gates. The original
+plain-UPDATE cancellation failure/reproducer and required full gate are unchanged.
+
+## Exact source, commands and exits
+
+Clean tested source **`4057535359400242c3a20d69f7ad06197caee5e6`**, tree
+**`4bfbfaea40f5413fe3bd0067b7f9b9047bfcfb1e`**; the empty source-change digest is
+SHA-256 `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+Later Markdown/evidence changes are not claimed as the Oracle-tested source.
+
+| Execution | Actual evidence |
+|---|---|
+| `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify` | PASS/exit0, supervisor129.017s, collector0. Run `50f38395-84ab-4b90-973d-6c7a6c154280`:149 JUnit tests/32 XML suites,76 Python guards; zero failures/errors/skips. Compilation, architecture/negative fixtures, H2, config, docs/profile/report checks retained. No expensive default goals. |
+| `python scripts/full-oracle-container.py --quota-diagnostic` | PASS/wrapper0, root full-preflight initialize0, selected launcher0; supervisor144.871s, infrastructure132.08s. Run `35ead9f5-f6af-4c49-a323-4ad149737b85`, infrastructure attempt `03c255b7-79ec-43a9-81cf-de94e8b25a90`:6 found/started/succeeded,0 failed/skipped/container failures,12471ms. JUnit launcher counts, not full/Failsafe counts. |
+| Git Bash `scripts/test-triggers.sh` | PASS/exit0:86 core/43 trigger standalone assertions, not added to JUnit counts. Terminal output plus bounded receipt. |
+| Strict current quota JSON validation and independent cleanup | PASS/exit0. Raw source/run markers, refusal/rollback/resource proof validated before report edits. |
+| Full/PIT/Gatling/million-row workload/old A-B-C/prototype | NOT_RUN on this source; exit not applicable because no execution. Known applicable first-insert/failure gates are unresolved; no unchanged full run launched. |
+
+## Scoped acceptance and implementation
+
+[Decision-to-test mapping](docs/quality/LOCK-POLICY-DECISION.md) records the owner's
+acceptance of the proposal at74916ce (Git-blob SHA-256
+`7291ae37af1f0620d5f42651d60e9c5571ec1e89d4283d1d4f9557f065618231`).
+The accepted work point lock, capable JPA lookup/retained-lock refresh and separate
+LOCAL_CONTENTION handling remain backed by source2eea1d8/run
+`d7f2d3fe-348c-41a5-89b3-0f7ed0785200`/21 of21. These unchanged tests were not
+rerun or borrowed as current-source Oracle counts. For those specific operations,
+database refusal with blocker held, rollback, preserved intent and healthy/disposed
+resources replace independent cancellation as the accepted mechanism. They do not
+make the historical plain UPDATE diagnostic pass.
+
+The separate property `model-sync.jdbc.quota-lock-policy=ORACLE_NOWAIT` configures
+only existing-quota SELECT locks on the replaceable default JdbcQuotaGate bean.
+The old constructor/DEFAULT behavior and registration INSERT remain compatible.
+No NOWAIT is appended to ordinary UPDATE/INSERT, no SQL rewriting interceptor,
+schema/platform/resource increase or global datasource change is shipped.
+
+Admission/cooldown remain REQUIRES_NEW transactions. A granted callback is not
+returned until commit succeeds. Exact Oracle54 becomes detached LocalContention
+only after rollback returns; other SQL/network/commit errors retain their category.
+The existing failure policy persists a separate bounded LOCAL_CONTENTION retry
+(200-400ms fixture settings, exponential jitter0.5-1, max-attempts3), without an
+immediate loop or owner-failure label. Earlier retry exhaustion tests remain intact.
+
+A refused cooldown propagates once with the original provider outcome suppressed.
+It does not claim that extension persisted or recursively retry the write. Durable
+LEASED/token/generation remain recoverable and spent admission is not refunded.
+The counter cannot advance without a metadata commit; there is no finite global
+retry guarantee across permanently unavailable persistence. Other instances cannot
+know an uncommitted requested cooldown. This is a monitored persistence failure,
+not assurance that the rejected extension protects the whole provider immediately.
+
+## Six actual Oracle cases
+
+Two independent starter applications/JpaTransactionManagers/pools share only the
+fresh disposable schema. The existing test owner and actual production quota,
+work/coordinator/JPA paths are used. Transaction listeners observe lifecycle and
+write an attempt-owned guard before the tested SELECT; they do not replace SQL.
+
+| Case / test | Observed result |
+|---|---|
+| default-compatible / compatibleDefaultStillCommitsSharedAdmissionAndCooldown | PASS: default admission commits; second-instance cooldown is shared; shorter extension cannot reduce it; later acquire denied. No deliberate default lock-timeout claim. |
+| held-acquire / heldAdmissionRefusesRepeatedlyWhileAnotherInstanceAndGroupContinue | PASS:3 Oracle54 refusals, final client/transaction return10/9/9ms; committed quota value unchanged. Independent instance admitted another group during the held blocker; main group admitted after release. |
+| held-cooldown / heldCooldownIsNotReportedPersistedAndNeverShortensPriorCooldown | PASS:3 refusals9/8/8ms. Prior cooldown unchanged while locked; extension was not reported persisted. Other group continued; after release the extension committed and shorter requests did not shorten it. |
+| coordinator-admission-refusal / coordinatorNeverCallsOwnerWithoutCommittedAdmissionAndRecovers | PASS: refusal18ms;0 owner calls before release; separate WAITING/attempts1/LOCAL_CONTENTION/backoff, no success state. Later1 admitted read produced1 committed IDLE reconciliation. |
+| owner-cooldown-refusal / failedCooldownAfterOwnerReadPropagatesOnceAndKeepsRecoverableLease | PASS: one refusal30ms after1 admitted synthetic read; no claimed cooldown persistence or DEFERRED metadata, same LEASED token/gen/attempts0. Explicit post-release failure handling committed cooldown/DEFERRED without refund; later another admitted read produced1 completion. RateLimitedAfter was injected after a successful synthetic owner read: this is not a real HTTP429 transport experiment. |
+| registration-boundary / existingRegistrationAcrossInstancesDoesNotChangeAdmissionOrSpacing | PASS for already committed row: second-instance registration preserves admission and matching spacing; mismatched spacing rejected. Concurrent first-registration INSERT remains UNQUALIFIED. |
+
+Actual server SQL (Oracle binds retained):
+
+```sql
+select spacing_ms,next_allowed_ms from MS_QUOTA where quota_group=:1 for update nowait
+select next_allowed_ms from MS_QUOTA where quota_group=:1 for update nowait
+```
+
+All8 refusals occurred with the original competing lock held. Before rollback,
+the exact SID/serial was INACTIVE/SQL*Net message from client, SQL_ID null,
+LOCK_WAIT0/TX_ACTIVE1; afterward the same identity had LOCK_WAIT0/TX_ACTIVE0.
+PREV_SQL_ID identified the exact refused quota SELECT. The raw SQL IDs, original
+session snapshots and timings remain in JSON. Before-rollback observations were
+3-9ms and after-rollback7-26ms from the afterBegin listener; final future/transaction
+return8-30ms includes dispatch, connection/guard/observer/rollback overhead. These
+are distinct lifecycle observations, not pure SQL latency or a production SLO.
+
+Fresh connections saw guard values rolled back and reacquired the guard lock while
+the target blocker remained held. Each attempt checked all6 owned runtime session
+identities for no row wait/transaction, physical0, both pools active0 and subsequent
+healthy SQL. No outstanding wait accumulated across the three-attempt sequences.
+These are endpoint snapshots, not universal continuous server-termination proof.
+Blockers were released only after proof, never as mitigation; no emergency release.
+Overall3 synthetic owner reads produced2 completed reconciliations. HTTP acceptance,
+permit grants, reads and persisted completions are not interchangeable counts.
+
+## Resource admission, environment and cleanup
+
+Post-build admission `12c66813-39eb-4013-bab1-cbe6f17e567c` sampled host available
+14.782/14.752/14.788GiB against the unchanged12GiB small-run budget. Docker available
+container capacity19.984GiB; free C65.487/D1069.976GiB. Oracle6GiB/4CPU and diagnostic
+JVM512MiB heap/128MiB direct remain; full planning budget18GiB is unchanged and no
+full admission is claimed. Two runtime pools3 each, observer2, fixture acquisition1s,
+connect1500ms/read10s,5s observation; manager default transaction timeout-1 recorded.
+No hidden2s whole-transaction bound is claimed for the quota gate.
+
+JDK21.0.12.1+1-LTS, Maven3.9.9, Python3.12.10, Boot4.1.1, Hibernate7.4.5.Final,
+JUnit6.0.3/Surefire3.5.3, Oracle26ai Free23.26.3.0.0/JDBC23.26.3.0.0, Docker29.8.2.
+Image `ghcr.io/gvenzl/oracle-free:23.26.3-slim@sha256:6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd`.
+Both acknowledgments were invocation-only: MODELSYNC_ORACLE_CONTAINER=EXPLICIT_DISPOSABLE,
+MODELSYNC_FULL_ENV_ACK=DISPOSABLE_NONPRODUCTION. Same project Central settings in
+default and nested Maven (SHA-256
+`ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`).
+External connection variables were cleared; credentials generated per run, separate
+runtime/migration schemas, synthetic rows, fresh labelled volume and loopback port.
+
+All12 application contexts/pools and the observer/executor ended; fixture rows/table
+were removed. Wrapper verified owned container/volume cleanup. Independent formatted
+inspect returned1/no-such-object for `msq-5e4a26e2d97b` and1/no-such-volume for
+`msq-5e4a26e2d97b-data`. These nonzero absence diagnostics are successful cleanup
+checks, not test exits. No residual resource observed; no unrelated resource touched.
+
+## Remaining gates, preserved outcomes and artifacts
+
+The [first-release writer model](docs/quality/SUPPORTED-WRITERS.md) includes concurrent
+compliant instances and correctly enlisted transactions. Arbitrary external writes,
+triggers and extra mappings are not added to its support promise. That scope does
+not waive legitimate first-work/projection/state/quota insertion paths. The
+[coverage matrix](docs/quality/LOCK-POLICY-COVERAGE.md) retains all four. In particular
+concurrent MS_WORK/MS_QUOTA unique-insert waits are not bounded by locking an absent
+row; first projection/state concurrency and applicable constraints still require
+proof. Additional flush targets, transport and uncertain COMMIT are not qualified
+by these8 existing-row refusals. The original failed plain-UPDATE gate remains
+applicable to unprotected reachable paths. All parent R01-R13 gates stay open.
+
+No unchanged full attempt was launched while those requirements are unresolved.
+Current full/PIT/Gatling are NOT_RUN; the original full FAILED result stays historical
+FAILED. A six-case scoped PASS is not full qualification or production acceptance.
+
+Development guard check76 tests/70.367s exited1 (one failure/one error): an exact
+heap-cap expression guard and successful synthetic full-report fixture needed the
+new quota mode/suite. Both were updated without reducing caps or required suites;
+the final default passed76 guards. This preliminary dirty check has only a bounded
+terminal summary, not source-bound qualification. A packaging helper's first exit1
+was a case-sensitive Docker absence parser; actual no-such-object/no-such-volume
+was confirmed, then corrected and rechecked. No Oracle rerun or resource deletion
+was used to solve that reporting issue. Both diagnostic summaries are retained.
+
+[Raw artifact index](validation/qualification/2026-10-24-quota-contention/README.md),
+execution-analysis.json and raw-evidence.zip retain logs, default XML, launcher and
+detailed Oracle JSON, run markers/manifests, settings hash, capacity and independent
+cleanup receipts, strict validation and run-scoped default QM. ZIP SHA-256
+`e72ae7b9ccecc0c4757ce6686529bf51be92f2a2868bbffd2f01eb4439819821` (183465 bytes/102 files), CRC and each archived input
+byte verified. Bounded48-hex-token/nonempty XML-password-property scans found0;
+this is not a universal secret audit. Original outcomes and every previous evidence
+ZIP were verified unchanged against74916ce; no merge/main/publication occurred.
+
+---
+
+## Immutable earlier report at74916ce (verbatim historical suffix)
+
 # Production Oracle point-lock integration - 2026-10-24
 
 **Default PASS; focused Oracle21/21 PASS; full NOT_RUN; production NO-GO.**

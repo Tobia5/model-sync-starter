@@ -2,6 +2,16 @@
 
 ## Review-branch evidence and first supported scope
 
+Current scoped update: the owner accepted only the existing-work/JPA criterion
+mapped in [LOCK-POLICY-DECISION](quality/LOCK-POLICY-DECISION.md) to source2eea1d8.
+Source4057535/tree4bfbfae adds independently opted-in existing-quota NOWAIT and
+passed default149 JUnit/76 Python plus six focused Oracle tests/eight refusals.
+Three synthetic reads produced two completed reconciliations, not a capacity run.
+The [writer model](quality/SUPPORTED-WRITERS.md) includes concurrent compliant
+instances and retains legitimate first-insert gates. New full is NOT_RUN while
+applicable requirements remain open. The original UPDATE cancellation failure,
+all prior reports and full gates are preserved; production remains **NO-GO**.
+
 The historical main assessment below is preserved. It predates the successful review-branch qualification of source `4f440807f20c568a2240ed5ce32f1aab8e9558b0`, full run `3177a6c3-3b64-4e5b-b40b-dc18bf1c7884`. Its statement that no full evidence existed is historical, not the current review-branch result. See the [immutable baseline report](https://github.com/Tobia5/model-sync-starter/blob/a67966d16ccf6c140f4c95bebc2ddfd3ad497364/QM.md) and the [current QM report](../QM.md).
 
 The first supported scope is **known-ID owner-to-Oracle/JPA reconciliation**, using one correctly enlisted local datasource and `JpaTransactionManager`, application-supplied detached DTO mappings and an application-authorized owner reader. This scope does not promise inventory/discovery, broker delivery, vendor connectors or remote writeback. No such feature is added by qualification work.

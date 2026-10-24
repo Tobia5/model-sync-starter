@@ -38,8 +38,10 @@ requires their nonempty/unskipped XML and source/run-bound detailed report, in
 addition to every existing requirement, including the original failing OracleIoIT
 cancellation gate. No qualification semantics are relaxed. Collection preserves
 fresh partial failures independently from qualification and rejects stale reports.
-Full requalification awaits the explicit reviewed contract decision; no unchanged
-full/prototype/A-B-C/million-row rerun is part of implementation.
+The owner has now accepted the evidenced existing-work/JPA subset in the scoped
+decision. Complete full requalification still awaits controls/proof for remaining
+supported reachable paths; no unchanged full/prototype/A-B-C/million-row rerun is
+part of the shared-quota implementation.
 
 The scoped observation boundary is5s per manual attempt; its local transaction
 template has2s timeout, fixture Hikari acquire1s/connect1500ms/read10s. The actual
@@ -48,7 +50,7 @@ persistence/owner thread, queue8, shutdown2s, retry-base200ms/retry-max400ms/
 max-attempts3. These settings are fixture-owned, not production global changes.
 The default compatible mode is tested without deliberate contention, preserving
 the original plain-UPDATE failure. See the [coverage matrix](LOCK-POLICY-COVERAGE.md)
-and [pending path-scoped proposal](JDBC-CONTAINMENT-PROPOSAL.md) for reachable gaps.
+and [accepted scoped decision](LOCK-POLICY-DECISION.md) for remaining reachable gaps.
 
 ### Isolated database NOWAIT prototype
 
