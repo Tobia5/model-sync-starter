@@ -1,3 +1,67 @@
+# Path-scoped Oracle lock-policy proposal
+
+**REVIEW REQUIRED - NOT A CHANGE TO THE ACTIVE QUALIFICATION CONTRACT.**
+Implementation authorization does not approve replacement of the original failing
+statement-cancellation gate. The plain-UPDATE reproducer, OracleIoIT requirement,
+FAILURE-CONTRACT.md and all source-bound historical evidence remain unchanged.
+
+## Current candidate
+
+The adapters now offer explicit opt-in Oracle existing-row point NOWAIT locking,
+JPA mapping lookup options and per-operation refresh options. Defaults remain
+compatible. There is no production SQL-rewriting inspector or native INSERT/UPDATE
+NOWAIT extension. Opted-in custom mappings must explicitly implement the capability;
+no legacy fallback is permitted. See the [coverage matrix](LOCK-POLICY-COVERAGE.md).
+
+The accepted eb18209 diagnostic/report baba54c motivates this implementation but
+is not evidence that the new production path passed. New default and focused
+Oracle runs must be recorded with their own source/tree/run in [QM](../../QM.md).
+The new scoped command selects production integration and retained atomicity only;
+it does not rerun the prototype, cancellation A/B/C, scale or full verification.
+
+## Exact proposed requirement changes (pending explicit acceptance)
+
+| Active requirement | Proposed path-scoped interpretation | Status |
+|---|---|---|
+| FAILURE-CONTRACT statement/row-lock row: effective statement2s, observed5s, plus original OracleIoIT ORA-01013 assertion | For opted-in, verified existing-row JDBC/JPA lookup/refresh only: require database NOWAIT refusal54, physical client return within5s, exact-session no residual lock wait with blocker held, whole local rollback, fresh committed-state inspection and healthy/disposed connection. Explicitly distinguish statement refusal from whole-transaction rollback. | Proposed only; original row/test remain active and failing. |
+| Independent plain UPDATE cancellation diagnostic | Retain its FAILED result and reproducer. NOWAIT point SELECT is a different operation, not a passing rerun or a repaired cancellation mechanism. | No removal/relabel authorized. |
+| Pool/acquisition, connect/read, transaction, owner and shutdown requirements | Retain separate host-configured safeguards and physical-completion proof. Network timeout is client containment, not proof of server termination or successful drain. No global datasource change. | Unchanged. |
+| Local retry outcome/accounting | Require rollback before separate LOCAL_CONTENTION persistence, finite attempt/backoff policy when metadata is writable, one reported failed metadata write otherwise, durable fenced intent and retained owner admission. | New integration assertion; not a waiver of other bounds. |
+| Complete bounded persistence | No completeness claim while reachable first-work/projection/state inserts, quota registration/row updates, extra flush targets, custom SQL and uncertain transport/COMMIT paths lack qualified controls. Known external IDs do not remove those local races. | Remains unqualified/release-blocking. |
+
+A reviewed decision must identify the exact supported deployment/path scope and
+which existing gate, if any, changes. Passing the new integration suite alone
+cannot approve this table, remove the original full requirement or close parent
+release gates. A scoped criterion may be accepted while complete persistence
+containment remains blocked; those statuses must stay separate.
+
+## Retry semantics and remaining server-lifecycle gaps
+
+Oracle54 becomes an explicit LocalContention port failure only for opted-in
+adapters. It is not an owner/network failure. Existing exponential bounded backoff
+and max-attempts apply to writable LOCAL_CONTENTION retry outcomes; no immediate
+retry loop, permit refund, provider cooldown change or owner I/O under locks.
+If metadata persistence is also locked, it is attempted once and propagated with
+the original error retained. Durable lease recovery may repeat an owner read and
+spend a new admission. An unwritable retry row cannot advance the counter; this
+is not a finite global-attempt guarantee under permanent metadata-write failure.
+Failed enqueue transactions cannot be acknowledged as accepted.
+
+The policy does not bound ordinary INSERT/UPDATE/flush SQL, additional mappings,
+FK/deferred checks/cascades/triggers, quota row locks, table locks, network loss
+or uncertain COMMIT. Layered transport deadlines still need deployment-specific
+qualification; known network containment can leave server work unresolved. No
+DDL_LOCK_TIMEOUT, privileged session kill, automatic replacement storm or general
+server-termination claim is introduced.
+
+---
+
+## Historical proposals and measurements (preserved)
+
+The following network-only draft and prototype notes are retained as history.
+They are superseded as the current proposal by the path-scoped text above, without
+changing the accepted measurements or approving a new contract.
+
 # Locked-DML containment proposal
 
 **DRAFT — NOT APPROVED OR IMPLEMENTED.** The active

@@ -16,6 +16,7 @@ import xml.etree.ElementTree as ET
 from run_evidence import current, fresh, reactor_modules
 from gatling_evidence import measured as gatling_measured
 from failure_evidence import collect as collect_fault, SCOPES as FAULT_SCOPES
+from lock_policy_evidence import collect as collect_lock_policy
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -92,7 +93,7 @@ def collect(full: bool, root: Path = ROOT) -> dict:
     executed_oracle = set()
     oracle_modules = {'model-sync-persistence-jdbc': ('OracleSmokeIT', 'OracleConcurrencyIT',
                       'OracleMigrationIT', 'OracleScaleIT', 'OracleCapacityIT', 'OracleSelectionIT', 'OracleOptimizationIT'),
-                      'model-sync-sample': ('OracleAtomicityIT', 'OracleWorkerIT', 'OracleRecoveryIT', 'OracleIoIT')}
+                      'model-sync-sample': ('OracleAtomicityIT', 'OracleWorkerIT', 'OracleRecoveryIT', 'OracleIoIT', 'OracleLockPolicyIT')}
     for module, names in (oracle_modules.items() if full else ()):
         if module not in modules:
             continue
@@ -233,6 +234,16 @@ def collect(full: bool, root: Path = ROOT) -> dict:
             worker.update(status='FAILED', reason='Worker suite failed; fresh partial measurements retained')
     faults = {}
     if full:
+        try:
+            faults['oracle-lock-policy'] = collect_lock_policy(root)
+        except (ValueError, OSError, json.JSONDecodeError) as error:
+            faults['oracle-lock-policy'] = {'status': 'REJECTED', 'reason': str(error)}
+        lock_suite = next((s for s in modules.get('model-sync-sample', {}).get('failsafe', {}).get('suites', [])
+                           if s['name'].rsplit('.', 1)[-1] == 'OracleLockPolicyIT'), None)
+        if faults['oracle-lock-policy'] is None and 'OracleLockPolicyIT' in executed_oracle:
+            faults['oracle-lock-policy'] = {'status': 'FAILED', 'reason': 'Executed lock-policy suite without fresh measurements'}
+        elif lock_suite and any(lock_suite.get(k, 0) for k in ('failures', 'errors', 'skipped')) and isinstance(faults['oracle-lock-policy'], dict) and faults['oracle-lock-policy'].get('status') != 'REJECTED':
+            faults['oracle-lock-policy'].update(status='FAILED', reason='Executed lock-policy suite failed; partial measurements retained')
         for name in FAULT_SCOPES:
             try:
                 faults[name] = collect_fault(root, name)

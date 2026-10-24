@@ -58,6 +58,71 @@ Use one datasource and a local transaction manager that enlists both the JPA pro
 
 The sample's default `demo` profile creates an in-memory H2 v1 ledger and a synthetic customer owner. It remains a one-shot periodic demonstration and exits. It deliberately does not exercise v2, real Oracle or the new scheduler. Never apply its `create-drop` configuration to a real database.
 
+### 3.1 Optional Oracle point-lock policy
+
+The compatible default remains ordinary point `FOR UPDATE`. To explicitly opt in
+for an Oracle datasource and a qualified JPA mapping:
+
+```yaml
+model-sync:
+  jdbc:
+    point-lock-policy: ORACLE_NOWAIT
+  jpa:
+    lock-policy: ORACLE_NOWAIT
+```
+
+The JDBC property configures the default `JdbcWorkStore` bean; a replacement bean
+uses its own explicit constructor policy. The JPA property supplies a replaceable
+`JpaLockPolicy` bean. Your application-owned projection binding must consume it:
+
+```java
+@Bean
+JpaProjectionStore<Customer, CustomerEntity> customerProjection(
+        EntityManagerFactory emf, JpaLockPolicy lockPolicy) {
+    return new JpaProjectionStore<>(
+        SharedEntityManagerCreator.createSharedEntityManager(emf),
+        new CustomerJpaMapping(), lockPolicy);
+}
+```
+
+The sample mapping implements `LockingJpaProjectionMapping`. An opted-in custom
+mapping must explicitly implement that interface and honor the policy on every
+pessimistic lookup, including tenant scoping; pass `policy.properties()` to its
+per-operation JPA lookup. The store passes those properties separately to refresh.
+It rejects legacy mappings when opted in, rather than silently ignoring the policy.
+Qualify actual generated SQL with your database/provider; implementing an interface
+or setting a hint is not runtime proof. The old two-argument store constructor
+retains DEFAULT even if a policy bean exists. No global EntityManager, datasource
+or application transaction-manager setting is changed.
+
+Oracle54 refusal on an opted-in adapter becomes `LocalContention`. The transaction
+must roll back before `coordinator.failed` persists a separate LOCAL_CONTENTION
+retry; calling failure persistence inside an active transaction is rejected.
+This is a failed local work attempt, not an owner/network failure. Existing
+retry-base/retry-max, exponential 0.5-1 jitter and max-attempts apply; DEAD is not
+revived by passive visits. No in-place retry loop is added. Provider cooldown and
+already spent admission are retained, including when a later local commit fails.
+
+If the single retry-metadata write also refuses, its exception propagates with
+the original failure retained as suppressed evidence. The committed lease remains
+recoverable; no recursive metadata retry occurs. The attempt counter cannot advance
+when its write cannot commit, so max-attempts is not a finite global bound across
+permanent metadata-write failures. Recovery is lease-paced and may repeat an owner
+read with another admission. Monitor this condition; it is not successful drain.
+A failed enqueue must not be acknowledged as accepted, and an ID returned inside
+a larger business transaction remains provisional until that transaction commits.
+`runOne()` returning true means an attempt ran, not that synchronization completed.
+
+**This is not complete bounded persistence.** Missing work/projection/state inserts,
+quota registration/update, extra flush targets and custom SQL are unchanged and
+can still wait. Known external IDs do not remove local first-insert conflicts.
+Oracle26 native INSERT/UPDATE NOWAIT remains a separate, unshipped capability;
+the test-only rewriting interceptor is not a consumer feature. Configure and
+qualify connection/acquisition, transport, transaction and shutdown controls
+separately. See the [coverage matrix](quality/LOCK-POLICY-COVERAGE.md),
+[pending path-scoped proposal](quality/JDBC-CONTAINMENT-PROPOSAL.md) and
+[current QM](../QM.md). The original cancellation failure/gate remains unchanged.
+
 ## 4. Define the model, owner and local mapping
 
 The minimal application integration has three responsibilities: read the owner, map a local projection, and declare their binding.

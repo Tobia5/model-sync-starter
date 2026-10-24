@@ -1,5 +1,39 @@
 # Verification profiles
 
+### Production Oracle point-lock integration (opt-in)
+
+Ordinary default verification compiles the new integration suite and runs cheap
+configuration, JPA operation-option/refusal, JDBC classification and deterministic
+contention retry contracts. New `ContentionPolicyTest` joins the existing three
+PIT target test classes; all eight behavioral targets and85% threshold remain.
+No Oracle/PIT/Gatling is added to default or automatic workflows.
+
+After matching default verification and the existing12 GiB small-run admission,
+use `python scripts/full-oracle-container.py --lock-policy-diagnostic` under the
+existing disposable acknowledgments/settings/caps. It selects seven
+`OracleLockPolicyIT` cases and seven retained `OracleAtomicityIT` cases only.
+The class uses actual starter work/quota beans, JpaTransactionManager, production
+JpaProjectionStore and an explicitly capable sample mapping. Its inspector records
+and returns identical SQL; there is no prototype or native DML replacement.
+Oracle6 GiB/4 CPU, JVM512 MiB heap/128 MiB direct and full18 GiB planning remain.
+
+The new seven cases also run in explicit full via Failsafe. Full evidence now
+requires their nonempty/unskipped XML and source/run-bound detailed report, in
+addition to every existing requirement, including the original failing OracleIoIT
+cancellation gate. No qualification semantics are relaxed. Collection preserves
+fresh partial failures independently from qualification and rejects stale reports.
+Full requalification awaits the explicit reviewed contract decision; no unchanged
+full/prototype/A-B-C/million-row rerun is part of implementation.
+
+The scoped observation boundary is5s per manual attempt; its local transaction
+template has2s timeout, fixture Hikari acquire1s/connect1500ms/read10s. The actual
+worker uses its host manager's recorded default transaction timeout, one lane/
+persistence/owner thread, queue8, shutdown2s, retry-base200ms/retry-max400ms/
+max-attempts3. These settings are fixture-owned, not production global changes.
+The default compatible mode is tested without deliberate contention, preserving
+the original plain-UPDATE failure. See the [coverage matrix](LOCK-POLICY-COVERAGE.md)
+and [pending path-scoped proposal](JDBC-CONTAINMENT-PROPOSAL.md) for reachable gaps.
+
 ### Isolated database NOWAIT prototype
 
 `python scripts/full-oracle-container.py --nowait-diagnostic` runs seven small
