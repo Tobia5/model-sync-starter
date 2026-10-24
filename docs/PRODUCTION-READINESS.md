@@ -1,3 +1,15 @@
+## Current named-target evidence - 2026-10-24
+
+The owner approved the exact [qualification mapping](quality/QUALIFICATION-TARGET.md)
+after accepting sourcecfcc53d/report5819b80. Clean sourcef9f6551/tree2fa8194 passed
+default156 JUnit/84 Python/exit0. Configured full admission is **BLOCKED**:
+13.139-13.174GiB host available versus unchanged18GiB; wrapper/Oracle/PIT/Gatling
+NOT_RUN. [QM](../QM.md) retains all original exits and raw evidence. Historical
+plain-UPDATE cancellation stays FAILED; current characterization NOT_RUN. DEFAULT
+is not bounded qualification. Failed cooldown publication/recovery and other
+parent gates remain open; production **NO-GO**. Earlier assessments below are
+preserved history, not a new execution result.
+
 # Production-readiness assessment
 
 ## Review-branch evidence and first supported scope

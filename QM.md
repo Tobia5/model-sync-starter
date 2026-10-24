@@ -1,3 +1,137 @@
+# Current qualification evidence - accepted named target, 2026-10-24
+
+**Default PASS. Configured full BLOCKED at resource admission; full suites NOT_RUN.
+Production NO-GO.** The owner accepted the first-creation milestone at source
+`cfcc53d` / report `5819b80` and explicitly approved the path-scoped mechanism
+mapping in [QUALIFICATION-TARGET](docs/quality/QUALIFICATION-TARGET.md).
+Earlier source-bound evidence, including the original cancellation failures,
+is preserved unchanged in the historical report below and in all12 prior ZIPs.
+
+## Exact tested source and target
+
+- Repository `Tobia5/model-sync-starter`; checkout
+  `D:/04_PROJECTS/model-sync-spring-boot-starter-0.1.0/model-sync-starter`.
+- Review branch `review/layered-refactor-qm-20261020`; starting clean HEAD
+  `5819b8063cffe621a7abcce35d086c95c6e7cbbe`, matching PR #1.
+- Final clean tested source **`f9f6551978d08fc7bc2db739aa73dc99268e2490`**, tree
+  **`2fa819434c813e07030115a78110ae34cd56212f`**; empty source-change digest
+  `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+  This later reporting commit is not claimed as the tested source.
+- Named target **`oracle26-nowait-ledger-first-v1`**: Oracle26ai/23.26.3,
+  JDBC23.26.3.0.0, point/quota/JPA ORACLE_NOWAIT and JDBC ORACLE_26_NOWAIT INSERT;
+  qualified mapping actually consumes JPA options, supported ledger-first writers,
+  same datasource enlisted with JpaTransactionManager. These are the declared target
+  and executable assertions, not current Oracle observations: admission blocked
+  before provisioning. DEFAULT and arbitrary replacements are outside this claim.
+
+## Implemented contract and guards
+
+[The exact manifest](docs/quality/qualification-target.json) requires77 named Oracle
+methods in16 suites, all remaining I/O, recovery, atomicity, quota, first-creation,
+worker, selection, migration, scale and capacity checks. Full validation rejects
+missing/substituted methods, failed/skipped cases, stale/mismatched/malformed
+reports, DEFAULT fallback and all-configuration claims. Runtime receipts inspect
+actual adapter fields, qualified mapping, platform and datasource enlistment in
+starter, worker, recovery/child JVM and NOWAIT atomicity hosts. Current Oracle
+runtime proof for these new combined-target checks is **NOT_RUN**.
+
+Exactly `OracleIoIT.realStatementLockWaitCancelsAndRollsBack` moves to explicit
+`--statement-characterization`; its original plain UPDATE, body and assertions
+are hash-verified unchanged. No class exclusion or @Disabled was introduced.
+All11 other OracleIoIT methods remain mandatory. The deliberately stalled DEFAULT
+JPA shutdown control retains its physical-operation/drain assertions, separately
+labelled from named NOWAIT behavior. Original DEFAULT concurrent coalescing/quota
+and atomicity controls remain explicit compatibility controls.
+
+Only the approved mechanism applicability changed. Independent cancellation is
+**historically FAILED** at `2c39b75` / report `43040e7`, and **currently NOT_RUN**.
+Network containment did not prove server termination; historical recovery required
+fixture cleanup. Unprotected equivalent waits in a supported path remain blockers.
+DEFAULT stays compatible without the same bounded-wait guarantee; older Oracle
+lines and arbitrary mappings/extra flush targets are not this named target.
+
+Rejected qualification now still writes diagnostics/QM and returns failure while
+retaining the original Maven exit separately. A regression proves original build0
+plus qualification1 cannot become PASS. Manual CI uploads raw sample/child evidence
+as well as existing reports. No automatic full trigger or production adapter change.
+
+## Actual commands, identities and exits
+
+| Attempt / command | Original result and current evidence |
+|---|---|
+| Source `b575f45841d9ee58d898656ef6f87e1b8de19443`, tree `60b942fd59a9564fbfae15555aebf85896a1a71c`; `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify` | **FAILED**, Maven1/collector0,130.583s;83 Python checks,one old source-string guard failure. No run marker or JUnit execution. Original log/pre-suite diagnostics retained; not attributed to later source. |
+| Final source `f9f6551`; same default command | **PASS**, run `102a74ee-b161-4127-9b0b-12003b765e90`, attempt `bec5ea29-f210-48ca-8835-0e22d9789790`; Maven0/qualification0/collector0,177.560s. **156 JUnit /34 XML suites,84 Python guards**, zero failures/errors/skips. |
+| `python scripts/check-default-log.py target/qm/default-build.log` | Exit0:102 recorded plugin goals, none expensive. Source/POM/effective lifecycle, architecture and documentation checks also passed within default. |
+| Git Bash `scripts/test-triggers.sh` | Exit0,4.672s;86 core /43 trigger standalone assertions. These are not156 additional JUnit tests. |
+| `python ../qualification-evidence/named-target-20261024/full_capacity.py` | **BLOCKED**, attempt `aea36634-c097-4d47-9f28-a42fcfec175a`; gate record exit2 / enclosing PowerShell tool exit1. Three post-build host samples13.139/13.174/13.139GiB fail unchanged18GiB admission. |
+| Intended `python scripts/full-oracle-container.py` -> `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml -fae -Pfull clean verify` | **NOT_RUN**. Wrapper/Maven exits absent. No full Maven run identity or fresh required Oracle/PIT/Gatling results. The intended command is not recorded as executed. |
+| Blocked-attempt `scripts/qm-report.py --full-status BLOCKED ...` | Collector0; diagnostic publication only. Default marker invalidated after archiving; evidence attribution NONE, no borrowed previous reports. |
+
+The full inventory, Oracle runtime policy/mapping assertions, all atomicity and
+creation cases, PIT threshold85% killed/all generated, nonzero/error-free mutation
+requirements and all six Gatling scenarios remain required and **NOT_RUN** for
+this attempt. No current mutation score, load latency, physical owner-call count,
+Oracle work counter or completed-sync throughput is claimed. No million-row seed
+ran, and no seed is presented as completed synchronization.
+
+## Environment, resource admission and cleanup
+
+Actual default environment: Windows/PowerShell, Temurin21.0.12.1+1-LTS,
+Maven3.9.9, Python3.12.10; resolved Boot4.1.1, JUnit6.0.3,
+Hibernate7.4.5.Final, Surefire3.5.3. Docker server29.8.2 was read for admission.
+Oracle/JDBC23.26.3.0.0, Failsafe3.5.3, PIT1.25.9/provider1.2.3 and
+Gatling3.13.1/plugin4.11.0 remain pinned; their expensive execution here is NOT_RUN.
+No new PIT/JUnit runtime compatibility result is inferred from default compilation.
+
+The approved Central settings were explicit in the default command and supervisor
+`MODELSYNC_MAVEN_SETTINGS=.mvn/qualification-central.settings.xml`; SHA-256
+`ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`.
+The wrapper retains forwarding of the same selected settings. No user/global
+settings, DNS, repositories or TLS verification changed.
+
+Admission at20:17:47-20:17:54UTC: host13.139/13.174/13.139GiB versus18;
+Docker unallocated19.976GiB, existing usage3.495GiB; free diskC85.234/D1069.963GiB.
+The unchanged full budget is6GiB Oracle +8GiB Maven/PIT/Gatling +4GiB reserve;
+Oracle remains6GiB/4CPU. Only one bounded three-sample admission check ran.
+No unrelated workload stopped, resource cap increased or global setting changed.
+
+The digest-pinned Oracle image and disposable wrapper were **not started**.
+No credentials, schema, container, network or volume was created by this attempt;
+owned-resource cleanup is **NO_RESOURCES_CREATED**, not a simulated Oracle cleanup
+PASS. Earlier owned-resource absence receipts remain historical and unchanged.
+
+## Evidence and remaining gates
+
+[Raw artifact/index](validation/qualification/2026-10-24-named-target/README.md)
+contains default XML/logs/markers, all84 Python results, the failed initial attempt,
+source contracts, resource samples, blocked run-scoped QM and preservation hashes.
+ZIP SHA-256 `55ef3c20e55550393879a58a614832812d70ffc79def03b43a385c379b4d716d`,
+280468 bytes /117 entries; CRC and every input hash verified. The nonsecret scan
+was bounded, not a universal audit. Current local `target/qm/QM.md` is the blocked
+attempt summary; the successful default has its separate archived run-scoped QM.
+
+**Remaining immediate prerequisite:** at least18GiB host available memory under
+the existing resource budget, then the explicitly authorized full container run
+on a clean source with matching default evidence. No external Oracle credential
+secret is the blocker for selected disposable mode. No unchanged configuration
+was repeatedly executed until green.
+
+**Production remains NO-GO.** Configured integrated full qualification is pending.
+Failed requested-cooldown publication/recovery, unprotected equivalent supported
+waits, applicable transport/server lifecycle, security/operations, consumer/supply
+chain, real provider-budget and production capacity/SLO gates remain open.
+Concurrent compliant instances stay in the writer scope; arbitrary external SQL,
+triggers, extra mappings and bulk-owner protocols were not added. No merge, main
+change, workflow bootstrap or package publication occurred.
+
+---
+
+# Immutable earlier report at 5819b80
+
+The following report is preserved byte-for-byte from that commit. Its pending
+mechanism-applicability statements are historical; only the exact approved mapping
+above supersedes them. Its measurements and failures are not current-run results.
+
 # First-creation qualification pass - 2026-10-24
 
 **Default PASS; focused Oracle12/12 PASS; full NOT_RUN; production NO-GO.**

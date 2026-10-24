@@ -1,3 +1,15 @@
+## Named configuration and rejected-qualification diagnostics
+
+[QUALIFICATION-TARGET](QUALIFICATION-TARGET.md) and its method inventory constrain
+full qualification to the owner-approved Oracle26 NOWAIT/INSERT configuration.
+Missing methods, DEFAULT runtime fallback, wrong platform/mapping/enlistment,
+stale receipts or all-configuration claims cannot pass. Exactly one preserved
+plain-UPDATE mechanism is separate driver characterization: historical FAILED,
+current NOT_RUN unless executed. All other applicable assertions remain mandatory.
+A successful Maven exit with rejected qualification still writes fresh diagnostics,
+keeps the original build exit and records a separate qualification failure/exit.
+A blocked admission has no Maven full exit or inherited previous suite results.
+
 # Quality report contract
 
 Each CI run writes `target/qm/QM.md`, `target/qm/evidence.json`, command log, and raw Surefire/Failsafe/PIT/Gatling/Oracle reports into a run-scoped Actions artifact. A short job summary uses the same generated evidence. The repository-root `QM.md` is a reviewed snapshot tied to its explicitly named tested source commit/tree; a later documentation-only commit does not silently reassign that evidence.
