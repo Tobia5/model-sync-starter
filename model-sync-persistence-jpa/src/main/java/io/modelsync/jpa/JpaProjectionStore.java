@@ -55,8 +55,11 @@ public final class JpaProjectionStore<T, E> implements ProjectionStore<T> {
       throw new IllegalStateException("Projection write in read-only transaction");
     try { return apply(key, expectedRevision, value, expiresAt); }
     catch (RuntimeException failure) {
-      if (lockPolicy == JpaLockPolicy.ORACLE_NOWAIT && oracleLockRefusal(failure))
-        throw new LocalContention("projection lookup/refresh/flush", failure);
+      java.sql.SQLException refusal = oracleLockRefusal(failure);
+      if (lockPolicy == JpaLockPolicy.ORACLE_NOWAIT && refusal != null)
+        // Hibernate's lock exception may retain the entity. Do not carry it across worker lanes.
+        throw new LocalContention("projection lookup/refresh/flush",
+            new java.sql.SQLException("Oracle row-lock refusal", refusal.getSQLState(), refusal.getErrorCode()));
       throw failure;
     }
   }
@@ -83,9 +86,9 @@ public final class JpaProjectionStore<T, E> implements ProjectionStore<T> {
     return true;
   }
 
-  static boolean oracleLockRefusal(Throwable failure) {
+  private static java.sql.SQLException oracleLockRefusal(Throwable failure) {
     for (Throwable cause = failure; cause != null; cause = cause.getCause())
-      if (cause instanceof java.sql.SQLException sql && sql.getErrorCode() == 54) return true;
-    return false;
+      if (cause instanceof java.sql.SQLException sql && sql.getErrorCode() == 54) return sql;
+    return null;
   }
 }

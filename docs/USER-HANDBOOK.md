@@ -95,7 +95,10 @@ or setting a hint is not runtime proof. The old two-argument store constructor
 retains DEFAULT even if a policy bean exists. No global EntityManager, datasource
 or application transaction-manager setting is changed.
 
-Oracle54 refusal on an opted-in adapter becomes `LocalContention`. The transaction
+Oracle54 refusal on an opted-in adapter becomes `LocalContention`. Adapters
+copy only Oracle code/state into a detached diagnostic cause; they do
+not carry entity-bearing Hibernate exceptions or JDBC connections across lanes.
+The transaction
 must roll back before `coordinator.failed` persists a separate LOCAL_CONTENTION
 retry; calling failure persistence inside an active transaction is rejected.
 This is a failed local work attempt, not an owner/network failure. Existing

@@ -100,16 +100,18 @@ public final class JdbcWorkStore implements WorkStore {
         .stream()
         .findFirst();
     } catch (org.springframework.dao.DataAccessException failure) {
-      if (pointLockPolicy == JdbcPointLockPolicy.ORACLE_NOWAIT && oracleLockRefusal(failure))
-        throw new LocalContention("work-record point lock", failure);
+      SQLException refusal = oracleLockRefusal(failure);
+      if (pointLockPolicy == JdbcPointLockPolicy.ORACLE_NOWAIT && refusal != null)
+        throw new LocalContention("work-record point lock",
+            new SQLException("Oracle row-lock refusal", refusal.getSQLState(), refusal.getErrorCode()));
       throw failure;
     }
   }
 
-  static boolean oracleLockRefusal(Throwable failure) {
+  static SQLException oracleLockRefusal(Throwable failure) {
     for (Throwable cause = failure; cause != null; cause = cause.getCause())
-      if (cause instanceof SQLException sql && sql.getErrorCode() == 54) return true;
-    return false;
+      if (cause instanceof SQLException sql && sql.getErrorCode() == 54) return sql;
+    return null;
   }
 
   @Override

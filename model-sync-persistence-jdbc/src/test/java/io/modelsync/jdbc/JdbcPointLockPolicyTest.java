@@ -12,10 +12,10 @@ class JdbcPointLockPolicyTest {
     assertEquals(JdbcPointLockPolicy.DEFAULT.sql() + " nowait", JdbcPointLockPolicy.ORACLE_NOWAIT.sql());
   }
   @Test void onlyExactOracleRefusalIsClassifiedAsContention() {
-    assertTrue(JdbcWorkStore.oracleLockRefusal(new IllegalStateException(new SQLException("synthetic", "61000", 54))));
+    assertNotNull(JdbcWorkStore.oracleLockRefusal(new IllegalStateException(new SQLException("synthetic", "61000", 54))));
     for (int code : new int[] {1, 1013, 18730, 17002})
-      assertFalse(JdbcWorkStore.oracleLockRefusal(new SQLException("synthetic", "72000", code)));
-    assertFalse(JdbcWorkStore.oracleLockRefusal(new IllegalStateException("timeout")));
+      assertNull(JdbcWorkStore.oracleLockRefusal(new SQLException("synthetic", "72000", code)));
+    assertNull(JdbcWorkStore.oracleLockRefusal(new IllegalStateException("timeout")));
   }
   @Test void oracleOptInRejectsAnUnqualifiedDatabase() {
     var jdbc = new JdbcTemplate(new DriverManagerDataSource("jdbc:h2:mem:oracle-policy-check", "sa", ""));

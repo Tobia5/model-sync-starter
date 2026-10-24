@@ -48,11 +48,14 @@ class JpaLockPolicyTest {
   }
   @Test void databaseRefusalAtRefreshStopsMutationAndFlush() {
     when(mapping.find(em, key, LockModeType.PESSIMISTIC_WRITE, JpaLockPolicy.ORACLE_NOWAIT)).thenReturn(Optional.of(entity));
-    var refused = new LockTimeoutException("synthetic", new SQLException("synthetic", "61000", 54));
+    var refused = new LockTimeoutException("synthetic", new SQLException("synthetic", "61000", 54), entity);
     doThrow(refused).when(em).refresh(entity, LockModeType.PESSIMISTIC_WRITE, JpaLockPolicy.ORACLE_NOWAIT.properties());
     var failure = assertThrows(LocalContention.class, () ->
         new JpaProjectionStore<>(em, mapping, JpaLockPolicy.ORACLE_NOWAIT).compareAndSet(key, "0", "after", null));
-    assertSame(refused, failure.getCause());
+    var diagnostic = assertInstanceOf(SQLException.class, failure.getCause());
+    assertEquals(54, diagnostic.getErrorCode()); assertEquals("61000", diagnostic.getSQLState());
+    assertNull(diagnostic.getCause()); assertNull(diagnostic.getNextException());
+    assertNotSame(refused, diagnostic);
     verify(mapping, never()).update(any(), any(), any()); verify(em, never()).flush();
   }
   @Test void transportAndOtherFailuresDoNotBecomeLockRefusal() {

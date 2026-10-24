@@ -8,7 +8,7 @@ package io.modelsync.core.port;
 public final class LocalContention extends RuntimeException {
   /**
    * @param operation nonsecret description of the refused local operation
-   * @param cause adapter failure retained for diagnostics
+   * @param cause detached diagnostic failure, without managed entities, sessions or connections
    */
   public LocalContention(String operation, Throwable cause) {
     super("Local persistence contention: " + java.util.Objects.requireNonNull(operation), cause);
