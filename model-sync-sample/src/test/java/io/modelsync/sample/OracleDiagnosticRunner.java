@@ -37,6 +37,7 @@ public final class OracleDiagnosticRunner {
       case "database-nowait" -> List.of("io.modelsync.sample.OracleNowaitDiagnostic");
       case "production-lock-policy" -> List.of("io.modelsync.sample.OracleLockPolicyIT", "io.modelsync.sample.OracleAtomicityIT", "io.modelsync.sample.NowaitOracleAtomicityIT");
       case "shared-quota" -> List.of("io.modelsync.sample.OracleQuotaContentionIT");
+      case "first-creation" -> List.of("io.modelsync.sample.OracleFirstCreationIT");
       default -> throw new IllegalArgumentException("Unknown diagnostic scope");
     };
     report.put("selected_classes", suites);
@@ -46,7 +47,7 @@ public final class OracleDiagnosticRunner {
       launcher.registerTestExecutionListeners(listener);
       launcher.execute(LauncherDiscoveryRequestBuilder.request().selectors(selectClass(name)).build());
       var summary = listener.getSummary();
-      long expected = name.endsWith("OracleQuotaContentionIT") ? 6 : name.endsWith("OracleLockPolicyIT") || name.endsWith("OracleNowaitDiagnostic") ? 7 : name.endsWith("OracleCancellationDiagnostic") ? 6 : name.endsWith("OracleRecoveryIT") ? 6 : name.endsWith("OracleIoIT") ? 12
+      long expected = name.endsWith("OracleFirstCreationIT") ? 6 : name.endsWith("OracleQuotaContentionIT") ? 6 : name.endsWith("OracleLockPolicyIT") || name.endsWith("OracleNowaitDiagnostic") ? 7 : name.endsWith("OracleCancellationDiagnostic") ? 6 : name.endsWith("OracleRecoveryIT") ? 6 : name.endsWith("OracleIoIT") ? 12
           : name.endsWith("OracleAtomicityIT") ? 7 : name.endsWith("OracleSelectionIT") ? 11 : 1;
       boolean success = summary.getTestsFoundCount() == expected
           && summary.getTestsSucceededCount() == expected && summary.getTestsSkippedCount() == 0

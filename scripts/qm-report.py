@@ -18,6 +18,7 @@ from gatling_evidence import measured as gatling_measured
 from failure_evidence import collect as collect_fault, SCOPES as FAULT_SCOPES
 from lock_policy_evidence import collect as collect_lock_policy
 from quota_evidence import collect as collect_quota
+from creation_evidence import collect as collect_creation
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -94,7 +95,7 @@ def collect(full: bool, root: Path = ROOT) -> dict:
     executed_oracle = set()
     oracle_modules = {'model-sync-persistence-jdbc': ('OracleSmokeIT', 'OracleConcurrencyIT',
                       'OracleMigrationIT', 'OracleScaleIT', 'OracleCapacityIT', 'OracleSelectionIT', 'OracleOptimizationIT'),
-                      'model-sync-sample': ('OracleAtomicityIT', 'NowaitOracleAtomicityIT', 'OracleWorkerIT', 'OracleRecoveryIT', 'OracleIoIT', 'OracleLockPolicyIT', 'OracleQuotaContentionIT')}
+                      'model-sync-sample': ('OracleAtomicityIT', 'NowaitOracleAtomicityIT', 'OracleWorkerIT', 'OracleRecoveryIT', 'OracleIoIT', 'OracleLockPolicyIT', 'OracleQuotaContentionIT', 'OracleFirstCreationIT')}
     for module, names in (oracle_modules.items() if full else ()):
         if module not in modules:
             continue
@@ -235,6 +236,16 @@ def collect(full: bool, root: Path = ROOT) -> dict:
             worker.update(status='FAILED', reason='Worker suite failed; fresh partial measurements retained')
     faults = {}
     if full:
+        try:
+            faults['oracle-first-creation'] = collect_creation(root)
+        except (ValueError, OSError, json.JSONDecodeError) as error:
+            faults['oracle-first-creation'] = {'status': 'REJECTED', 'reason': str(error)}
+        creation_suite = next((s for s in modules.get('model-sync-sample', {}).get('failsafe', {}).get('suites', [])
+                               if s['name'].rsplit('.', 1)[-1] == 'OracleFirstCreationIT'), None)
+        if faults['oracle-first-creation'] is None and 'OracleFirstCreationIT' in executed_oracle:
+            faults['oracle-first-creation'] = {'status': 'FAILED', 'reason': 'Executed first-creation suite without fresh measurements'}
+        elif creation_suite and any(creation_suite.get(k, 0) for k in ('failures', 'errors', 'skipped')) and isinstance(faults['oracle-first-creation'], dict) and faults['oracle-first-creation'].get('status') != 'REJECTED':
+            faults['oracle-first-creation'].update(status='FAILED', reason='Executed first-creation suite failed; partial evidence retained')
         try:
             faults['oracle-quota-contention'] = collect_quota(root)
         except (ValueError, OSError, json.JSONDecodeError) as error:
