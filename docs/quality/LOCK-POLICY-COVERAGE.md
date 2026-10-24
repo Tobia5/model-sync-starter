@@ -1,5 +1,37 @@
 # Opt-in Oracle point-lock coverage
 
+## First-creation result - cfcc53d
+
+Clean source `cfcc53d9bb7a90e20bbd67f4255d8322c1fc0d99`, tree
+`1a900bb8845c912793fb5136118222a1fac84c8e`: default run
+`73cbe204-8173-4287-a77c-d294ff1623d8` PASS/155 JUnit/79 Python/exit0;
+focused run `16a9d2a6-3581-4715-a9d5-895875d3e34e` PASS/12 of12/exit0.
+Six native INSERT refusals returned in8-75ms with A unresolved. Four DEFAULT
+INSERT wait observations are not bounded-policy PASS. Full is NOT_RUN; original
+failure/gate unchanged. [Raw evidence](../../validation/qualification/2026-10-24-first-creation/README.md)
+and [entry/transaction/competitor audit](FIRST-CREATION-REACHABILITY.md).
+
+| Legitimate first path | Current classification | Actual test/outcome and limit |
+|---|---|---|
+| MS_WORK explicit enqueue | **Protected by measured conflict policy** when insert-policy=ORACLE_26_NOWAIT | nativeWorkCommit/nativeWorkRollback: actual INSERT refuses54 before A resolution, whole B attempt/earlier guard intent rolled back, no accepted ticket. Fresh retry after A commit gives generation2; after rollback generation1. One target row/urgent forced intent preserved. DEFAULT remains an observed ACTIVE/TX WAITING insert until A resolves, not bounded. |
+| MS_WORK passive first enqueue | **Protected by measured conflict policy** with same option | nativePassiveCreationCommit/nativePassiveCreationRollback through ModelSync.requestRefresh: distinct passive INSERT refuses54. After A commit generation1/force1 remains; after rollback B creates generation1/force0. DEFAULT passive INSERT is not qualified bounded. |
+| MS_QUOTA first registration | **Protected by measured conflict policy** with same option | nativeQuotaCommit/nativeQuotaRollback through actual register (the startup method): independent B transaction rolls back/refuses54 before A resolves. Fresh retry gives one row/spacing17/next_allowed0; mismatch18 rejected. DEFAULT waits. Tests call real registration after startup; not whole multi-pod startup/restart qualification. |
+| Projection first creation | **Serialized by demonstrated protocol** | firstProjectionAndStateCommitAreFenced / firstProjectionAndStateRollbackAreFenced: actual finish flushes JPA insertion under MS_WORK. B worker cannot claim A's lease; ledger-first business writer refuses before mapping/DML. Fresh connections see both projection/state on A commit, neither on rollback. B local revision/new generation and later recovery retained. No native JPA rewrite. |
+| MS_STATE first creation | **Serialized by demonstrated protocol** | Same two tests execute completeOnDemand/currentToken/UPDATE-then-INSERT under work fence; paired commit/rollback and later single state row, obsolete token rejection. No out-of-protocol state writer or fabricated shared lease. |
+
+The measured combination uses existing work/quota NOWAIT, a capable JPA mapping,
+and explicit Oracle26ai/JDBC23.26 INSERT capability for work/quota. No default/older
+configuration receives a new bounded guarantee. Additional mappings/constraints/
+flush targets, transport, uncertain COMMIT and failed-cooldown publication remain
+separate requirements. The original plain-UPDATE failure/full gate still applies
+to unprotected operations. A passing first-creation regression is not blanket gate
+acceptance, complete bounded persistence or production readiness.
+
+## Historical b280af4 coverage (preserved)
+
+The first-creation table above supersedes the earlier UNQUALIFIED entries below
+within its precise configuration. Earlier existing-row measurements remain accepted.
+
 **Current scoped decision and quota evidence:** the owner accepted the existing
 work/JPA subset at2eea1d8; [decision-to-test mapping](LOCK-POLICY-DECISION.md).
 New clean source `4057535359400242c3a20d69f7ad06197caee5e6`, tree

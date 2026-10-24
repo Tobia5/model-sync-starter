@@ -11,7 +11,7 @@ DEFAULT completion following A resolution is not bounded mitigation/cancellation
 No out-of-protocol starter writer, prototype, A/B/C, load or million-row seed runs.
 The same6 GiB/4 CPU Oracle and512 MiB/128 MiB launcher limits remain; full18 GiB
 budget remains. Cheap metadata/SQL/classification/configuration and evidence guards
-run in default. Full-only Failsafe/detailed-evidence checks add the10 cases while
+run in default. Full-only Failsafe/detailed-evidence checks add the12 cases while
 retaining every existing full requirement and original failure. This diagnostic
 alone is not full qualification or acceptance of a new gate mapping.
 

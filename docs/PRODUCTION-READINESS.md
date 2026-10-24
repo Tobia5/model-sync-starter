@@ -2,6 +2,15 @@
 
 ## Review-branch evidence and first supported scope
 
+First-creation update: clean source cfcc53d/tree1a900bb passed default155 JUnit/79
+Python and12 focused Oracle cases. Explicit Oracle26 INSERT capability protects
+first explicit/passive work and quota registration; actual work fence serializes
+first projection/state creation. Four DEFAULT waits remain unbounded observations.
+[Matrix](quality/LOCK-POLICY-COVERAGE.md) and [QM](../QM.md) record exact source/runs,
+SQL, outcomes and cleanup. The original UPDATE failure/full gate and unpublished
+failed-cooldown extension remain open. Full NOT_RUN; production **NO-GO**. This
+does not change default Oracle support or promise arbitrary mappings/triggers.
+
 Current scoped update: the owner accepted only the existing-work/JPA criterion
 mapped in [LOCK-POLICY-DECISION](quality/LOCK-POLICY-DECISION.md) to source2eea1d8.
 Source4057535/tree4bfbfae adds independently opted-in existing-quota NOWAIT and

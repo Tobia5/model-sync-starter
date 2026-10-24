@@ -173,7 +173,7 @@ One case injects RateLimitedAfter after a successful synthetic read; it is not a
 HTTP429 transport test. Concurrent first registration stays unqualified. Full/PIT/
 load were not run; see [current QM](../QM.md) for exact commands, source and raw data.
 
-## 4. Define the model, owner and local mapping
+### 3.3 First-creation capability and protocol
 
 For the two demonstrated first-work/quota races, the independent explicit option
 `model-sync.jdbc.insert-policy=ORACLE_26_NOWAIT` selects native single-row INSERT
@@ -194,8 +194,15 @@ duplicate-key handling remains for committed races. Native statement rollback is
 not itself whole-transaction rollback. A ticket inside a caller transaction remains
 provisional until commit. Oracle transport/uncertain COMMIT are separate controls.
 See [reachability and measured protocol](quality/FIRST-CREATION-REACHABILITY.md).
-The new candidate still needs its own recorded Oracle run; pre-control evidence
-does not qualify native INSERT. Failed cooldown publication remains unchanged.
+Source cfcc53d/tree1a900bb passed default155 JUnit/79 Python and12 Oracle cases,
+run16a9d2a6-3581-4715-a9d5-895875d3e34e. Six native INSERT conflicts refused with A
+unresolved (8-75ms including transaction/observer overhead); first projection/state
+creation serialized at the work fence. Four DEFAULT waits were observed and are
+not bounded PASS. [Coverage](quality/LOCK-POLICY-COVERAGE.md) and [QM](../QM.md) record
+exact outcomes. Full/PIT/load are NOT_RUN; the original failure remains unchanged.
+Failed cooldown publication remains an open provider gate.
+
+## 4. Define the model, owner and local mapping
 
 The minimal application integration has three responsibilities: read the owner, map a local projection, and declare their binding.
 

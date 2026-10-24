@@ -1,3 +1,173 @@
+# First-creation qualification pass - 2026-10-24
+
+**Default PASS; focused Oracle12/12 PASS; full NOT_RUN; production NO-GO.**
+This finite pass classifies all four legitimate creation paths within its precise
+writer/configuration scope. Six native INSERT refusals and two work-fence refusals
+are distinguished from four deliberately observed DEFAULT waits. The old work/JPA
+and quota milestones, tested4057535/reportb280af4 and all earlier evidence remain
+unchanged. The original plain-UPDATE cancellation failure/reproducer is not PASS.
+
+## Exact tested source, commands and results
+
+Clean tested source **`cfcc53d9bb7a90e20bbd67f4255d8322c1fc0d99`**, tree
+**`1a900bb8845c912793fb5136118222a1fac84c8e`**; empty source-change SHA-256
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+Only Markdown/evidence changes follow; no future report commit is claimed tested.
+
+| Execution | Source-bound outcome |
+|---|---|
+| `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify` | PASS/exit0,104.851s supervisor, collector0. Run `73cbe204-8173-4287-a77c-d294ff1623d8`:155 JUnit tests/33 XML suites,79 Python guards,0 failures/errors/skips. Compilation, portable contracts/configuration, H2, compiled architecture/negative fixtures, docs/profile/report checks retained. No expensive default goals. |
+| `python scripts/full-oracle-container.py --creation-diagnostic` | PASS/preflight0/launcher0/wrapper0,143.213s supervisor/130.72s infrastructure. Run `16a9d2a6-3581-4715-a9d5-895875d3e34e`, infrastructure attempt `7c33b07c-1c5d-4bf2-9154-287dd76e4dab`:12 found/started/succeeded,0 failed/skipped/container failures,15841ms. JUnit launcher counts, not full/Failsafe qualification. |
+| Git Bash `scripts/test-triggers.sh` | PASS/exit0;86 core/43 trigger standalone assertions, separately counted, raw log retained. |
+| Strict detailed first-creation validator / independent owned cleanup / archive integrity | PASS/exit0 before report edits; all12 cases and source/run identity verified. |
+| Full/PIT/Gatling/million-row/old A-B-C/old NOWAIT prototype | NOT_RUN on this source, no exit because not executed. Existing-row implementation suites were not rerun/reopened as Oracle diagnostics. |
+
+## Reachability first, then smallest control
+
+[The audit](docs/quality/FIRST-CREATION-REACHABILITY.md) maps public entries,
+transactions, held locks, compliant competitors and commit/acceptance boundaries.
+Before adding controls, source `f55f9299d0cdb67a742e8cf0cf8aa5f001f31333`, tree
+`15e75f5f1292ed0850bfffc73486939c4fe0e02a`, passed default149 JUnit/79 Python/exit0,
+run `35c35ba7-a594-45ee-8fed-fec7a02536a7`,135.506s. Its actual six-case Oracle run
+`1ea8bf28-27f0-4225-970e-6298b62e8335` passed evidence checks/exit0,174.727s:
+all four explicit work/quota first INSERT cases left B ACTIVE/TX row-lock WAITING
+behind A before planned commit/rollback. The two projection/state cases stopped B
+at MS_WORK before JPA entry. Default wait resolution is not cancellation/mitigation.
+That immutable pre-control source/run is separate from final candidate evidence.
+
+New explicit `model-sync.jdbc.insert-policy=ORACLE_26_NOWAIT` configures the default
+JdbcWorkStore and JdbcQuotaGate constructors for single-row work enqueue/passive
+enqueue and quota registration INSERT only. It checks actual Oracle26ai/JDBC23.26
+metadata (the observed major is23/minor26, not major26). DEFAULT and old constructors
+remain compatible; older/unrecognized lines reject the new option instead of
+silently changing the production platform/range. Replacement beans select their
+own explicit capability. There is no JPA/blanket SQL rewrite, native UPDATE change,
+new schema/migration, global datasource option or resource increase.
+
+Exact Oracle54 becomes detached LocalContention; uniqueness, cancellation, network
+and other SQL failures are not relabelled. Public REQUIRED enqueue propagates
+through rollback of the whole attempt/outer participation; registration reports
+refusal after its independent transaction rolls back. No failed producer transaction
+is accepted; the A ticket observed inside its outer transaction is provisional.
+No immediate retry or retry inside the failed transaction is added. A caller may
+use bounded redelivery/retry only from a fresh transaction. Startup registration
+refusal fails startup rather than fabricating a configured quota; no automatic
+restart loop is shipped. Native statement rollback alone is not whole rollback.
+Oracle's [INSERT wait-clause contract](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/INSERT.html)
+is recorded separately from the actual transaction/resource evidence below.
+
+## Final path classification and committed outcomes
+
+Two independent compliant starter applications/EMFs/JpaTransactionManagers/pools
+share one disposable schema in one test JVM. A pauses only after actual adapter
+insertion/flush and before commit; B uses real public entry points and separate
+connections. Test listeners observe lifecycle/SQL/session state, never rewrite SQL.
+
+| Path / final cases | Observed classification and outcomes |
+|---|---|
+| First MS_WORK explicit; nativeWorkCommit/nativeWorkRollback | **Protected by measured conflict policy.** Native INSERT refuses54 in75/12ms with A unresolved. B outer transaction and earlier guard enqueue roll back; no ticket accepted. After A commit, fresh B request commits one target row/generation2/force1; after A rollback, B creates generation1/force1. Tenant/subject/urgent intent verified. |
+| First MS_WORK passive; nativePassiveCreationCommit/nativePassiveCreationRollback | **Protected by measured conflict policy.** Public ModelSync.requestRefresh's distinct INSERT refuses54 in15/14ms. Fresh post-resolution attempt preserves generation1/force1 after A commit, creates generation1/force0 after rollback; passive work cannot invent a forced generation. No failed transaction accepted. |
+| First MS_QUOTA; nativeQuotaCommit/nativeQuotaRollback | **Protected by measured conflict policy.** Actual register method's independent INSERT refuses54 in8/8ms while A unresolved. Fresh post-resolution registration yields exactly one row/spacing17ms/next_allowed0; mismatched18ms rejected. This is the method auto-configuration calls, tested explicitly after startup; not whole multi-pod startup/restart qualification. |
+| First projection; firstProjectionAndStateCommitAreFenced / firstProjectionAndStateRollbackAreFenced | **Serialized by demonstrated protocol.** A's actual coordinator finish holds the ledger fence while ordinary JPA INSERT flushes. B worker cannot claim A's current lease; ledger-first business writer refuses at work lock before mapping/JPA SQL (12/15ms). Fresh connections see projection/state both committed after A commit, neither after rollback. Later B local creation/update is unverified business data, not a new successful reconciliation; its local version0/1 is checked. |
+| First MS_STATE; same two cases | **Serialized by demonstrated protocol.** Actual completeOnDemand/currentToken executes UPDATE-then-INSERT under the same work fence. No out-of-protocol state writer or fabricated shared lease is used. A rollback publishes no successful state; the old prepared response then detects B's revision and records LOCAL_CONFLICT without state insertion. Generation2 recovery commits the pair, one state row/IDLE; obsolete token is rejected. |
+| Four DEFAULT work/quota commit/rollback controls | **Exact unresolved blocker for compatible DEFAULT mode:** B remains physically incomplete/ACTIVE/TX row-lock WAITING behind A's SID. B finishes after A's planned commit/rollback, coalescing correctly. These four passing observation tests are UNBOUNDED_DEFAULT_WAIT, not a passing bounded policy. DEFAULT passive INSERT is not claimed bounded either. |
+
+All six native INSERT failures occurred before A resolution. Exact B SID/serial
+had LOCK_WAIT0 before rollback and LOCK_WAIT0/TX_ACTIVE0 afterward; the actual refused
+INSERT text/SQL ID is retained. A remained TX_ACTIVE1; only explicitly paused A
+was still physically in flight, and B's pool was active0 after its return. B's
+earlier guard intent was absent after rollback where applicable. Physical client
+return8-75ms includes dispatch/connection/observer/transaction cleanup, not pure SQL
+latency or a production SLO. The two fence refusals are a different SELECT mechanism.
+Every case ends with both pools active0/healthy subsequent SQL and all six runtime
+session endpoints LOCK_WAIT0/TX_ACTIVE0, before owned pool/executor closure.
+
+A commit/rollback was selected explicitly after observing B; no sleep race or
+cleanup lock release earned refusal credit. Emergency release was false in12/12.
+Fresh transaction assertions verify generations, local revisions and paired outcomes.
+The two fence cases made4 synthetic owner reads and3 successful result commits
+(2 with A commit,1 with A rollback), not an accepted-request throughput metric.
+The other first-create cases performed no owner I/O. No lock spans owner I/O.
+JPA emitted ordinary projection INSERT; MS_STATE's actual loaded SQL is retained
+without inventing cursor deltas. Queue/point/acquire/cooldown method bodies were
+hash-compared unchanged againstb280af4; all earlier ZIPs and original failure and
+accepted integration/atomicity test sources were also checked unchanged.
+
+## Source-specific attempts and economics
+
+- f55f929: default and six-case pre-control diagnostic above passed, but default
+  insert waits were not bounded qualification. Both sources/run identities retained.
+- `754ba0678d5829bb7c21c957d1810b9259f1bf45`, tree
+  `4a1e3c11e791da19294c5d4a1991a08db15bc3f5`: default run
+  `33ad5811-b0d3-4f7a-9ba8-7de8c438c913` **FAILED/exit1**,100.219s,collector0.
+  119 JUnit/23 XML suites passed before sample test compilation failed on missing
+  Priority import. Sample/architecture suites and Oracle did not execute; no
+  leftover evidence borrowed.79 Python guards had passed.
+- `62a878f551ee9e56f9431208e4fffb06048b6c5c`, tree
+  `6d4c123955dc684593a46181bc01a67ae39c38a7`: import-only fix, default
+  `7f704f8e-9c19-40ed-9a8b-81667e8a326a` PASS/155 JUnit/33 XML/79 Python,
+ 145.084s,exit0/collector0. Oracle NOT_RUN: passive real-SQL cases were added first.
+- Final cfcc53d default and twelve-case diagnostic above passed once. No unchanged
+  cancellation matrix, prototype, existing-row implementation or full run repeated.
+
+Post-build resource admission `498b1c24-cbca-4430-a76a-4c901a8d40bb` measured
+14.555/14.552/14.503GiB available against unchanged12GiB diagnostic budget; Docker
+available container capacity19.986GiB, C65.249/D1069.970GiB free. Earlier f55 admission
+15.840/15.871/15.870GiB retained separately. Oracle6GiB/4CPU; launcher512MiB heap/
+128MiB direct; two runtime pools3 each/observer2. Fixture acquisition1s/connect1500ms/
+read10s/observation5s; manager timeout-1 recorded. No implicit whole-transaction2s
+or universal transport/server-termination claim. Full18GiB budget unchanged; no full
+resource admission or capacity/SLO comparison claimed. Table/index/cache history
+differs between fresh runs; these are correctness probes, not measured speedups.
+
+JDK21.0.12.1+1-LTS, Maven3.9.9, Python3.12.10, Boot4.1.1, Hibernate7.4.5.Final,
+JUnit6.0.3/Surefire3.5.3, Oracle26ai Free/JDBC23.26.3.0.0, Docker29.8.2.
+Same image `ghcr.io/gvenzl/oracle-free:23.26.3-slim@sha256:6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd`.
+Same project Central settings in all Maven subprocesses (SHA-256
+`ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`). Invocation-only
+MODELSYNC_ORACLE_CONTAINER=EXPLICIT_DISPOSABLE and MODELSYNC_FULL_ENV_ACK=DISPOSABLE_NONPRODUCTION;
+external DB inputs cleared, generated credentials, separate runtime/migration schemas,
+synthetic data, fresh labelled volume and loopback port. No unrelated resource changed.
+
+## Cleanup, remaining gates and artifacts
+
+All owned contexts/pools, observer, executor and fixtures closed/removed. Wrapper
+cleanup and independent formatted inspect confirm both container/volume pairs
+`msq-3d4b3499c130`/-data and `msq-365da070fd18`/-data absent. Each absence command
+exit1/no-such-object or no-such-volume is a cleanup result, not the build's exit.
+No residual resource observed. Full/PIT/Gatling/million-row workloads were not run.
+
+The [current matrix](docs/quality/LOCK-POLICY-COVERAGE.md) closes this finite first-
+creation pass for the measured Oracle26/native/fenced configuration only. Default
+and older-mode waits remain explicit; arbitrary constraints/mappings/triggers/
+external writers are not added to [the support promise](docs/quality/SUPPORTED-WRITERS.md).
+The separate provider limitation is preserved: a new cooldown extension that failed
+to commit remains unpublished to other instances. Previous cooldown/admission and
+recoverable intent do not guarantee that new requested delay across instances.
+
+**Full prerequisite remains unresolved:** the accepted decision covers the prior
+work/JPA operations, while the active OracleIoIT.realStatementLockWaitCancelsAndRollsBack
+still requires the original5s/ORA-01013 plain-UPDATE behavior. It remains failed
+historically and was not removed, skipped, converted into this INSERT test or made
+PASS by resolving A. The accepted gate mapping for the intended final configuration
+must explicitly address the new path proof and still-applicable unprotected SQL;
+this task does not grant a blanket waiver. No unchanged full run was launched to
+repeat that known failure. Transport, uncertain COMMIT, provider publication and
+other parent release requirements remain open; all parent R01-R13 gates remain open.
+Production stays **NO-GO** even if a later configured full passes.
+
+[Raw artifact index](validation/qualification/2026-10-24-first-creation/README.md)
+and execution-analysis.json retain every attempt, raw logs/XML/JSON, exact source/run
+markers/manifests, SQL/session/transaction/pool receipts, settings hash, admissions,
+strict validation, independent cleanup and run-scoped QM. Archive SHA-256
+`84c9ff461dc296c5483d9ab8a551c8ddaffa8ea389c1e822a577b028f80db5e4`, 642553 bytes/343 files, CRC/input hashes verified.
+Bounded48-hex-token/nonempty XML-password scans found0, not a universal secret audit.
+No merge, main change, workflow bootstrap or publication occurred.
+
+---
+
+## Immutable b280af4 report (verbatim historical suffix)
+
 # Accepted existing-row criterion and shared-quota integration - 2026-10-24
 
 **Default PASS; focused Oracle quota6/6 PASS; full NOT_RUN; production NO-GO.**
