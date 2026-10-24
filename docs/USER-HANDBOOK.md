@@ -96,8 +96,8 @@ retains DEFAULT even if a policy bean exists. No global EntityManager, datasourc
 or application transaction-manager setting is changed.
 
 Oracle54 refusal on an opted-in adapter becomes `LocalContention`. Adapters
-copy only Oracle code/state into a detached diagnostic cause; they do
-not carry entity-bearing Hibernate exceptions or JDBC connections across lanes.
+copy only Oracle code/state into a detached diagnostic cause for this outcome;
+the contention exception carries no ORM entity, session or JDBC connection.
 The transaction
 must roll back before `coordinator.failed` persists a separate LOCAL_CONTENTION
 retry; calling failure persistence inside an active transaction is rejected.
@@ -125,6 +125,14 @@ qualify connection/acquisition, transport, transaction and shutdown controls
 separately. See the [coverage matrix](quality/LOCK-POLICY-COVERAGE.md),
 [pending path-scoped proposal](quality/JDBC-CONTAINMENT-PROPOSAL.md) and
 [current QM](../QM.md). The original cancellation failure/gate remains unchanged.
+
+Measured review source `2eea1d849dfd8d5f7f0ee1ee6f3386412b282477` passed
+default141 JUnit/72 Python and focused Oracle21/21: seven integration cases plus
+the same seven atomicity assertions in DEFAULT and ORACLE_NOWAIT. Run
+`d7f2d3fe-348c-41a5-89b3-0f7ed0785200` retains actual SQL, exact sessions,
+rollback/recovery and cleanup. This is existing-row/single-mapping evidence,
+not complete persistence containment or full release qualification. The active
+contract still requires explicit review; production remains NO-GO.
 
 ## 4. Define the model, owner and local mapping
 

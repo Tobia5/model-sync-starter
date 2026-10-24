@@ -1,3 +1,195 @@
+# Production Oracle point-lock integration - 2026-10-24
+
+**Default PASS; focused Oracle21/21 PASS; full NOT_RUN; production NO-GO.**
+The opt-in policy is implemented in real adapters. This is scoped integration,
+not full release qualification or complete bounded persistence. The original
+plain-UPDATE cancellation failure, active contract/gate and reproducer are unchanged.
+Accepted eb18209 diagnostic/report baba54c and all earlier evidence are preserved;
+the complete baba54c QM follows as an unchanged historical suffix.
+
+## Exact tested source and commands
+
+Clean tested source **`2eea1d849dfd8d5f7f0ee1ee6f3386412b282477`**, tree
+**`8338eff0badecc4be2b8855f1e4e9fedbc8da0d6`**, change digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+Repository Tobia5/model-sync-starter, branch review/layered-refactor-qm-20261020,
+initial clean HEAD baba54c. No concurrent build, reset or unrelated edit.
+Subsequent report-only changes are not claimed as tested source.
+
+| Execution | Actual outcome |
+|---|---|
+| `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify` | Run **`fb25cfb1-075e-407a-8ca2-8bfb276278b3`**, exit0/107.286s, collector0. **141 JUnit tests/31 XML suites,72 Python guards**, zero failures/errors/skips; compilation, bounded local/H2 contracts, architecture, docs and profile/lifecycle/log/evidence checks passed. No expensive goals. |
+| `python scripts/full-oracle-container.py --lock-policy-diagnostic` | Run **`d7f2d3fe-348c-41a5-89b3-0f7ed0785200`**, infrastructure attempt `021c1335-b225-4df6-963d-fea55337c9b8`; preflight/launcher/wrapper exit0,157.537s supervision. **21 JUnit launcher tests**:7 production integration/11.473s,7 retained DEFAULT atomicity/8.582s,7 inherited ORACLE_NOWAIT atomicity/9.429s. Zero failed/skipped/container failures. These are launcher summaries, not21 Failsafe XML tests. Strict detailed-suite evidence check also passed before source changed. |
+| Git Bash `scripts/test-triggers.sh` | Exit0 at final source:86 core/43 trigger assertions; separate from JUnit counts. |
+| Full/PIT/Gatling/million-row/A-B-C/prototype | **NOT_RUN** in this session. No earlier score/load result is attributed to this code. |
+
+Diagnostic acknowledgments were invocation-only EXPLICIT_DISPOSABLE and
+DISPOSABLE_NONPRODUCTION, with external Oracle variables cleared. The wrapper's
+Maven subprocess used the same approved project settings, only `-Pfull -N initialize`
+for guarded preflight, then selected the three classes. It did not run full verify.
+Settings SHA256 `ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`;
+user/global Maven settings and platform versions were unchanged.
+
+## Implementation and responsibility review
+
+- JDBC DEFAULT keeps ordinary point FOR UPDATE. Explicit ORACLE_NOWAIT validates
+  an Oracle datasource and changes only the MS_WORK point lock. Queue SKIP LOCKED
+  SQL is byte-identical to the baseline method. INSERT/UPDATE SQL is unchanged.
+- JPA has explicit per-operation policy properties, a replaceable policy bean and
+  a LockingJpaProjectionMapping capability. Opt-in rejects legacy mappings at
+  construction. The sample explicitly consumes the bean; old two-argument store
+  constructors remain DEFAULT. No global EntityManager timeout or production SQL
+  inspector/native DML rewriter is shipped.
+- Adapters recognize Oracle54 and produce framework-neutral LocalContention;
+  the core contains no Oracle/Hibernate/Spring classification. Oracle code/state
+  is copied into a new resource-free diagnostic SQLException: no entity-bearing
+  Hibernate cause, session/connection or next-exception chain crosses lanes.
+  Default exception behavior is preserved. Unit regressions cover that boundary.
+- Failure persistence rejects an active attempt transaction. After rollback,
+  LOCAL_CONTENTION uses the existing exponential retry-base/retry-max, 0.5-1 jitter,
+  positive delay floor and failed-work max-attempts. It is a local work failure,
+  not an owner/network failure. Metadata refusal propagates once with the original
+  detached failure suppressed; no recursive write retry or permit refund.
+- Ledger-before-projection ordering, tenant scoping, generation/lease fencing,
+  local revisions and atomic commits remain. Owner reads remain outside DB
+  transactions. Types stay top-level and module/layer/bean boundaries remain
+  replaceable. This responsibility review is not a claim to prove all of SOLID.
+
+The attempt limit applies when retry metadata can commit. A permanently locked
+retry row cannot advance its counter: the lease remains recoverable and recovery
+is lease-paced, potentially repeating owner reads/admissions. This is not a finite
+global-attempt guarantee under perpetual metadata-write failure. Passive requests
+cannot reset local contention backoff or revive DEAD; new explicit generations
+retain existing semantics. Failed enqueue is not accepted, and a returned ID inside
+an outer business transaction is provisional until its commit.
+
+## Seven production integration outcomes
+
+Times are attempt-start to refusal / outer transaction return (include guard/setup,
+observation and rollback overhead), not isolated execute latency or production SLOs.
+
+| Case | Observed outcome |
+|---|---|
+| Disabled compatibility | **PASS**, ordinary versioned lookup lock, plain refresh SELECT and ordinary UPDATE, successful IDLE completion; no NOWAIT SQL, healthy pool. |
+| Failed existing-work enqueue | **PASS**, actual `select * from MS_WORK where work_id=:1 for update nowait` refused54, **12/85ms**. Exact SID61/serial281, previousSQL4rrcx6pxm100r. Guard write/lock rolled back, target generation1/WAITING retained, accepted=false,0 owner reads. A later explicit request after blocker cleanup reached generation2. |
+| Result contention / cooldown / recovery | **PASS**, real mapping's version-qualified lookup `... for update of ce1_0.storage_key nowait` refused54, **7/13ms**, SID61/serial54156, previousSQLapad3w6hckwc8. Fresh projection remained before/version0 with no success state. Separate WAITING/attempts1/LOCAL_CONTENTION persisted; provider cooldown unchanged.1 prior owner read was retained; later recovery spent another admission/read and committed1 synchronization. |
+| Retry metadata also locked | **PASS**, result point lock refused54, **5/10ms**, SID60/serial20807. The single separate metadata call refused54 in3ms and retained the original failure. Durable LEASED token/generation1/attempts0 stayed recoverable, projection before/no success; admission unchanged. After cleanup and explicit fixture expiry, another owner read completed1 sync. This is not natural lease-expiry timing proof. |
+| Ordinary first inserts | **PASS for uncontended functionality**, first work/projection/state created and reached IDLE; actual JPA INSERT has no NOWAIT. Concurrent insert containment remains **UNQUALIFIED**. |
+| Enabled success / refresh / safety | **PASS**, lookup NOWAIT followed by plain refresh SELECT. An independent observer immediately before flush refused54, proving the lookup's exclusive row lock persisted through refresh. New generation stayed WAITING, obsolete token rejected, local-change preserved with LOCAL_CONFLICT. Per-operation refresh options are separately asserted in default tests. |
+| Actual Reactor worker | **PASS**,1 lane/persistence/owner thread, queue8, base200ms/max400ms/max-attempts3, default pacing250/500/1000ms and shutdown2s. With blocker held: **3 successful synthetic owner reads,0 completed syncs**, DEAD/attempts3/LOCAL_CONTENTION, generation1, projection before/no success.4 ticks/1 empty/3 failed/0 fetched/0 cancellation; maximum in-flight1. Stop reported DRAINED/0ms resolution, logical/physical/owner0; runtime sessions/pool independently idle/transaction-free. This is healthy local refusal shutdown, not a universal stalled-I/O drain qualification. |
+
+For all three manual refusal cases, **before rollback with blocker held** the exact
+session was INACTIVE/SQL*Net message from client/SQL_ID null/LOCK_WAIT0/TX_ACTIVE1.
+After rollback it was LOCK_WAIT0/TX_ACTIVE0. Whole-transaction rollback and an earlier
+guard write/lock release were independently inspected; all3 owned runtime session
+identities remained observable, pool-active0, healthy subsequent query. No emergency
+release occurred. Discrete exact-session snapshots demonstrate request return here,
+not continuous tracing or universal server-termination bounds. Blocker release was
+cleanup only and earns no mitigation credit.
+
+### Refresh explanation and preserved failure
+
+The first real run incorrectly required two locking SELECTs. The pinned provider
+uses READ during refresh when it already holds the requested exclusive lock;
+[Hibernate's refresh implementation](https://raw.githubusercontent.com/hibernate/hibernate-orm/7.4.5/hibernate-core/src/main/java/org/hibernate/event/internal/DefaultRefreshEventListener.java)
+and the resolved sources-JAR hashes are retained. The corrected assertion requires
+actual lock retention through refresh, rather than a redundant SQL clause. It does
+not infer a bound from a hint or from a Java exception. No session-wide setting is
+used. The old isolated unlocked-lookup prototype remains separate historical proof.
+The recovery wait also incorrectly re-evaluated a state-changing runOne predicate;
+its corrected observation is sticky and does not execute an extra attempt.
+
+## Both-policy atomicity and precise coverage limits
+
+All seven original OracleAtomicityIT assertions/bodies are unchanged. They passed
+again with DEFAULT and, through NowaitOracleAtomicityIT inheritance, ORACLE_NOWAIT:
+post-flush exception, ledger-completion rejection, transaction-completion rejection,
+physical Oracle deferred-constraint COMMIT failure, successful paired commit,
+local-version conflict and obsolete lease. Fresh independent transactions inspect
+committed outcomes and separately persisted retry state. This retains the accepted
+milestone and proves the newly selected policy under the same faults.
+
+[Coverage matrix](docs/quality/LOCK-POLICY-COVERAGE.md) distinguishes existing work
+point locks; first work insert; existing/missing projection; first reconciliation
+state; quota registration/update; and extra flush targets. **Still unqualified:**
+concurrent ordinary work/projection/state insert conflicts, quota row waits and
+registration races, arbitrary mappings/additional tables/cascades/triggers/FK or
+deferred checks, extra flush SQL, table locks, transport/COMMIT uncertainty and
+universal server cleanup. Known external IDs do not eliminate local insert races.
+Native Oracle26 DML NOWAIT remains an unshipped separate capability. No complete
+bounded-persistence claim or million-row completion/capacity claim is made.
+
+## Preserved attempts and source attribution
+
+Every attempt retains its original log/exit, identity/tree/change digest and raw
+reports. Later success does not change these outcomes:
+
+- Development command setup failed exit1 before tests (PowerShell split an
+  unquoted Maven property); corrected focused red run at baba54c plus recorded
+  dirty-change digest executed4 new tests:3 failures/0 errors/1 pass, exit1.
+- f32213f/tree8c502004, default0d3f9aea-04bb-4c33-b899-e47dbc36a39b,
+  exit1/89.238s:24 JUnit/4 suites,1 error/0 failures,72 Python passed.
+  New test wrongly assumed MemoryQuotaGate supplied an optional scheduling hint;
+  corrected to check authoritative denied admission and retained grant/cooldown.
+- 6465adc/treecde726b7, defaultf8ed800d-198d-4ae5-af56-d78f98c1748e,
+  exit1/102.040s:139 JUnit/30 suites,1 error/0 failures,72 Python passed.
+  New mock loop invoked its previous throwing stub while restubbing; fixed without
+  relaxing the error classification assertion.
+- 5fedde9/tree147edb6b, default14383024-8a93-4a2f-98f5-dba4b11a3cf2,
+  exit0/114.869s,141 JUnit/72 Python. Diagnostic e476fe40-f285-4e14-bf07-8c50372e544c
+  **FAILED**, exit1/147.559s,5/7; duplicate-refresh SQL assumption and one-shot wait
+  caller failed. Atomicity classes did not execute in that attempt (NOT_RUN).
+- 118526e/treee8eb79f0, default97804af5-ea78-4851-a79f-23a8c6ca04fc,
+  exit0/112.618s,141 JUnit/72 Python. Diagnostic b7564920-214b-40cc-84c8-c626c379244c,
+  exit0/153.230s:7 integration plus7 DEFAULT atomicity passed. It predates the
+  detached-cause safety fix and the explicit enabled-policy atomicity variant;
+  those results are not borrowed for final source.
+
+## Environment, admission, cleanup and release decision
+
+JDK21.0.12.1+1-LTS, Maven3.9.9, Python3.12.10, Boot4.1.1,
+Hibernate7.4.5.Final, JUnit Jupiter/platform6.0.3, Surefire3.5.3,
+Oracle26ai Free23.26.3.0.0/JDBC23.26.3.0.0, Docker29.8.2.
+Pinned image `ghcr.io/gvenzl/oracle-free:23.26.3-slim@sha256:6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd`.
+Oracle6 GiB/4 CPU, JVM512 MiB heap/128 MiB direct; generated credentials,
+synthetic targets, separate runtime/migration schemas, new labelled volume,
+loopback-only port. No existing DB/volume/socket/host-directory mount.
+
+Final post-build/collection admission eb11763a-19a5-4500-a0a5-eac5258e7845 observed
+12.999/13.104/13.073 GiB available against unchanged12 GiB (6+2+4). Docker unused
+container capacity19.989 GiB, C65.512/D1069.979 GiB free. Earlier bounded admissions
+also passed; receipts retained. **Full18 GiB planning unchanged.** No unrelated
+workload, container/network/volume, global settings, DNS/TLS or credential change.
+
+Integration runtime pool3/observer2, acquire1s/connect1500ms/read10s. Manual attempt
+TransactionTemplate timeout2s; actual manager default timeout was **-1**, explicitly
+recorded. The option does not create a universal transaction deadline. Dataset is
+one target/at most one guard per integration case plus the small inherited atomicity
+fixtures; no large seed. No HTTP/provider load or throughput/percentile claim.
+
+All three session pairs independently absent after owned cleanup:
+msq-d8763410c914, msq-6b736e92dadb, msq-a125147b196d and each -data volume.
+Exact no-such-object/no-such-volume receipts retained. Final owned pools, scheduler
+threads and executor ended, physical remaining0, test table removed. Atomicity
+fixtures dropped their owned tables/constraint. No observed owned residue.
+
+**Full requalification NOT_RUN:** the path-scoped
+[proposal](docs/quality/JDBC-CONTAINMENT-PROPOSAL.md) identifies the exact active
+requirements that would change. Explicit reviewed contract acceptance is still
+required before changing qualification semantics. The original active row-lock/
+plain-UPDATE cancellation gate and reproducer remain unchanged, not relabelled PASS
+or silently removed. New full gates add these cases/raw evidence to all existing
+requirements; PIT keeps all8 targets/85% and adds the contention test class.
+Applicable R01-R13 parents and reachable-path containment gaps remain open.
+Production remains **NO-GO**. No full run, merge, main change, workflow bootstrap/
+dispatch, package publication or broad refactor occurred.
+
+[New immutable raw artifact/index](validation/qualification/2026-10-24-lock-policy/README.md)
+contains source-bound attempts, SQL, logs, default XML/launcher summaries, manifests,
+source-analysis hashes, admission/cleanup receipts and this run-scoped QM.
+
+---
+
 # NOWAIT diagnostic executed - 2026-10-24
 
 **Default PASS; seven-case Oracle diagnostic PASS; full NOT_RUN; production NO-GO.**

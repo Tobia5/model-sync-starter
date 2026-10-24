@@ -16,13 +16,23 @@ evidence. New integration uses actual starter beans and adapters, not that proto
 Current integration results belong in [QM](../../QM.md), with exact source/run/tree.
 Tests and collectors below are implemented; no unexecuted case is claimed PASS.
 
+**Final measured source:** `2eea1d849dfd8d5f7f0ee1ee6f3386412b282477`, tree
+`8338eff0badecc4be2b8855f1e4e9fedbc8da0d6`. Default
+`fb25cfb1-075e-407a-8ca2-8bfb276278b3` PASS/141 JUnit/72 Python/exit0;
+focused Oracle `d7f2d3fe-348c-41a5-89b3-0f7ed0785200` PASS/21 of21/exit0:
+seven production cases plus the same seven atomicity assertions in each of
+DEFAULT and ORACLE_NOWAIT. Fresh detailed-suite evidence passed validation;
+[raw attempts](../../validation/qualification/2026-10-24-lock-policy/README.md)
+retain the initial5/7 failure and intermediate14/14 pass separately.
+Full remains NOT_RUN, the original cancellation gate unchanged, production NO-GO.
+
 | Reachable path | Production option | Implemented verification / remaining boundary |
 |---|---|---|
-| Existing MS_WORK record: enqueue/passive enqueue, lease validation, currentToken/completion/reschedule | Exact point `SELECT ... FOR UPDATE NOWAIT`; Oracle54 becomes LocalContention | Default SQL/classifier/config tests; focused Oracle producer/result/metadata cases require refusal while blocker held, exact-session state, rollback/guard release, healthy pool and durable intent. Await source-bound execution results. |
+| Existing MS_WORK record: enqueue/passive enqueue, lease validation, currentToken/completion/reschedule | Exact point `SELECT ... FOR UPDATE NOWAIT`; Oracle54 becomes LocalContention | PASS within the final scoped fixture: actual producer/result/metadata refusals while blocker held, exact-session state, rollback/guard release, healthy pool and durable intent. Queue SQL unchanged. |
 | First MS_WORK insertion | Ordinary INSERT unchanged; empty NOWAIT SELECT does not reserve a missing key | Normal first-insert functionality test only. Concurrent unique insert wait is **UNQUALIFIED**, not bounded by this option. Existing duplicate-key reread is not a lock deadline. |
-| Existing projection lookup | Explicit mapping capability and policy properties; sample uses per-call em.find | Default mock/config tests and focused Oracle refused lookup. No silent legacy fallback. Custom mappings require their own SQL proof. |
-| Existing projection refresh | Store passes policy properties to the actual em.refresh operation | Default verifies the explicit per-operation call and no global setProperty. Pinned Hibernate uses READ for refresh when the lookup already holds the exclusive lock; the first integration run observed a plain refresh SELECT, not a second locking SELECT. The corrected test requires an independent Oracle54 probe immediately before flush to prove that lookup lock remains held through refresh. An independent contended refresh on this production mapping is not a separate end-to-end experiment; the earlier isolated prototype remains distinct. |
-| Missing projection | Ordinary persist/flush; no existing row to lock | Normal first projection creation tested; concurrent unique/FK insert bounds **UNQUALIFIED**. Oracle26 native DML prototype is separate and is not shipped. |
+| Existing projection lookup | Explicit mapping capability and policy properties; sample uses per-call em.find | PASS for sample mapping: actual versioned NOWAIT lookup refused54, no projection DML continuation; fresh projection before/no success state. No silent legacy fallback. Custom mappings require their own SQL proof. |
+| Existing projection refresh | Store passes policy properties to the actual em.refresh operation | PASS for retained-lock scope: default verifies per-operation properties/no global setProperty. Pinned Hibernate uses READ when lookup already holds the exclusive lock; real refresh emitted a plain SELECT. Independent observer refused54 immediately before flush, proving lock retention through refresh. Independent contended refresh on this production mapping is not a separate end-to-end experiment; the earlier isolated prototype remains distinct. |
+| Missing projection | Ordinary persist/flush; no existing row to lock | PASS for uncontended first creation; concurrent unique/FK insert bounds **UNQUALIFIED**. Oracle26 native DML prototype is separate and is not shipped. |
 | First MS_STATE reconciliation record | Ordinary UPDATE-then-INSERT under work-record fence | Normal completion and retained atomicity tests; a conflicting out-of-band first INSERT wait remains **UNQUALIFIED**. Other writers must not be assumed to obey the ledger fence. |
 | Existing MS_STATE update | Ordinary UPDATE, serialized for compliant workers by MS_WORK lock | Fencing/atomicity retained; arbitrary noncompliant writers, triggers and extra locks are not covered. |
 | Quota registration | Existing consistent read / ordinary INSERT and duplicate-key reread | Unchanged; concurrent first-registration insert bound **UNQUALIFIED**. |
@@ -33,6 +43,8 @@ Tests and collectors below are implemented; no unexecuted case is claimed PASS.
 ## Contention and accounting
 
 LocalContention is a framework-neutral port failure. Opted-in adapters translate
+only the observed Oracle code/state into a detached diagnostic cause, without the
+entity-bearing provider exception or a connection/session chain. They recognize
 Oracle54; parser errors, uniqueness errors, ORA-01013 and recoverable network errors
 are not reclassified as that outcome. The attempt must exit/roll back before
 `coordinator.failed`; failure persistence rejects an active caller transaction.

@@ -7,6 +7,22 @@ FAILURE-CONTRACT.md and all source-bound historical evidence remain unchanged.
 
 ## Current candidate
 
+Final implementation source `2eea1d849dfd8d5f7f0ee1ee6f3386412b282477`, tree
+`8338eff0badecc4be2b8855f1e4e9fedbc8da0d6`: default
+`fb25cfb1-075e-407a-8ca2-8bfb276278b3` PASS/141 JUnit/72 Python/exit0;
+focused Oracle `d7f2d3fe-348c-41a5-89b3-0f7ed0785200` PASS/21 of21/exit0.
+It includes actual starter/worker cases plus all seven original atomicity assertions
+in both policy modes. JDBC refusal12ms, JPA lookup7ms, contended result point5ms;
+outer transaction return85/13/10ms. Metadata refusal3ms retained recoverable lease
+and original detached failure. Exact sessions had no residual row-lock wait with
+blockers held and no active transaction after rollback. The worker's3 successful
+synthetic reads produced0 completed syncs and bounded DEAD/LOCAL_CONTENTION.
+Refresh retained the lookup's lock, independently verified before flush; Hibernate
+elided a redundant locking SELECT. [QM](../../QM.md) and
+[immutable attempts](../../validation/qualification/2026-10-24-lock-policy/README.md)
+retain exact SQL, first failures, earlier pass, source analysis and cleanup.
+**This is measured candidate evidence, not acceptance of the proposal below.**
+
 The adapters now offer explicit opt-in Oracle existing-row point NOWAIT locking,
 JPA mapping lookup options and per-operation refresh options. Defaults remain
 compatible. There is no production SQL-rewriting inspector or native INSERT/UPDATE
