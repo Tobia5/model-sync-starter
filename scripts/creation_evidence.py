@@ -40,9 +40,13 @@ def qualify(root):
                 or type(b.get('physical_return_ms')) is not int or not 0<=b['physical_return_ms']<=5000
                 or before.get('LOCK_WAIT')!=0 or after.get('LOCK_WAIT')!=0 or after.get('TRANSACTION_ACTIVE')!=0
                 or c.get('b_failed_transaction_accepted') is not False
+                or c.get('a_unresolved_at_refusal') is not True or c.get('a_during_b_refusal',{}).get('TRANSACTION_ACTIVE')!=1
+                or c.get('b_pool_active_after_refusal')!=0 or c.get('physical_while_a_paused')!=1
                 or any(type(before.get(k)) is not int or before[k]<1 or before[k]!=after.get(k) for k in ('SID','SERIAL'))):
             raise ValueError('First-creation refusal/rollback proof missing: '+name)
         expected='SERIALIZED_BY_WORK_FENCE' if name in FENCED else 'MEASURED_INSERT_REFUSAL'
         if c.get('classification')!=expected or (name in FENCED and c.get('b_mapping_entered') is not False):
             raise ValueError('First-creation path classification missing')
+        if name in NATIVE and not str(b.get('previous_sql','')).lower().endswith('nowait'):
+            raise ValueError('Native first-creation SQL not observed')
     return data

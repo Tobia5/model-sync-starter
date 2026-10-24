@@ -3,6 +3,26 @@
 Audit base: `b280af476cb76b3b147af2aa893dd44007819d6f`; accepted work/JPA
 and quota existing-row policies are unchanged. See [writer model](SUPPORTED-WRITERS.md).
 
+Actual pre-control source `f55f9299d0cdb67a742e8cf0cf8aa5f001f31333`, tree
+`15e75f5f1292ed0850bfffc73486939c4fe0e02a`: default run
+`35c35ba7-a594-45ee-8fed-fec7a02536a7` PASS/149 JUnit/79 Python/exit0;
+focused run `1ea8bf28-27f0-4225-970e-6298b62e8335` PASS/6 evidence tests/exit0.
+All four default work/quota cases observed B ACTIVE/row-lock WAITING, with its
+exact INSERT SQL and A as BLOCKING_SESSION before A's planned commit/rollback.
+Those are UNBOUNDED_DEFAULT_WAIT observations, not bounded qualification. The
+two projection/state cases refused B at the work fence before JPA entry, verified
+paired first-create commit/rollback, newer intent/local revisions and recovery.
+No out-of-protocol starter-table writer or release-assisted cancellation was used.
+
+This measurement justifies an explicit `JdbcInsertPolicy.ORACLE_26_NOWAIT` candidate
+for single-row MS_WORK explicit/passive creation and MS_QUOTA registration only.
+It validates Oracle26ai/JDBC23.26 metadata; DEFAULT and older configurations are
+unchanged. It does not modify state/projection INSERT, existing locks or queue SQL.
+The real candidate run remains separate from the pre-control results above.
+Oracle documents [INSERT NOWAIT](https://docs.oracle.com/en/database/oracle/oracle-database/26/sqlrf/INSERT.html)
+as statement rollback on lock conflict; public transaction boundaries must still
+roll back the whole failed attempt. No in-place transaction retry is added.
+
 | First creation | Public entry and transaction | Existing locks and compliant competitor | Commit/acceptance boundary |
 |---|---|---|---|
 | MS_WORK | SyncGateway.request / ModelSync.request, SyncTriggers or RequestSync; passive requestRefresh also reaches enqueueRefresh. SpringLocalTransactions REQUIRED joins caller or creates transaction. | Missing-row SELECT FOR UPDATE locks no key. Two compliant producer instances can both observe absence and INSERT the same WorkKey.storageId. No projection lock is held yet. | Standalone request commits before returning. A ticket returned inside an outer transaction is provisional until that outer commit; rollback/failure is not accepted intent. |

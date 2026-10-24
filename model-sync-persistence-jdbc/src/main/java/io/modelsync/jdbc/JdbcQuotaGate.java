@@ -22,6 +22,7 @@ public final class JdbcQuotaGate implements QuotaGate {
   private final TransactionTemplate independent;
   private final Clock clock;
   private final JdbcQuotaLockPolicy lockPolicy;
+  private final JdbcInsertPolicy insertPolicy;
 
   public JdbcQuotaGate(JdbcTemplate jdbc, PlatformTransactionManager manager, Clock databaseClock) {
     this(jdbc, manager, databaseClock, JdbcQuotaLockPolicy.DEFAULT);
@@ -35,6 +36,12 @@ public final class JdbcQuotaGate implements QuotaGate {
    */
   public JdbcQuotaGate(JdbcTemplate jdbc, PlatformTransactionManager manager, Clock databaseClock,
       JdbcQuotaLockPolicy lockPolicy) {
+    this(jdbc, manager, databaseClock, lockPolicy, JdbcInsertPolicy.DEFAULT);
+  }
+
+  /** Explicit work/quota creation capability; existing-row lock behavior stays independent. */
+  public JdbcQuotaGate(JdbcTemplate jdbc, PlatformTransactionManager manager, Clock databaseClock,
+      JdbcQuotaLockPolicy lockPolicy, JdbcInsertPolicy insertPolicy) {
     this.jdbc = Objects.requireNonNull(jdbc);
     this.clock = Objects.requireNonNull(databaseClock);
     this.lockPolicy = Objects.requireNonNull(lockPolicy);
@@ -42,6 +49,8 @@ public final class JdbcQuotaGate implements QuotaGate {
         && !Boolean.TRUE.equals(jdbc.execute((ConnectionCallback<Boolean>) c ->
             "Oracle".equals(c.getMetaData().getDatabaseProductName()))))
       throw new IllegalArgumentException("ORACLE_NOWAIT quota locks require an Oracle datasource");
+    this.insertPolicy = Objects.requireNonNull(insertPolicy);
+    insertPolicy.validate(jdbc);
     independent = new TransactionTemplate(manager);
     independent.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     independent.setName("modelSyncQuota");
@@ -50,7 +59,7 @@ public final class JdbcQuotaGate implements QuotaGate {
   public void register(String group, Duration spacing) {
     if (group == null || group.isBlank() || group.length() > 128 || spacing.toMillis() < 1)
       throw new IllegalArgumentException("Invalid quota");
-    independent.executeWithoutResult(
+    try { independent.executeWithoutResult(
         status -> {
           List<Long> existing =
               jdbc.query(
@@ -60,7 +69,7 @@ public final class JdbcQuotaGate implements QuotaGate {
           if (existing.isEmpty()) {
             try {
               jdbc.update(
-                  "insert into MS_QUOTA (quota_group,spacing_ms,next_allowed_ms) values (?,?,0)",
+                  "insert into MS_QUOTA (quota_group,spacing_ms,next_allowed_ms) values (?,?,0)" + insertPolicy.suffix(),
                   group,
                   spacing.toMillis());
             } catch (DuplicateKeyException race) {
@@ -74,7 +83,14 @@ public final class JdbcQuotaGate implements QuotaGate {
           if (actual != spacing.toMillis())
             throw new IllegalStateException(
                 "Quota configuration differs from persisted configuration: " + group);
-        });
+        }); }
+    catch (DataAccessException failure) {
+      SQLException refusal = JdbcWorkStore.oracleLockRefusal(failure);
+      if (insertPolicy == JdbcInsertPolicy.ORACLE_26_NOWAIT && refusal != null)
+        throw new LocalContention("quota registration",
+            new SQLException("Oracle insert-lock refusal", refusal.getSQLState(), refusal.getErrorCode()));
+      throw failure;
+    }
   }
 
   @Override

@@ -1,5 +1,20 @@
 # Verification profiles
 
+### Compliant first creation (small, explicit)
+
+`python scripts/full-oracle-container.py --creation-diagnostic` selects only
+OracleFirstCreationIT after matching default and the existing12 GiB admission.
+The final candidate has10 cases: four observed DEFAULT insert waits, four explicit
+Oracle26 work/quota INSERT refusals, two projection/state work-fence cases. A is
+paused after actual insert/before commit, then commit/rollback is selected explicitly.
+DEFAULT completion following A resolution is not bounded mitigation/cancellation.
+No out-of-protocol starter writer, prototype, A/B/C, load or million-row seed runs.
+The same6 GiB/4 CPU Oracle and512 MiB/128 MiB launcher limits remain; full18 GiB
+budget remains. Cheap metadata/SQL/classification/configuration and evidence guards
+run in default. Full-only Failsafe/detailed-evidence checks add the10 cases while
+retaining every existing full requirement and original failure. This diagnostic
+alone is not full qualification or acceptance of a new gate mapping.
+
 ### Shared quota contention (explicit, small)
 
 After a matching green default and the existing12 GiB diagnostic admission, use

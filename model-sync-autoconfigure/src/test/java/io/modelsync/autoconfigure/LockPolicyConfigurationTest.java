@@ -18,6 +18,16 @@ import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.transaction.PlatformTransactionManager;
 
 class LockPolicyConfigurationTest {
+  @Test void creationCapabilityIsExplicitVersionedAndReplaceable() {
+    var source=new DriverManagerDataSource("jdbc:h2:mem:creation-config;DB_CLOSE_DELAY=-1","sa","");new ResourceDatabasePopulator(new ClassPathResource("model-sync/schema/h2-v2.sql")).execute(source);var f=new CoreFixture();
+    var runner=new ApplicationContextRunner().withConfiguration(AutoConfigurations.of(ModelSyncJdbcAutoConfiguration.class))
+        .withBean(DataSource.class,()->source).withBean(PlatformTransactionManager.class,()->new DataSourceTransactionManager(source))
+        .withBean(ModelRegistry.class,()->f.registry).withBean("modelSyncClock",Clock.class,()->f.clock).withPropertyValues("model-sync.enabled=true","model-sync.quotas.owner=1ms");
+    runner.run(c->{assertThat(c).hasNotFailed();assertThat(c.getBean(ModelSyncJdbcProperties.class).getInsertPolicy()).isEqualTo(JdbcInsertPolicy.DEFAULT);});
+    runner.withPropertyValues("model-sync.jdbc.insert-policy=ORACLE_26_NOWAIT").run(c->assertThat(c.getStartupFailure()).hasStackTraceContaining("qualified Oracle26ai"));
+    runner.withBean(WorkStore.class,()->f.store).withBean(QuotaGate.class,()->f.gate).withPropertyValues("model-sync.jdbc.insert-policy=ORACLE_26_NOWAIT")
+        .run(c->{assertThat(c).hasNotFailed();assertThat(c.getBean(WorkStore.class)).isSameAs(f.store);assertThat(c.getBean(QuotaGate.class)).isSameAs(f.gate);});
+  }
   @Test void quotaPolicyIsSeparateAndCustomGateBacksOff() {
     var source = new DriverManagerDataSource("jdbc:h2:mem:quota-config;DB_CLOSE_DELAY=-1", "sa", "");
     new ResourceDatabasePopulator(new ClassPathResource("model-sync/schema/h2-v2.sql")).execute(source);

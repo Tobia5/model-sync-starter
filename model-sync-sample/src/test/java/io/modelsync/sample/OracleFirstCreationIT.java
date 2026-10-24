@@ -93,9 +93,18 @@ class OracleFirstCreationIT {
   private void refused(CreationAttempt attempt) {
     assertInstanceOf(LocalContention.class,attempt.failure());assertEquals(54,attempt.evidence().get("oracle_code"));
     assertEquals("ROLLED_BACK",attempt.evidence().get("completion"));assertNull(attempt.ticket());assertFalse(a.resolved);
+    result.put("a_unresolved_at_refusal",true);result.put("a_during_b_refusal",a.snapshot());
+    assertEquals(1,((Number)a.snapshot().get("TRANSACTION_ACTIVE")).intValue());
+    assertEquals(1,physical.get(),"Only the explicitly paused A operation may remain");
+    assertEquals(0,appB.getBean(HikariDataSource.class).getHikariPoolMXBean().getActiveConnections());
+    result.put("b_pool_active_after_refusal",0);result.put("physical_while_a_paused",physical.get());
     var before=(Map<?,?>)attempt.evidence().get("server_before_rollback");var after=(Map<?,?>)attempt.evidence().get("server_after_transaction");
     assertEquals(0,((Number)before.get("LOCK_WAIT")).intValue());assertEquals(0,((Number)after.get("LOCK_WAIT")).intValue());assertEquals(0,((Number)after.get("TRANSACTION_ACTIVE")).intValue());
     result.put("b_failed_transaction_accepted",false);
+    if(result.get("name").toString().contains("-native-")) {
+      String sql=attempt.evidence().get("previous_sql").toString().toLowerCase(Locale.ROOT);
+      assertTrue(sql.startsWith("insert into ms_")&&sql.endsWith("nowait"));
+    }
   }
   private void resolve(Future<CreationAttempt> first,boolean rollback) throws Exception {
     a.decide(rollback);result.put("a_resolution",rollback?"ROLLBACK":"COMMIT");var done=finished(first,"a");
@@ -177,6 +186,10 @@ class OracleFirstCreationIT {
   @Test void defaultWorkRollback() throws Exception {work(true,false);}
   @Test void defaultQuotaCommit() throws Exception {quota(false,false);}
   @Test void defaultQuotaRollback() throws Exception {quota(true,false);}
+  @Test void nativeWorkCommit() throws Exception {work(false,true);}
+  @Test void nativeWorkRollback() throws Exception {work(true,true);}
+  @Test void nativeQuotaCommit() throws Exception {quota(false,true);}
+  @Test void nativeQuotaRollback() throws Exception {quota(true,true);}
   @Test void firstProjectionAndStateCommitAreFenced() throws Exception {fence(false);}
   @Test void firstProjectionAndStateRollbackAreFenced() throws Exception {fence(true);}
 

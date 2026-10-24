@@ -175,6 +175,28 @@ load were not run; see [current QM](../QM.md) for exact commands, source and raw
 
 ## 4. Define the model, owner and local mapping
 
+For the two demonstrated first-work/quota races, the independent explicit option
+`model-sync.jdbc.insert-policy=ORACLE_26_NOWAIT` selects native single-row INSERT
+NOWAIT only in JdbcWorkStore enqueue/enqueueRefresh and JdbcQuotaGate.register.
+It requires Oracle26ai metadata (JDBC database version23.26); older/unrecognized
+lines reject this opt-in. DEFAULT/old constructors retain ordinary INSERT and do
+not change the supported default database/platform contract. Replacement beans
+choose their own constructor capability. No JPA mapping SQL is rewritten, and no
+state INSERT, ordinary UPDATE, queue or existing-row lock policy is changed.
+
+A conflict throws detached LocalContention, never a ticket/configuration acceptance.
+Public REQUIRED enqueue rolls back the whole attempt (and joins/marks an outer
+transaction as appropriate); registration's independent transaction rolls back
+before reporting refusal. A caller must retry only from a new transaction using
+its bounded admission/redelivery policy. Startup registration refusal fails startup;
+the library does not create a restart or immediate retry loop. Existing compatible
+duplicate-key handling remains for committed races. Native statement rollback is
+not itself whole-transaction rollback. A ticket inside a caller transaction remains
+provisional until commit. Oracle transport/uncertain COMMIT are separate controls.
+See [reachability and measured protocol](quality/FIRST-CREATION-REACHABILITY.md).
+The new candidate still needs its own recorded Oracle run; pre-control evidence
+does not qualify native INSERT. Failed cooldown publication remains unchanged.
+
 The minimal application integration has three responsibilities: read the owner, map a local projection, and declare their binding.
 
 A domain DTO contains the owner-controlled fields:

@@ -40,7 +40,7 @@ public class ModelSyncJdbcAutoConfiguration {
   JdbcWorkStore modelSyncWorkStore(
       DataSource dataSource, PlatformTransactionManager transactionManager, ModelSyncJdbcProperties properties) {
     validateTransactionDataSource(dataSource, transactionManager);
-    JdbcWorkStore store = new JdbcWorkStore(new JdbcTemplate(dataSource), properties.getPointLockPolicy());
+    JdbcWorkStore store = new JdbcWorkStore(new JdbcTemplate(dataSource), properties.getPointLockPolicy(), properties.getInsertPolicy());
     store.verifySchema();
     return store;
   }
@@ -56,7 +56,7 @@ public class ModelSyncJdbcAutoConfiguration {
       ModelSyncJdbcProperties jdbcProperties,
       ModelRegistry registry) {
     validateTransactionDataSource(dataSource, manager);
-    JdbcQuotaGate gate = new JdbcQuotaGate(new JdbcTemplate(dataSource), manager, clock, jdbcProperties.getQuotaLockPolicy());
+    JdbcQuotaGate gate = new JdbcQuotaGate(new JdbcTemplate(dataSource), manager, clock, jdbcProperties.getQuotaLockPolicy(), jdbcProperties.getInsertPolicy());
     properties.getQuotas().forEach(gate::register);
     for (ModelBinding<?> b : registry.all())
       if (!properties.getQuotas().containsKey(b.quota()))
