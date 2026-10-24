@@ -1,3 +1,94 @@
+# Database NOWAIT prototype — 2026-10-24
+
+**Default PASS · New Oracle diagnostic BLOCKED / NOT_RUN · A/B/C and full NOT_RUN · Production NO-GO.**
+The JDBC/JPA locking audit and executable, isolated prototype are implemented.
+No Oracle container was provisioned: available host memory was below the retained
+12 GiB small-run planning budget. There is no measured NOWAIT decision or generated
+Hibernate SQL from Oracle in this attempt. The original failing gate and accepted
+`2c39b75` findings remain unchanged. The complete `43040e7` report follows verbatim
+as history; its evidence ZIPs and production persistence code were hash-checked.
+
+## Actual source, commands, results and blocker
+
+Tested clean source **`ab7ae1d0bfb15670b6de3dc8205573c9fc04844c`**, tree
+**`4601bfdfab27e849bd15ce96647b4689896009f0`**, change digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+The later documentation/evidence commit is not claimed as tested source.
+
+| Execution | Evidence / actual outcome |
+|---|---|
+| Initial prototype default | Source `731d558a98985881c601b7a137747227e7f836fa`, tree `186985bbb3178ae5e246a8b9dc9f81a43cfccfcc`, run `c37466c0-899e-473b-ae45-662484a9f6e7`; same default command below, exit1/74.577s. New queue assertion failed Java generic type inference. The source fix is retained; the failing log/partial reports are not relabelled passing. No Oracle ran. |
+| Corrected default | `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify`; run `dc582cf4-df8a-4b56-b198-4a7d03f094e8`, exit0/102.511s, collector0. **125 JUnit tests/27 suites,67 Python guards**, zero failures/errors/skips. Architecture, docs, lifecycle separation and fresh-report guards passed. No expensive goals executed. |
+| Standalone development checks | Git Bash `scripts/test-triggers.sh`, exit0:86 core/43 trigger assertions (not JUnit counts). Architecture/docs and three focused Python scope guards also passed. |
+| Scoped resource preflight | Attempt `b775f679-54e7-4c24-81da-16d13643cff4`,2026-10-24T09:07:40–47Z;11.410/11.402/11.430 GiB available versus12 GiB required. **BLOCKED**, Python2/enclosing PowerShell1. Docker29.8.2,8 CPUs,25201692672 configured bytes,20.088 GiB capacity unused by containers; C69.397/D1069.990 GiB disk free. No unrelated resource was changed. |
+| Planned `python scripts/full-oracle-container.py --nowait-diagnostic` | **NOT_RUN**; resource preflight stopped before wrapper/provisioning. No Oracle run identity, container, volume, schema or database was created by this attempt. |
+
+Project-scoped Central settings remain explicit, SHA-256
+`ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`;
+user/global settings were not modified. No platform/dependency version was changed.
+The diagnostic retains512 MiB heap/128 MiB direct, Oracle6 GiB/4 CPU, and the
+scoped6+2+4 GiB budget. Full18 GiB planning remains unchanged. The blocker is
+host headroom; it is not missing external credentials or a denied Oracle service.
+
+## Audit and executable scope
+
+[Audited locking paths](docs/quality/NOWAIT-PERSISTENCE-AUDIT.md):
+
+- JDBC `locked()` uses plain `FOR UPDATE` for point validation/enqueue/completion/
+  reschedule. The test-only JdbcTemplate seam changes only that exact query to
+  `FOR UPDATE NOWAIT` while exercising the real `JdbcWorkStore`.
+- Queue WAITING/expired-lease `SKIP LOCKED` paths are unchanged and have a separate
+  small control. No queue design or prior selection milestone is reopened.
+- JPA delegates lookup locking to the mapping, refreshes with PESSIMISTIC_WRITE
+  without explicit per-call wait properties, then flushes. The fixture provides
+  explicit mapping/session timeout0 and records generated SQL; SQL without NOWAIT
+  cannot be treated as bounded merely because a hint was present.
+- A deliberately deferred lookup isolates the real store's refresh; extra-row
+  mutation exposes flush targets not protected by a primary-row lock. Native
+  DML NOWAIT is prototyped only for the synthetic table, including an uncommitted
+  projection insert conflict. This syntax is documented for Oracle26, but support
+  on the pinned image is **unmeasured**, not presumed.
+
+Seven explicitly selected tests compile; each refusal sequence permits three
+attempts with the same blocker held. They require real Oracle54, client/transaction
+timing, exact SID/serial state before and after rollback, no later SQL after refusal,
+release of earlier ledger guard writes/locks, healthy pool behavior, durable intent
+and post-cleanup recovery. Generation, old-token and local-revision controls remain.
+No owner call occurs under a local transaction. Uncertain physical completion
+stops subsequent probes; cleanup cannot earn mitigation credit.
+
+All seven Oracle tests are **NOT_RUN**. In particular, database refusal, generated
+SQL, absence of server waits, rollback and recovery under this policy are not yet
+verified. Current default regressions are not substituted for those measurements.
+
+## Limits and decision
+
+**Candidate decision: BLOCKED / UNMEASURED.** This is an isolated test prototype,
+not a shipped SQL-rewriting policy. Future adapter/API changes require explicit
+Oracle-aware point-lock configuration and a mapping/refresh contract, plus reviewed
+coverage of flush SQL. Native DML generation cannot be silently generalized.
+Existing-row SELECT NOWAIT cannot qualify missing-key/unique/FK races, new ledger/
+state inserts, additional mapped tables, cascades/triggers/deferred constraints,
+custom SQL, table locks, network failure or uncertain COMMIT. No DDL_LOCK_TIMEOUT,
+privileged session killing, application-owned datasource/global changes or
+unbounded replacement attempts were introduced.
+
+[The containment proposal](docs/quality/JDBC-CONTAINMENT-PROPOSAL.md) records this
+pending route and leaves the original active gate unchanged. Restore roughly1 GiB
+of headroom, then obtain a fresh default at the current review head and run only
+the new diagnostic. No further generic local-run approval is required. Do not run
+the accepted A/B/C matrix or full as part of this task. Production remains NO-GO;
+no merge, main change, workflow dispatch or package publication occurred.
+
+[Raw default/failure/resource evidence](validation/qualification/2026-10-24-nowait/README.md):
+133 files/246673 bytes; SHA-256
+`792d6594b80eff76390ce5dda393db2659918245191b79943c352d7c91569eab`.
+Original exits/logs, source/run-bound reports, hash manifests, capacity and baseline
+preservation receipts retained. ZIP CRC/per-file equality and input hashes verified;
+bounded generated48-hex/XML-secret-property scans found0 (not a universal audit).
+
+---
+
 # Corrected focused JDBC diagnostic completed — 2026-10-23
 
 **Default PASS; six diagnostic evidence checks PASS. Independent cancellation

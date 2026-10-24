@@ -4,6 +4,35 @@
 [failure contract](FAILURE-CONTRACT.md) and original `OracleIoIT` gate are unchanged.
 This proposal does not authorize full qualification or claim production readiness.
 
+## New database-enforced prototype — 2026-10-24
+
+[The persistence-path audit](NOWAIT-PERSISTENCE-AUDIT.md) identifies unbounded
+JDBC point locks and separate JPA lookup/refresh/flush controls. A test-only
+prototype now exercises the real stores through explicit NOWAIT SQL and the pinned
+Hibernate/JPA path. No production adapter, interface, datasource/global default or
+active gate changed. Queue SKIP LOCKED remains separate.
+
+Clean source `ab7ae1d0bfb15670b6de3dc8205573c9fc04844c`, tree
+`4601bfdfab27e849bd15ce96647b4689896009f0`, default run
+`dc582cf4-df8a-4b56-b198-4a7d03f094e8`: exit0,125 JUnit/27 suites,67 Python,
+zero failures/errors/skips. Its new Oracle tests **did not run**: host memory
+11.402–11.430 GiB versus the retained12 GiB scoped budget blocked provisioning.
+There is no new generated-SQL, database-refusal, server-exit, rollback or retry
+measurement, and no measured candidate decision yet. The exact missing execution
+prerequisite is host headroom, not external Oracle credentials or image access.
+
+The next diagnostic is `--nowait-diagnostic`, not the unchanged A/B/C matrix or
+full suite. It tests three fixed attempts under each original blocker, separately
+records database refusal and whole-transaction rollback, and stops on an uncertain
+physical operation. Native DML NOWAIT support must be checked on the actual pinned
+image before attributing any flush/unique-insert containment. New ledger/state
+insert races, additional mapped tables, triggers, deferred constraints and custom
+adapter SQL remain outside any existing-row SELECT NOWAIT conclusion.
+
+The accepted `2c39b75` findings and complete `43040e7` report/evidence are preserved
+unchanged below/in Git and their existing archives. This unexecuted prototype does
+not resolve their server-lifecycle gap or approve replacement of the original gate.
+
 ## Current measured basis and limits
 
 Corrected diagnostic source `2c39b759cd9295c35eeddf6587094816950ccdf3`, tree
