@@ -3,20 +3,23 @@ import io.modelsync.core.application.*;
 import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
-import io.modelsync.jpa.JpaProjectionMapping;
+import io.modelsync.jpa.LockingJpaProjectionMapping;
+import io.modelsync.jpa.JpaLockPolicy;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.*;
 
 /** Sample mapping between the synchronized customer DTO and the local JPA entity. */
-public final class CustomerJpaMapping implements JpaProjectionMapping<Customer, CustomerEntity> {
+public final class CustomerJpaMapping implements LockingJpaProjectionMapping<Customer, CustomerEntity> {
   static String storageId(SubjectKey key) {
     return new WorkKey("customer", key).storageId();
   }
 
   @Override
-  public Optional<CustomerEntity> find(EntityManager em, SubjectKey key, LockModeType lock) {
-    CustomerEntity e = em.find(CustomerEntity.class, storageId(key), lock);
+  public Optional<CustomerEntity> find(EntityManager em, SubjectKey key, LockModeType lock, JpaLockPolicy policy) {
+    CustomerEntity e = policy == JpaLockPolicy.DEFAULT
+        ? em.find(CustomerEntity.class, storageId(key), lock)
+        : em.find(CustomerEntity.class, storageId(key), lock, policy.properties());
     if (e != null && (!e.tenant.equals(key.tenant()) || !e.sourceId.equals(key.id())))
       throw new IllegalStateException("Tenant/subject mismatch");
     return Optional.ofNullable(e);

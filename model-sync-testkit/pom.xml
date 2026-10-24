@@ -39,7 +39,7 @@
           <param>io.modelsync.core.application.SyncFailurePolicy</param>
           <param>io.modelsync.core.application.SyncJob</param>
         </targetClasses>
-        <targetTests><param>io.modelsync.testkit.CoreContractsTest</param><param>io.modelsync.testkit.TriggerContractsTest</param><param>io.modelsync.testkit.AdmissionHintsTest</param></targetTests>
+        <targetTests><param>io.modelsync.testkit.CoreContractsTest</param><param>io.modelsync.testkit.TriggerContractsTest</param><param>io.modelsync.testkit.AdmissionHintsTest</param><param>io.modelsync.testkit.ContentionPolicyTest</param></targetTests>
       </configuration>
     </plugin>
   </plugins></build></profile></profiles>

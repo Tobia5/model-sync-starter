@@ -36,9 +36,9 @@ public class SampleConfiguration {
 
   @Bean
   @DataCache("customer")
-  JpaProjectionStore<Customer, CustomerEntity> customerCache(EntityManagerFactory emf) {
+  JpaProjectionStore<Customer, CustomerEntity> customerCache(EntityManagerFactory emf, JpaLockPolicy lockPolicy) {
     return new JpaProjectionStore<>(
-        SharedEntityManagerCreator.createSharedEntityManager(emf), new CustomerJpaMapping());
+        SharedEntityManagerCreator.createSharedEntityManager(emf), new CustomerJpaMapping(), lockPolicy);
   }
 
   @Bean

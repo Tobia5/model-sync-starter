@@ -18,11 +18,25 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  */
 public final class JdbcWorkStore implements WorkStore {
   private final JdbcTemplate jdbc;
+  private final JdbcPointLockPolicy pointLockPolicy;
   private final AtomicIntegerArray bindingLanes = new AtomicIntegerArray(Priority.values().length);
   private final AtomicIntegerArray claimLanes = new AtomicIntegerArray(Priority.values().length);
 
   public JdbcWorkStore(JdbcTemplate jdbc) {
-    this.jdbc = jdbc;
+    this(jdbc, JdbcPointLockPolicy.DEFAULT);
+  }
+
+  /**
+   * @param jdbc transaction-bound JDBC access, enlisted with the local projection transaction
+   * @param pointLockPolicy explicit Oracle NOWAIT opt-in; does not bound inserts or other SQL
+   */
+  public JdbcWorkStore(JdbcTemplate jdbc, JdbcPointLockPolicy pointLockPolicy) {
+    this.jdbc = Objects.requireNonNull(jdbc);
+    this.pointLockPolicy = Objects.requireNonNull(pointLockPolicy);
+    if (pointLockPolicy == JdbcPointLockPolicy.ORACLE_NOWAIT
+        && !Boolean.TRUE.equals(jdbc.execute((ConnectionCallback<Boolean>) c ->
+            "Oracle".equals(c.getMetaData().getDatabaseProductName()))))
+      throw new IllegalArgumentException("ORACLE_NOWAIT point locks require an Oracle datasource");
   }
 
   public void verifySchema() {
@@ -80,10 +94,22 @@ public final class JdbcWorkStore implements WorkStore {
   }
 
   private Optional<JdbcWorkRow> locked(String id) {
-    return jdbc
-        .query("select * from MS_WORK where work_id=? for update", (r, n) -> row(r), id)
+    try {
+      return jdbc
+        .query(pointLockPolicy.sql(), (r, n) -> row(r), id)
         .stream()
         .findFirst();
+    } catch (org.springframework.dao.DataAccessException failure) {
+      if (pointLockPolicy == JdbcPointLockPolicy.ORACLE_NOWAIT && oracleLockRefusal(failure))
+        throw new LocalContention("work-record point lock", failure);
+      throw failure;
+    }
+  }
+
+  static boolean oracleLockRefusal(Throwable failure) {
+    for (Throwable cause = failure; cause != null; cause = cause.getCause())
+      if (cause instanceof SQLException sql && sql.getErrorCode() == 54) return true;
+    return false;
   }
 
   @Override

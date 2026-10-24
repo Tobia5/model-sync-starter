@@ -22,6 +22,8 @@ final class SyncFailurePolicy {
     this.registry=registry; this.store=store; this.tx=tx; this.gate=gate; this.clock=clock; this.options=options; this.jitter=jitter;
   }
   public void failed(WorkLease lease, Throwable failure) {
+    if (tx.active())
+      throw new IllegalStateException("Persist failure only after the attempt transaction has ended");
     Throwable e = unwrap(failure);
     if (e instanceof LeaseLost) return;
     Instant now = clock.instant(), next;
@@ -48,7 +50,7 @@ final class SyncFailurePolicy {
                   1,
                   (long) (delay * (0.5 + 0.5 * Math.max(0, Math.min(1, jitter.getAsDouble()))))));
       code =
-          e instanceof Permanent p
+          e instanceof LocalContention ? "LOCAL_CONTENTION" : e instanceof Permanent p
               ? p.code()
               : (e instanceof TimeoutException ? "FETCH_TIMEOUT" : "FETCH_FAILED");
     }

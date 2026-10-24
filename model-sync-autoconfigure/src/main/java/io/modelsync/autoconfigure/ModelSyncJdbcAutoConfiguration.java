@@ -26,7 +26,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 @ConditionalOnClass(JdbcWorkStore.class)
 @ConditionalOnSingleCandidate(DataSource.class)
 @ConditionalOnProperty(prefix = "model-sync", name = "enabled", havingValue = "true")
-@EnableConfigurationProperties(ModelSyncProperties.class)
+@EnableConfigurationProperties({ModelSyncProperties.class, ModelSyncJdbcProperties.class})
 public class ModelSyncJdbcAutoConfiguration {
   @Bean(name = "modelSyncClock")
   @ConditionalOnMissingBean(name = "modelSyncClock")
@@ -38,9 +38,9 @@ public class ModelSyncJdbcAutoConfiguration {
   @ConditionalOnMissingBean(WorkStore.class)
   @ConditionalOnSingleCandidate(PlatformTransactionManager.class)
   JdbcWorkStore modelSyncWorkStore(
-      DataSource dataSource, PlatformTransactionManager transactionManager) {
+      DataSource dataSource, PlatformTransactionManager transactionManager, ModelSyncJdbcProperties properties) {
     validateTransactionDataSource(dataSource, transactionManager);
-    JdbcWorkStore store = new JdbcWorkStore(new JdbcTemplate(dataSource));
+    JdbcWorkStore store = new JdbcWorkStore(new JdbcTemplate(dataSource), properties.getPointLockPolicy());
     store.verifySchema();
     return store;
   }

@@ -91,6 +91,10 @@ public final class SyncCoordinator {
   public void finish(PreparedSync<?> prepared, FetchResult<?> result) { applier.finish(prepared, result); }
   public void failed(WorkLease lease, Throwable failure) {
     try { failurePolicy.failed(lease, failure); }
+    catch (RuntimeException persistenceFailure) {
+      if (persistenceFailure != failure) persistenceFailure.addSuppressed(failure);
+      throw persistenceFailure;
+    }
     finally { scheduling.release(lease); }
   }
 
