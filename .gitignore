@@ -5,3 +5,7 @@
 .env
 *.log
 !validation/*.log
+
+__pycache__/
+*.py[cod]
+!validation/**/*.log

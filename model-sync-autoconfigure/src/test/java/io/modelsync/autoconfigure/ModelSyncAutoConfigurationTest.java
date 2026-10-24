@@ -1,4 +1,7 @@
 package io.modelsync.autoconfigure;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -65,5 +68,21 @@ class ModelSyncAutoConfigurationTest {
               assertThat(c).hasSingleBean(WeightedPriorities.class);
               assertThat(c.getBean(WeightedPriorities.class)).isSameAs(custom);
             });
+  }
+
+  @Test void invalidWorkerPacingFailsStartup() {
+    runner(new CoreFixture()).withPropertyValues("model-sync.enabled=true", "model-sync.productive-interval=0ms")
+        .run(c -> assertThat(c).hasFailed());
+    runner(new CoreFixture()).withPropertyValues("model-sync.enabled=true", "model-sync.max-idle-interval=100ms")
+        .run(c -> assertThat(c).hasFailed());
+  }
+
+  @Test void invalidShutdownDeadlineFailsStartup() {
+    for (String value : new String[] {"0ms", "-1ms", "301s"}) {
+      runner(new CoreFixture()).withPropertyValues("model-sync.enabled=true", "model-sync.shutdown-timeout=" + value)
+          .run(c -> assertThat(c).hasFailed());
+    }
+    var properties = new ModelSyncProperties();
+    assertThat(properties.getShutdownTimeout()).isEqualTo(java.time.Duration.ofSeconds(5));
   }
 }

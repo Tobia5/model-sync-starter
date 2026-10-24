@@ -1,7 +1,10 @@
 package io.modelsync.webclient;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
-import io.modelsync.rest.HttpSemantics;
+import io.modelsync.core.http.HttpSemantics;
 import java.net.URI;
 import java.util.concurrent.CompletionStage;
 import java.util.function.Function;
@@ -40,7 +43,7 @@ public final class WebClientOwner<T> implements AsyncOwner<T> {
                             return response
                                 .bodyToMono(type)
                                 .switchIfEmpty(
-                                    Mono.error(new SyncExceptions.Permanent("EMPTY_BODY")))
+                                    Mono.error(new Permanent("EMPTY_BODY")))
                                 .map(body -> FetchResult.found(body, etag));
                           if (code == 304)
                             return response

@@ -1,0 +1,20 @@
+{
+  "source_sha": "3564410ad8e884509cecb0e530a8e3c16473eb29",
+  "source_tree": "d0af02e4117463eae97a25108b537eb9650fd577",
+  "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "run_id": "d0500d1e-030b-425e-9b49-a35e214f7598",
+  "full_status": "FAILED",
+  "full_command_exit": 1,
+  "sha256": "8c236668f6456fec19c919791c970ab292abe493f9172fd6724bd5f9462db49c",
+  "bytes": 4432245,
+  "files": 1479,
+  "components": 22,
+  "bounded_secret_scan": {
+    "inputs": 1479,
+    "findings": 0,
+    "patterns": "48-hex generated credentials; password XML; sensitive XML property names/values"
+  },
+  "binary_icons_ascii_scanned": 6,
+  "zip_crc": "PASS",
+  "binary_policy": "No JAR/class outputs; library artifacts hashed only"
+}

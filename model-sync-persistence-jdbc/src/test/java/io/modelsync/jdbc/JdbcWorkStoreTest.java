@@ -1,4 +1,6 @@
 package io.modelsync.jdbc;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -58,6 +60,20 @@ class JdbcWorkStoreTest {
     assertNotNull(lease);
     assertEquals(2, lease.generation());
     assertTrue(lease.force());
+    assertEquals("LEASED", jdbc.queryForObject("select work_status from MS_WORK where work_id=?", String.class, key.storageId()));
+    assertEquals(lease.token(), jdbc.queryForObject("select lease_token from MS_WORK where work_id=?", String.class, key.storageId()));
+    assertEquals(lease.generation(), jdbc.queryForObject("select leased_generation from MS_WORK where work_id=?", Long.class, key.storageId()));
+    tx.executeWithoutResult(s -> assertTrue(store.lockValid(lease, now)));
+  }
+
+  @Test
+  void inconsistentStoredIdCannotProduceALease() {
+    jdbc.update("insert into MS_WORK (work_id,binding_id,tenant_id,subject_id,priority,generation,attempts,force_refresh,work_status,next_at_ms,requested_at_ms) values (?,?,?,?,?,1,0,0,'WAITING',0,0)",
+        "incorrect-storage-id", key.binding(), key.subject().tenant(), key.subject().id(), Priority.NORMAL.ordinal());
+    assertThrows(IllegalStateException.class,
+        () -> tx.execute(s -> store.claim(Priority.NORMAL, now, Duration.ofSeconds(60))));
+    assertEquals("WAITING", jdbc.queryForObject("select work_status from MS_WORK where work_id='incorrect-storage-id'", String.class));
+    assertEquals(0, jdbc.queryForObject("select count(*) from MS_WORK where work_status='LEASED'", Integer.class));
   }
 
   @Test
@@ -116,5 +132,21 @@ class JdbcWorkStoreTest {
     gate.register("provider", Duration.ofSeconds(1));
     assertThrows(
         IllegalStateException.class, () -> gate.register("provider", Duration.ofSeconds(2)));
+  }
+  @Test void hintReadsDoNotConsumeOrShortenDistributedAdmission() {
+    var gate = new JdbcQuotaGate(jdbc,manager,Clock.fixed(now,ZoneOffset.UTC));
+    gate.register("hint",Duration.ofSeconds(1));
+    assertEquals(Instant.EPOCH,gate.nextAdmission("hint").orElseThrow());
+    for(int i=0;i<20;i++) {gate.nextAdmission("hint");assertTrue(tx.execute(s -> store.claim(Priority.NORMAL,now,Duration.ofSeconds(60))).isEmpty());}
+    assertEquals(0L,jdbc.queryForObject("select next_allowed_ms from MS_QUOTA where quota_group='hint'",Long.class));
+    assertTrue(gate.acquire("hint").granted());
+    gate.cooldown("hint",now.plusSeconds(30));
+    assertEquals(now.plusSeconds(30),gate.nextAdmission("hint").orElseThrow());
+    assertFalse(gate.acquire("hint").granted());
+  }
+
+  @Test void missingQueueIndexFailsStartupBeforeWorkers() {
+    jdbc.execute("drop index MS_WORK_BIND_READY_IX");
+    assertThrows(IllegalStateException.class,store::verifySchema);
   }
 }

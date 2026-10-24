@@ -1,0 +1,161 @@
+{
+  "target": "oracle26-nowait-ledger-first-v1",
+  "claim_scope": "named-configuration-only",
+  "platform": {
+    "oracle_major": 23,
+    "oracle_minor": 26,
+    "oracle_version": "23.26.3.0.0",
+    "driver": "23.26.3.0.0",
+    "oracle_brand": "26ai",
+    "hibernate": "7.4.5.Final"
+  },
+  "policies": {
+    "point_lock_policy": "ORACLE_NOWAIT",
+    "quota_lock_policy": "ORACLE_NOWAIT",
+    "insert_policy": "ORACLE_26_NOWAIT",
+    "jpa_lock_policy": "ORACLE_NOWAIT"
+  },
+  "writer_protocol": "ledger-first",
+  "required_host_roles": [
+    "starter-target",
+    "nowait-atomicity",
+    "recovery-host",
+    "actual-worker"
+  ],
+  "characterization": {
+    "class": "OracleIoIT",
+    "method": "realStatementLockWaitCancelsAndRollsBack",
+    "case": "statement-lock-timeout",
+    "tag": "modelsync-driver-characterization",
+    "body_sha256": "e8d22041b618fe042683ba58833b248b4ab08c776f741ef7fa7563770b073dfe",
+    "historical_capability": "FAILED",
+    "historical_source": "2c39b75",
+    "historical_report": "43040e7",
+    "current_if_absent": "NOT_RUN"
+  },
+  "mandatory": {
+    "model-sync-persistence-jdbc": {
+      "OracleSmokeIT": [
+        "claimAndFencingOnOracle"
+      ],
+      "OracleConcurrencyIT": [
+        "competingConnectionsCoalesceOneLogicalWorkItem",
+        "hintsNeverSpendPermitsAndIndependentGatesStillSerialize",
+        "reclaimedLeaseRejectsOldToken"
+      ],
+      "OracleMigrationIT": [
+        "v1ToV2PreservesWaitingAndDeadEvidence"
+      ],
+      "OracleScaleIT": [
+        "dueLedgerClaimHasMeasuredDatabaseWork"
+      ],
+      "OracleCapacityIT": [
+        "millionRecordReconciliationMeasuresCompletedWork"
+      ],
+      "OracleSelectionIT": [
+        "activeLeasesAndOtherPrioritiesAreNotClaimed",
+        "availableBindingProgressesPastDelayedEarlierWork",
+        "availableBindingsAlternateWithinOnePriority",
+        "emptyAndFutureQueuesDoNotLease",
+        "filteringWaitingWorkNeverSuppressesRecovery",
+        "lockedEarliestDoesNotHideLaterUnlockedWaiting",
+        "lockedEarliestRecoverySkipsToLaterExpiredLease",
+        "lockedPrefixDoesNotHideWorkBeyondDriverFetch",
+        "recoveryAndWaitingBothProgressUnderRepeatedExpiry",
+        "simultaneousWorkersNeverClaimTheSameLease",
+        "waitingOrderAndFutureBoundaryArePreserved"
+      ],
+      "OracleOptimizationIT": [
+        "comparesIndependentChangesOnTheSameOraclePopulation"
+      ]
+    },
+    "model-sync-sample": {
+      "OracleAtomicityIT": [
+        "changedLocalRevisionReschedulesWithoutOverwriting",
+        "failureAfterProjectionFlushRollsBackBoth",
+        "failureAtSpringCompletionRollsBackBoth",
+        "failureDuringJdbcLedgerWriteRollsBackJpaFlush",
+        "failureInActualOracleCommitRollsBackBoth",
+        "obsoleteLeaseCannotApplyProjectionOrLedger",
+        "successfulProjectionAndLedgerCommitTogether"
+      ],
+      "NowaitOracleAtomicityIT": [
+        "changedLocalRevisionReschedulesWithoutOverwriting",
+        "failureAfterProjectionFlushRollsBackBoth",
+        "failureAtSpringCompletionRollsBackBoth",
+        "failureDuringJdbcLedgerWriteRollsBackJpaFlush",
+        "failureInActualOracleCommitRollsBackBoth",
+        "obsoleteLeaseCannotApplyProjectionOrLedger",
+        "successfulProjectionAndLedgerCommitTogether"
+      ],
+      "OracleWorkerIT": [
+        "autoConfiguredWorkerPacesBacklogAndBoundsIdleRechecks"
+      ],
+      "OracleRecoveryIT": [
+        "crashAfterCommitBeforeObservedSuccess",
+        "crashAfterDurableClaim",
+        "crashAfterOwnerResponse",
+        "crashAfterRealProjectionFlush",
+        "localRevisionAndOwnedFieldsSurviveCrash",
+        "newerRequestSurvivesCrashAndOldToken"
+      ],
+      "OracleIoIT": [
+        "boundedStopDoesNotCallALockedJpaOperationDrained",
+        "connectionLossBeforeCommitIsUncertainUntilFreshInspection",
+        "databaseReadStallEndsPhysicalCallAndPoolRecovers",
+        "gracefulStopDrainsARealOwnerSocketAndAtomicCompletion",
+        "lateOwnerCannotBecomeASuccessOrAFalseDrain",
+        "lostCommitAcknowledgementDoesNotLoseCommittedCompletion",
+        "ownerSocketTimeoutEndsThePhysicalClientIndependentlyOfFetchTimeout",
+        "poolAcquisitionIsBoundedAndRecovers",
+        "stalledLoginCleansUpItsPhysicalConnectionAttempt",
+        "transactionDeadlineRollsBackEarlierWrites",
+        "unavailableDatabaseConnectionDoesNotWaitIndefinitely"
+      ],
+      "OracleLockPolicyIT": [
+        "actualWorkerBoundsContentionRetriesWithoutForgettingOwnerReads",
+        "disabledPolicyKeepsCompatibleSqlAndSuccess",
+        "enabledProducerRefusalIsNeverAccepted",
+        "enabledSuccessRetainsRefreshGenerationFencingAndLocalRevision",
+        "firstInsertsRemainOrdinaryAndUncontendedFunctionalityWorks",
+        "lockedRetryMetadataIsReportedOnceAndLeavesLeaseRecoverable",
+        "resultRefusalRollsBackBeforeDurableRetryAndRespectsCooldown"
+      ],
+      "OracleQuotaContentionIT": [
+        "compatibleDefaultStillCommitsSharedAdmissionAndCooldown",
+        "coordinatorNeverCallsOwnerWithoutCommittedAdmissionAndRecovers",
+        "existingRegistrationAcrossInstancesDoesNotChangeAdmissionOrSpacing",
+        "failedCooldownAfterOwnerReadPropagatesOnceAndKeepsRecoverableLease",
+        "heldAdmissionRefusesRepeatedlyWhileAnotherInstanceAndGroupContinue",
+        "heldCooldownIsNotReportedPersistedAndNeverShortensPriorCooldown"
+      ],
+      "OracleFirstCreationIT": [
+        "defaultQuotaCommit",
+        "defaultQuotaRollback",
+        "defaultWorkCommit",
+        "defaultWorkRollback",
+        "firstProjectionAndStateCommitAreFenced",
+        "firstProjectionAndStateRollbackAreFenced",
+        "nativePassiveCreationCommit",
+        "nativePassiveCreationRollback",
+        "nativeQuotaCommit",
+        "nativeQuotaRollback",
+        "nativeWorkCommit",
+        "nativeWorkRollback"
+      ],
+      "OracleQualificationTargetIT": [
+        "namedTargetConsumesEveryPolicyAndQualifiedMapping"
+      ]
+    }
+  },
+  "compatibility_controls": {
+    "OracleAtomicityIT": "All seven original DEFAULT atomicity assertions retained; not DEFAULT bounded qualification",
+    "OracleConcurrencyIT": "Original concurrent DEFAULT coalescing and quota serialization contracts retained",
+    "OracleLockPolicyIT": "Disabled and point/JPA-only controls retained, explicitly labelled",
+    "OracleQuotaContentionIT": "Disabled and point/JPA/quota-only controls retained, explicitly labelled",
+    "OracleFirstCreationIT": "Four DEFAULT waits observed, six native refusals and two work-fenced creation cases required",
+    "OracleIoIT#boundedStopDoesNotCallALockedJpaOperationDrained": "Deliberate DEFAULT JPA physical-stall shutdown control retained; not bounded-policy locking evidence",
+    "OracleOptimizationIT": "Frozen legacy selector/admission variants are comparative controls; selected candidate uses named JDBC policies",
+    "OracleMigrationIT": "Metadata/migration compatibility, not a bounded-wait claim"
+  }
+}

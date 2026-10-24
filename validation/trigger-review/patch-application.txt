@@ -1,0 +1,5 @@
+PASS: changed input content rejected; no update files written.
+PASS: new-path collision rejected; pre-existing content preserved.
+PASS: verified update applied with unrelated local file unchanged.
+PASS: patch applied in an isolated base-content checkout, then 77 original + 41 new offline contracts passed.
+LIMIT: isolated checkout uses verified current touched files plus original-archive untouched dependencies; full GitHub checkout Maven build remains required.

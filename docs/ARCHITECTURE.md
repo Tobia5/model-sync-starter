@@ -1,5 +1,8 @@
 # Architecture: authority-aware model synchronization
 
+> **Trigger-extension update:** for job/event/visit APIs, on-demand recurrence and current validation boundaries, use the [handbook](USER-HANDBOOK.md), [arc42 architecture](ARC42.md), [production runbook](PRODUCTION.md) and [review report](REVIEW.md). This document retains the original design/history; original test counts and schema-v1 examples are not the new release evidence.
+
+
 ## 1. Scope and architectural position
 
 Model Sync is an **operational pull-reconciliation starter**, not an ORM replacement and not a generic replication database. Its default use case is: an external party owns a set of fields, the application stores a local replica or temporary cache, and the application needs bounded-staleness access and accountable reconciliation under a provider request budget.
@@ -203,13 +206,13 @@ Without that capability, this starter can reconcile known IDs but cannot establi
 
 ## 13. Vista and DWH: dataset reconciliation, not record fan-out
 
-The analytical seam operates on a `DatasetPort.Slice`: dataset, tenant, snapshot, partition, mapping version and record grain. A manifest contains that actual slice identity, row count, unresolved-record count, business totals and a deterministic content digest.
+The analytical seam operates on a `DatasetSlice`: dataset, tenant, snapshot, partition, mapping version and record grain. A manifest contains that actual slice identity, row count, unresolved-record count, business totals and a deterministic content digest.
 
 The default comparison returns `INCOMPARABLE` for a different slice, `INCOMPLETE` for unresolved coverage or missing digests, `DIFFERENT` for unequal content/counts/totals, and `MATCH` only when the comparable evidence agrees. Numeric totals use value comparison, not BigDecimal scale equality.
 
 `JdbcDatasetReader` reads a reviewed parameterized manifest query and checks the identity actually returned from the database; it does not label any returned result with the requested snapshot and pretend it matches. Null count fields are rejected. Users supply schema-specific SQL.
 
-`VistaPort` and `DwhPort` are typed reader interfaces. Vendor HTTP protocols, warehouse loading, durable dispatch, partition-digest generation and drill-down orchestration are not implemented. `DatasetPort.Sink` describes a delivery seam with distinct accepted/applied/verified receipts; the starter does not claim a completed outbox implementation.
+`VistaPort` and `DwhPort` are typed reader interfaces. Vendor HTTP protocols, warehouse loading, durable dispatch, partition-digest generation and drill-down orchestration are not implemented. `DatasetSink` describes a delivery seam with distinct accepted/applied/verified receipts; the starter does not claim a completed outbox implementation.
 
 MDM uniqueness depends on the dataset grain. One row per transaction may legitimately repeat customer IDs. Compare like-for-like snapshots and preserve unresolved/excluded coverage rather than dropping failed subjects and declaring the reduced dataset reconciled.
 

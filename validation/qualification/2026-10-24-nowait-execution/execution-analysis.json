@@ -1,0 +1,253 @@
+{
+  "source_sha": "eb182094dc168573accb8c12f8e63264f771f192",
+  "source_tree": "904b24d22194b2e4c303ce14538e8368f711b3ec",
+  "diagnostic_run": "c82fa300-a9e4-4a6e-ab9d-274d4f824936",
+  "status": "PASS",
+  "qualification": "DIAGNOSTIC_ONLY",
+  "full": "NOT_RUN",
+  "production": "NO_GO",
+  "raw_refusal_attempts": 15,
+  "server_observation": "discrete SID/serial snapshots, not continuous tracing",
+  "timing_definition": "attempt start to refusal and outer transaction return; includes setup/observation/rollback, not isolated execute latency",
+  "versions": {
+    "jdk": "21.0.12.1+1-LTS",
+    "maven": "3.9.9",
+    "python": "3.12.10",
+    "boot": "4.1.1",
+    "hibernate": "7.4.5.Final",
+    "junit_jupiter_and_platform": "6.0.3",
+    "oracle": "Oracle AI Database 26ai Free Release 23.26.3.0.0 - Develop, Learn, and Run for Free\nVersion 23.26.3.0.0",
+    "driver": "23.26.3.0.0",
+    "docker": "29.8.2",
+    "surefire": "3.5.3"
+  },
+  "cases": [
+    {
+      "mode": "jdbc-point",
+      "status": "PROOF_PASS",
+      "client_refusal_ms": [
+        17,
+        5,
+        4
+      ],
+      "transaction_end_ms": [
+        66,
+        8,
+        7
+      ],
+      "server_sessions": [
+        {
+          "serial": 8623,
+          "sid": 220
+        },
+        {
+          "serial": 8623,
+          "sid": 220
+        },
+        {
+          "serial": 8623,
+          "sid": 220
+        }
+      ],
+      "previous_sql_ids": [
+        "4rrcx6pxm100r",
+        "4rrcx6pxm100r",
+        "4rrcx6pxm100r"
+      ],
+      "timing_for_control_cases": null,
+      "retry": null
+    },
+    {
+      "mode": "jpa-refresh",
+      "status": "PROOF_PASS",
+      "client_refusal_ms": [
+        10,
+        8,
+        7
+      ],
+      "transaction_end_ms": [
+        14,
+        11,
+        10
+      ],
+      "server_sessions": [
+        {
+          "serial": 8623,
+          "sid": 220
+        },
+        {
+          "serial": 8623,
+          "sid": 220
+        },
+        {
+          "serial": 8623,
+          "sid": 220
+        }
+      ],
+      "previous_sql_ids": [
+        "d7btmgvwcr0ak",
+        "d7btmgvwcr0ak",
+        "d7btmgvwcr0ak"
+      ],
+      "timing_for_control_cases": null,
+      "retry": {
+        "WORK_STATUS": "WAITING",
+        "ATTEMPTS": 1,
+        "LAST_ERROR_CODE": "FETCH_FAILED",
+        "NEXT_AT_MS": 1792843998770
+      }
+    },
+    {
+      "mode": "queue-skip-locked-separate",
+      "status": "PROOF_PASS",
+      "client_refusal_ms": [],
+      "transaction_end_ms": [],
+      "server_sessions": [],
+      "previous_sql_ids": [],
+      "timing_for_control_cases": "NOT_MEASURED",
+      "retry": null
+    },
+    {
+      "mode": "success-generation-fencing-revision",
+      "status": "PROOF_PASS",
+      "client_refusal_ms": [],
+      "transaction_end_ms": [],
+      "server_sessions": [],
+      "previous_sql_ids": [],
+      "timing_for_control_cases": "NOT_MEASURED",
+      "retry": null
+    },
+    {
+      "mode": "insert-race",
+      "status": "PROOF_PASS",
+      "client_refusal_ms": [
+        13,
+        8,
+        7
+      ],
+      "transaction_end_ms": [
+        16,
+        10,
+        10
+      ],
+      "server_sessions": [
+        {
+          "serial": 8623,
+          "sid": 220
+        },
+        {
+          "serial": 8623,
+          "sid": 220
+        },
+        {
+          "serial": 8623,
+          "sid": 220
+        }
+      ],
+      "previous_sql_ids": [
+        "c57ndxp9jwvtx",
+        "c57ndxp9jwvtx",
+        "c57ndxp9jwvtx"
+      ],
+      "timing_for_control_cases": null,
+      "retry": {
+        "WORK_STATUS": "WAITING",
+        "ATTEMPTS": 1,
+        "LAST_ERROR_CODE": "FETCH_FAILED",
+        "NEXT_AT_MS": 1792843999204
+      }
+    },
+    {
+      "mode": "jpa-lookup",
+      "status": "PROOF_PASS",
+      "client_refusal_ms": [
+        6,
+        7,
+        6
+      ],
+      "transaction_end_ms": [
+        9,
+        10,
+        9
+      ],
+      "server_sessions": [
+        {
+          "serial": 8623,
+          "sid": 220
+        },
+        {
+          "serial": 8623,
+          "sid": 220
+        },
+        {
+          "serial": 8623,
+          "sid": 220
+        }
+      ],
+      "previous_sql_ids": [
+        "apad3w6hckwc8",
+        "apad3w6hckwc8",
+        "apad3w6hckwc8"
+      ],
+      "timing_for_control_cases": null,
+      "retry": {
+        "WORK_STATUS": "WAITING",
+        "ATTEMPTS": 1,
+        "LAST_ERROR_CODE": "FETCH_FAILED",
+        "NEXT_AT_MS": 1792843999402
+      }
+    },
+    {
+      "mode": "flush-extra-row",
+      "status": "PROOF_PASS",
+      "client_refusal_ms": [
+        12,
+        10,
+        10
+      ],
+      "transaction_end_ms": [
+        16,
+        13,
+        14
+      ],
+      "server_sessions": [
+        {
+          "serial": 8623,
+          "sid": 220
+        },
+        {
+          "serial": 8623,
+          "sid": 220
+        },
+        {
+          "serial": 8623,
+          "sid": 220
+        }
+      ],
+      "previous_sql_ids": [
+        "a5nx5hysw1v17",
+        "a5nx5hysw1v17",
+        "a5nx5hysw1v17"
+      ],
+      "timing_for_control_cases": null,
+      "retry": {
+        "WORK_STATUS": "WAITING",
+        "ATTEMPTS": 1,
+        "LAST_ERROR_CODE": "FETCH_FAILED",
+        "NEXT_AT_MS": 1792843999596
+      }
+    }
+  ],
+  "first_attempt": {
+    "source": "a7a2bcf612057b363d33e985a81d50377751061e",
+    "tree": "e7a13f272f39d0d701a32eaaefe7f27f8eccac21",
+    "run": "e96cd2cc-9dc7-40d9-9c25-4ea2e46c7625",
+    "exit": 1,
+    "started": 7,
+    "passed": 3,
+    "failed": 4,
+    "cause": "queue-control claim retained its local provider slot; four cases failed before their operation at claim",
+    "mitigation_credit": "only observed JDBC point and refresh sequences; not the four setup failures"
+  },
+  "queue_sql_collection_note": "Raw cursor list includes the metadata query itself (fqkda3cr4fg4q); it is not selector SQL. Cumulative execution counts are not interval deltas and are not used as selector/work counts."
+}

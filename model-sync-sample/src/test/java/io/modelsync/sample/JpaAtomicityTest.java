@@ -1,4 +1,7 @@
 package io.modelsync.sample;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 

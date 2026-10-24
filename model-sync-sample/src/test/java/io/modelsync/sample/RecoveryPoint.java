@@ -1,0 +1,3 @@
+package io.modelsync.sample;
+
+enum RecoveryPoint { NONE, CLAIM_COMMITTED, OWNER_RESPONDED, PROJECTION_FLUSHED, COMPLETION_COMMITTED }

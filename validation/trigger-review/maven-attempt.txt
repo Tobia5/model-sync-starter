@@ -1,0 +1,3 @@
+bash: line 13: mvn: command not found
+
+Maven invocation exit code: 127

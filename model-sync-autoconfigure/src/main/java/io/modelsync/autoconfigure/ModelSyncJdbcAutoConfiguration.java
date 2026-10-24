@@ -1,4 +1,7 @@
 package io.modelsync.autoconfigure;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
 import io.modelsync.jdbc.*;
@@ -23,7 +26,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 @ConditionalOnClass(JdbcWorkStore.class)
 @ConditionalOnSingleCandidate(DataSource.class)
 @ConditionalOnProperty(prefix = "model-sync", name = "enabled", havingValue = "true")
-@EnableConfigurationProperties(ModelSyncProperties.class)
+@EnableConfigurationProperties({ModelSyncProperties.class, ModelSyncJdbcProperties.class})
 public class ModelSyncJdbcAutoConfiguration {
   @Bean(name = "modelSyncClock")
   @ConditionalOnMissingBean(name = "modelSyncClock")
@@ -35,9 +38,9 @@ public class ModelSyncJdbcAutoConfiguration {
   @ConditionalOnMissingBean(WorkStore.class)
   @ConditionalOnSingleCandidate(PlatformTransactionManager.class)
   JdbcWorkStore modelSyncWorkStore(
-      DataSource dataSource, PlatformTransactionManager transactionManager) {
+      DataSource dataSource, PlatformTransactionManager transactionManager, ModelSyncJdbcProperties properties) {
     validateTransactionDataSource(dataSource, transactionManager);
-    JdbcWorkStore store = new JdbcWorkStore(new JdbcTemplate(dataSource));
+    JdbcWorkStore store = new JdbcWorkStore(new JdbcTemplate(dataSource), properties.getPointLockPolicy(), properties.getInsertPolicy());
     store.verifySchema();
     return store;
   }
@@ -50,9 +53,10 @@ public class ModelSyncJdbcAutoConfiguration {
       PlatformTransactionManager manager,
       @Qualifier("modelSyncClock") Clock clock,
       ModelSyncProperties properties,
+      ModelSyncJdbcProperties jdbcProperties,
       ModelRegistry registry) {
     validateTransactionDataSource(dataSource, manager);
-    JdbcQuotaGate gate = new JdbcQuotaGate(new JdbcTemplate(dataSource), manager, clock);
+    JdbcQuotaGate gate = new JdbcQuotaGate(new JdbcTemplate(dataSource), manager, clock, jdbcProperties.getQuotaLockPolicy(), jdbcProperties.getInsertPolicy());
     properties.getQuotas().forEach(gate::register);
     for (ModelBinding<?> b : registry.all())
       if (!properties.getQuotas().containsKey(b.quota()))

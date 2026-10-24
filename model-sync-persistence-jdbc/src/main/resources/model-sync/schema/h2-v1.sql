@@ -9,8 +9,8 @@ CREATE TABLE MS_WORK (
  generation BIGINT NOT NULL,
  leased_generation BIGINT,
  attempts INTEGER NOT NULL,
- force_refresh INTEGER NOT NULL CHECK (force_refresh IN (0,1)),
- work_status VARCHAR(16) NOT NULL CHECK (work_status IN ('WAITING','LEASED','DEAD')),
+ force_refresh INTEGER NOT NULL CHECK (force_refresh BETWEEN 0 AND 1),
+ work_status VARCHAR(16) NOT NULL CHECK (CASE work_status WHEN 'WAITING' THEN TRUE WHEN 'LEASED' THEN TRUE WHEN 'DEAD' THEN TRUE ELSE FALSE END),
  next_at_ms BIGINT NOT NULL,
  requested_at_ms BIGINT NOT NULL,
  lease_token VARCHAR(36),
@@ -20,6 +20,8 @@ CREATE TABLE MS_WORK (
 );
 CREATE INDEX MS_WORK_READY_IX ON MS_WORK(priority,work_status,next_at_ms,work_id);
 CREATE INDEX MS_WORK_LEASE_IX ON MS_WORK(work_status,lease_until_ms,priority);
+CREATE INDEX MS_WORK_RECOVER_IX ON MS_WORK(priority,work_status,lease_until_ms,work_id);
+CREATE INDEX MS_WORK_BIND_READY_IX ON MS_WORK(binding_id,priority,work_status,next_at_ms,work_id);
 CREATE TABLE MS_STATE (
  work_id VARCHAR(64) PRIMARY KEY REFERENCES MS_WORK(work_id),
  validated_at_ms BIGINT,

@@ -1,0 +1,745 @@
+{
+  "scope": "shared-quota-contention",
+  "source_sha": "4057535359400242c3a20d69f7ad06197caee5e6",
+  "source_tree": "4bfbfaea40f5413fe3bd0067b7f9b9047bfcfb1e",
+  "default": {
+    "run_id": "50f38395-84ab-4b90-973d-6c7a6c154280",
+    "source_sha": "4057535359400242c3a20d69f7ad06197caee5e6",
+    "source_tree": "4bfbfaea40f5413fe3bd0067b7f9b9047bfcfb1e",
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "supervisor_launch_ns": 1792853235959645100,
+    "supervisor_launch_utc": "2026-10-24T14:47:15.959645+00:00",
+    "bound_seconds": 600,
+    "bound_basis": "scoped local diagnostic/default budget",
+    "command": [
+      "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+      "-B",
+      "-ntp",
+      "-s",
+      ".mvn/qualification-central.settings.xml",
+      "clean",
+      "verify"
+    ],
+    "maven_settings": ".mvn/qualification-central.settings.xml",
+    "external_oracle_variables_cleared": true,
+    "exit": 0,
+    "elapsed_seconds": 129.017,
+    "log_decode": "cp1252; normalized to UTF-8; original build.log retained",
+    "collector_exit": 0,
+    "xml_suites": 32,
+    "junit": {
+      "tests": 149,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0
+    },
+    "python_guards": 76
+  },
+  "diagnostic": {
+    "run_id": "35ead9f5-f6af-4c49-a323-4ad149737b85",
+    "source_sha": "4057535359400242c3a20d69f7ad06197caee5e6",
+    "source_tree": "4bfbfaea40f5413fe3bd0067b7f9b9047bfcfb1e",
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "supervisor_launch_ns": 1792853410859249100,
+    "supervisor_launch_utc": "2026-10-24T14:50:10.859249+00:00",
+    "bound_seconds": 1200,
+    "bound_basis": "scoped local diagnostic/default budget",
+    "command": [
+      "C:\\Python312\\python.exe",
+      "-u",
+      "scripts/full-oracle-container.py",
+      "--quota-diagnostic"
+    ],
+    "maven_settings": ".mvn/qualification-central.settings.xml",
+    "external_oracle_variables_cleared": true,
+    "exit": 0,
+    "elapsed_seconds": 144.871,
+    "log_decode": "utf-8",
+    "launcher": {
+      "run_id": "35ead9f5-f6af-4c49-a323-4ad149737b85",
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_sha": "4057535359400242c3a20d69f7ad06197caee5e6",
+      "source_tree": "4bfbfaea40f5413fe3bd0067b7f9b9047bfcfb1e",
+      "started_ns": 1792853536647998000,
+      "scope": "DIAGNOSTIC_ONLY",
+      "full_qualification": "NOT_RUN",
+      "suites": [
+        {
+          "class": "io.modelsync.sample.OracleQuotaContentionIT",
+          "found": 6,
+          "started": 6,
+          "succeeded": 6,
+          "failed": 0,
+          "skipped": 0,
+          "container_failures": 0,
+          "duration_ms": 12471,
+          "status": "PASS",
+          "failures": []
+        }
+      ],
+      "selected_classes": [
+        "io.modelsync.sample.OracleQuotaContentionIT"
+      ],
+      "status": "PASS"
+    },
+    "infrastructure": {
+      "attempt_id": "03c255b7-79ec-43a9-81cf-de94e8b25a90",
+      "cleanup_verified": true,
+      "container_cleanup_verified": true,
+      "container_created": true,
+      "container_name": "msq-5e4a26e2d97b",
+      "diagnostic_exit": 0,
+      "diagnostic_scope": "shared-quota",
+      "elapsed_seconds": 132.08,
+      "error": null,
+      "full_qualification": "NOT_RUN",
+      "image": "ghcr.io/gvenzl/oracle-free:23.26.3-slim@sha256:6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd",
+      "maven_exit": 0,
+      "maven_settings": ".mvn/qualification-central.settings.xml",
+      "maven_settings_sha256": "ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940",
+      "migration_schema": "MS_TEST_MIGRATION",
+      "mode": "diagnostic",
+      "phase": "selected Oracle diagnostics (not full qualification)",
+      "run_id": "35ead9f5-f6af-4c49-a323-4ad149737b85",
+      "runtime_schema": "MS_TEST_RUNTIME",
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_sha": "4057535359400242c3a20d69f7ad06197caee5e6",
+      "source_tree": "4bfbfaea40f5413fe3bd0067b7f9b9047bfcfb1e",
+      "status": "PASS",
+      "volume_cleanup_verified": true,
+      "volume_created": true,
+      "volume_name": "msq-5e4a26e2d97b-data",
+      "wrapper_exit": 0
+    }
+  },
+  "measurement": {
+    "run_id": "35ead9f5-f6af-4c49-a323-4ad149737b85",
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "4057535359400242c3a20d69f7ad06197caee5e6",
+    "source_tree": "4bfbfaea40f5413fe3bd0067b7f9b9047bfcfb1e",
+    "started_ns": 1792853536647998000,
+    "scope": "shared-quota-contention",
+    "status": "PASS",
+    "cases": [
+      {
+        "name": "registration-boundary",
+        "status": "PASS",
+        "quota_policy": "ORACLE_NOWAIT",
+        "manager_default_timeout_seconds": -1,
+        "sessions_a": [
+          {
+            "sid": 222,
+            "serial": 179
+          },
+          {
+            "sid": 56,
+            "serial": 13524
+          },
+          {
+            "sid": 223,
+            "serial": 47540
+          }
+        ],
+        "sessions_b": [
+          {
+            "sid": 57,
+            "serial": 40290
+          },
+          {
+            "sid": 224,
+            "serial": 18911
+          },
+          {
+            "sid": 58,
+            "serial": 6420
+          }
+        ],
+        "concurrent_first_insert": "UNQUALIFIED; ordinary INSERT retained; no missing-row reservation",
+        "healthy_pools": true,
+        "physical_remaining": 0,
+        "owner_calls": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "owner-cooldown-refusal",
+        "status": "PASS",
+        "quota_policy": "ORACLE_NOWAIT",
+        "manager_default_timeout_seconds": -1,
+        "sessions_a": [
+          {
+            "sid": 224,
+            "serial": 40438
+          },
+          {
+            "sid": 58,
+            "serial": 25803
+          },
+          {
+            "sid": 223,
+            "serial": 51147
+          }
+        ],
+        "sessions_b": [
+          {
+            "sid": 57,
+            "serial": 3994
+          },
+          {
+            "sid": 222,
+            "serial": 36209
+          },
+          {
+            "sid": 56,
+            "serial": 26664
+          }
+        ],
+        "blocker_released_for_proof": false,
+        "attempts": [
+          {
+            "sid": 224,
+            "serial": 40438,
+            "begin_failed": false,
+            "server_before_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "fd8dfx1p03x3t",
+              "TRANSACTION_ACTIVE": 1,
+              "LOCK_WAIT": 0,
+              "SID": 224,
+              "SERIAL": 40438
+            },
+            "before_rollback_elapsed_ms": 9,
+            "server_sql": "select next_allowed_ms from MS_QUOTA where quota_group=:1 for update nowait",
+            "server_after_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "fd8dfx1p03x3t",
+              "TRANSACTION_ACTIVE": 0,
+              "LOCK_WAIT": 0,
+              "SID": 224,
+              "SERIAL": 40438
+            },
+            "after_rollback_elapsed_ms": 26,
+            "completion": "ROLLED_BACK",
+            "client_and_transaction_return_ms": 30,
+            "oracle_code": 54,
+            "error_type": "io.modelsync.core.port.LocalContention",
+            "suppressed_types": [
+              "io.modelsync.core.RateLimitedAfter"
+            ],
+            "guard_rolled_back_and_reacquired": true
+          }
+        ],
+        "healthy_pools": true,
+        "physical_remaining": 0,
+        "durable_after_cooldown_failure": {
+          "WORK_STATUS": "LEASED",
+          "LEASE_TOKEN": "34d6c558-16f6-4666-b8d4-eb0e6cfe5c83",
+          "GENERATION": 1,
+          "ATTEMPTS": 0
+        },
+        "cooldown_persisted": false,
+        "owner_response": "synthetic read completed, RateLimitedAfter injected into failure handler",
+        "emergency_release": false,
+        "blocker_release_cleanup_only": true,
+        "cooldown_persisted_after_release": true,
+        "repeated_owner_reads": 1,
+        "completed_syncs": 1,
+        "owner_calls": 2,
+        "cleanup_verified": true
+      },
+      {
+        "name": "held-acquire",
+        "status": "PASS",
+        "quota_policy": "ORACLE_NOWAIT",
+        "manager_default_timeout_seconds": -1,
+        "sessions_a": [
+          {
+            "sid": 222,
+            "serial": 61993
+          },
+          {
+            "sid": 56,
+            "serial": 32549
+          },
+          {
+            "sid": 223,
+            "serial": 28818
+          }
+        ],
+        "sessions_b": [
+          {
+            "sid": 57,
+            "serial": 45728
+          },
+          {
+            "sid": 224,
+            "serial": 32235
+          },
+          {
+            "sid": 58,
+            "serial": 54604
+          }
+        ],
+        "blocker_released_for_proof": false,
+        "attempts": [
+          {
+            "sid": 222,
+            "serial": 61993,
+            "begin_failed": false,
+            "server_before_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "ftw6vyf723296",
+              "TRANSACTION_ACTIVE": 1,
+              "LOCK_WAIT": 0,
+              "SID": 222,
+              "SERIAL": 61993
+            },
+            "before_rollback_elapsed_ms": 4,
+            "server_sql": "select spacing_ms,next_allowed_ms from MS_QUOTA where quota_group=:1 for update nowait",
+            "server_after_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "ftw6vyf723296",
+              "TRANSACTION_ACTIVE": 0,
+              "LOCK_WAIT": 0,
+              "SID": 222,
+              "SERIAL": 61993
+            },
+            "after_rollback_elapsed_ms": 9,
+            "completion": "ROLLED_BACK",
+            "client_and_transaction_return_ms": 10,
+            "oracle_code": 54,
+            "error_type": "io.modelsync.core.port.LocalContention",
+            "suppressed_types": [],
+            "guard_rolled_back_and_reacquired": true
+          },
+          {
+            "sid": 222,
+            "serial": 61993,
+            "begin_failed": false,
+            "server_before_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "ftw6vyf723296",
+              "TRANSACTION_ACTIVE": 1,
+              "LOCK_WAIT": 0,
+              "SID": 222,
+              "SERIAL": 61993
+            },
+            "before_rollback_elapsed_ms": 4,
+            "server_sql": "select spacing_ms,next_allowed_ms from MS_QUOTA where quota_group=:1 for update nowait",
+            "server_after_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "ftw6vyf723296",
+              "TRANSACTION_ACTIVE": 0,
+              "LOCK_WAIT": 0,
+              "SID": 222,
+              "SERIAL": 61993
+            },
+            "after_rollback_elapsed_ms": 9,
+            "completion": "ROLLED_BACK",
+            "client_and_transaction_return_ms": 9,
+            "oracle_code": 54,
+            "error_type": "io.modelsync.core.port.LocalContention",
+            "suppressed_types": [],
+            "guard_rolled_back_and_reacquired": true
+          },
+          {
+            "sid": 222,
+            "serial": 61993,
+            "begin_failed": false,
+            "server_before_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "ftw6vyf723296",
+              "TRANSACTION_ACTIVE": 1,
+              "LOCK_WAIT": 0,
+              "SID": 222,
+              "SERIAL": 61993
+            },
+            "before_rollback_elapsed_ms": 3,
+            "server_sql": "select spacing_ms,next_allowed_ms from MS_QUOTA where quota_group=:1 for update nowait",
+            "server_after_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "ftw6vyf723296",
+              "TRANSACTION_ACTIVE": 0,
+              "LOCK_WAIT": 0,
+              "SID": 222,
+              "SERIAL": 61993
+            },
+            "after_rollback_elapsed_ms": 9,
+            "completion": "ROLLED_BACK",
+            "client_and_transaction_return_ms": 9,
+            "oracle_code": 54,
+            "error_type": "io.modelsync.core.port.LocalContention",
+            "suppressed_types": [],
+            "guard_rolled_back_and_reacquired": true
+          }
+        ],
+        "healthy_pools": true,
+        "physical_remaining": 0,
+        "emergency_release": false,
+        "blocker_release_cleanup_only": true,
+        "recovered_committed_admission": 1792853546957,
+        "owner_calls": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "default-compatible",
+        "status": "PASS",
+        "quota_policy": "DEFAULT",
+        "manager_default_timeout_seconds": -1,
+        "sessions_a": [
+          {
+            "sid": 224,
+            "serial": 62140
+          },
+          {
+            "sid": 58,
+            "serial": 2318
+          },
+          {
+            "sid": 223,
+            "serial": 26838
+          }
+        ],
+        "sessions_b": [
+          {
+            "sid": 57,
+            "serial": 62180
+          },
+          {
+            "sid": 222,
+            "serial": 43986
+          },
+          {
+            "sid": 56,
+            "serial": 4105
+          }
+        ],
+        "cooldown_ms": 1792853577873,
+        "healthy_pools": true,
+        "physical_remaining": 0,
+        "owner_calls": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "held-cooldown",
+        "status": "PASS",
+        "quota_policy": "ORACLE_NOWAIT",
+        "manager_default_timeout_seconds": -1,
+        "sessions_a": [
+          {
+            "sid": 222,
+            "serial": 53134
+          },
+          {
+            "sid": 56,
+            "serial": 32683
+          },
+          {
+            "sid": 223,
+            "serial": 31122
+          }
+        ],
+        "sessions_b": [
+          {
+            "sid": 57,
+            "serial": 43489
+          },
+          {
+            "sid": 224,
+            "serial": 43619
+          },
+          {
+            "sid": 58,
+            "serial": 44338
+          }
+        ],
+        "blocker_released_for_proof": false,
+        "attempts": [
+          {
+            "sid": 222,
+            "serial": 53134,
+            "begin_failed": false,
+            "server_before_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "fd8dfx1p03x3t",
+              "TRANSACTION_ACTIVE": 1,
+              "LOCK_WAIT": 0,
+              "SID": 222,
+              "SERIAL": 53134
+            },
+            "before_rollback_elapsed_ms": 4,
+            "server_sql": "select next_allowed_ms from MS_QUOTA where quota_group=:1 for update nowait",
+            "server_after_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "fd8dfx1p03x3t",
+              "TRANSACTION_ACTIVE": 0,
+              "LOCK_WAIT": 0,
+              "SID": 222,
+              "SERIAL": 53134
+            },
+            "after_rollback_elapsed_ms": 8,
+            "completion": "ROLLED_BACK",
+            "client_and_transaction_return_ms": 9,
+            "oracle_code": 54,
+            "error_type": "io.modelsync.core.port.LocalContention",
+            "suppressed_types": [],
+            "guard_rolled_back_and_reacquired": true
+          },
+          {
+            "sid": 222,
+            "serial": 53134,
+            "begin_failed": false,
+            "server_before_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "fd8dfx1p03x3t",
+              "TRANSACTION_ACTIVE": 1,
+              "LOCK_WAIT": 0,
+              "SID": 222,
+              "SERIAL": 53134
+            },
+            "before_rollback_elapsed_ms": 3,
+            "server_sql": "select next_allowed_ms from MS_QUOTA where quota_group=:1 for update nowait",
+            "server_after_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "fd8dfx1p03x3t",
+              "TRANSACTION_ACTIVE": 0,
+              "LOCK_WAIT": 0,
+              "SID": 222,
+              "SERIAL": 53134
+            },
+            "after_rollback_elapsed_ms": 8,
+            "completion": "ROLLED_BACK",
+            "client_and_transaction_return_ms": 8,
+            "oracle_code": 54,
+            "error_type": "io.modelsync.core.port.LocalContention",
+            "suppressed_types": [],
+            "guard_rolled_back_and_reacquired": true
+          },
+          {
+            "sid": 222,
+            "serial": 53134,
+            "begin_failed": false,
+            "server_before_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "fd8dfx1p03x3t",
+              "TRANSACTION_ACTIVE": 1,
+              "LOCK_WAIT": 0,
+              "SID": 222,
+              "SERIAL": 53134
+            },
+            "before_rollback_elapsed_ms": 3,
+            "server_sql": "select next_allowed_ms from MS_QUOTA where quota_group=:1 for update nowait",
+            "server_after_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "fd8dfx1p03x3t",
+              "TRANSACTION_ACTIVE": 0,
+              "LOCK_WAIT": 0,
+              "SID": 222,
+              "SERIAL": 53134
+            },
+            "after_rollback_elapsed_ms": 7,
+            "completion": "ROLLED_BACK",
+            "client_and_transaction_return_ms": 8,
+            "oracle_code": 54,
+            "error_type": "io.modelsync.core.port.LocalContention",
+            "suppressed_types": [],
+            "guard_rolled_back_and_reacquired": true
+          }
+        ],
+        "healthy_pools": true,
+        "physical_remaining": 0,
+        "emergency_release": false,
+        "blocker_release_cleanup_only": true,
+        "prior_cooldown_ms": 1792853578752,
+        "persisted_after_release_ms": 1792853608752,
+        "owner_calls": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "coordinator-admission-refusal",
+        "status": "PASS",
+        "quota_policy": "ORACLE_NOWAIT",
+        "manager_default_timeout_seconds": -1,
+        "sessions_a": [
+          {
+            "sid": 224,
+            "serial": 39348
+          },
+          {
+            "sid": 58,
+            "serial": 50502
+          },
+          {
+            "sid": 223,
+            "serial": 18704
+          }
+        ],
+        "sessions_b": [
+          {
+            "sid": 57,
+            "serial": 55639
+          },
+          {
+            "sid": 222,
+            "serial": 57762
+          },
+          {
+            "sid": 56,
+            "serial": 56182
+          }
+        ],
+        "blocker_released_for_proof": false,
+        "attempts": [
+          {
+            "sid": 224,
+            "serial": 39348,
+            "begin_failed": false,
+            "server_before_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "ftw6vyf723296",
+              "TRANSACTION_ACTIVE": 1,
+              "LOCK_WAIT": 0,
+              "SID": 224,
+              "SERIAL": 39348
+            },
+            "before_rollback_elapsed_ms": 4,
+            "server_sql": "select spacing_ms,next_allowed_ms from MS_QUOTA where quota_group=:1 for update nowait",
+            "server_after_rollback": {
+              "STATUS": "INACTIVE",
+              "EVENT": "SQL*Net message from client",
+              "STATE": "WAITING",
+              "SQL_ID": null,
+              "PREV_SQL_ID": "ftw6vyf723296",
+              "TRANSACTION_ACTIVE": 0,
+              "LOCK_WAIT": 0,
+              "SID": 224,
+              "SERIAL": 39348
+            },
+            "after_rollback_elapsed_ms": 8,
+            "completion": "ROLLED_BACK",
+            "client_and_transaction_return_ms": 18,
+            "oracle_code": 54,
+            "error_type": "io.modelsync.core.port.LocalContention",
+            "suppressed_types": [],
+            "guard_rolled_back_and_reacquired": true
+          }
+        ],
+        "healthy_pools": true,
+        "physical_remaining": 0,
+        "durable_retry": {
+          "WORK_STATUS": "WAITING",
+          "ATTEMPTS": 1,
+          "LAST_ERROR_CODE": "LOCAL_CONTENTION",
+          "NEXT_AT_MS": 1792853549895
+        },
+        "emergency_release": false,
+        "blocker_release_cleanup_only": true,
+        "completed_syncs": 1,
+        "owner_calls_before_release": 0,
+        "owner_calls": 1,
+        "cleanup_verified": true
+      }
+    ],
+    "observation_ms": 5000,
+    "scope_limit": "existing quota rows; first-registration race remains unqualified",
+    "oracle": "Oracle AI Database 26ai Free Release 23.26.3.0.0 - Develop, Learn, and Run for Free\nVersion 23.26.3.0.0",
+    "driver": "23.26.3.0.0",
+    "jdk": "21.0.12.1+1-LTS",
+    "hibernate": "7.4.5.Final",
+    "runtime_pools": [
+      3,
+      3
+    ],
+    "observer_pool": 2,
+    "read_ms": 10000,
+    "connect_ms": 1500,
+    "acquire_ms": 1000,
+    "owned_executor_terminated": true,
+    "physical_remaining": 0,
+    "owned_pools_closed": true,
+    "table_removed": true
+  },
+  "cleanup": {
+    "run_id": "35ead9f5-f6af-4c49-a323-4ad149737b85",
+    "attempt_id": "03c255b7-79ec-43a9-81cf-de94e8b25a90",
+    "source_sha": "4057535359400242c3a20d69f7ad06197caee5e6",
+    "source_tree": "4bfbfaea40f5413fe3bd0067b7f9b9047bfcfb1e",
+    "container_name": "msq-5e4a26e2d97b",
+    "volume_name": "msq-5e4a26e2d97b-data",
+    "container": {
+      "command": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.Id}}",
+        "msq-5e4a26e2d97b"
+      ],
+      "exit": 1,
+      "absent": true,
+      "stdout": "",
+      "stderr": "error: no such object: msq-5e4a26e2d97b"
+    },
+    "volume": {
+      "command": [
+        "docker",
+        "volume",
+        "inspect",
+        "--format",
+        "{{.Name}}",
+        "msq-5e4a26e2d97b-data"
+      ],
+      "exit": 1,
+      "absent": true,
+      "stdout": "",
+      "stderr": "Error response from daemon: get msq-5e4a26e2d97b-data: no such volume"
+    },
+    "status": "PASS"
+  },
+  "acceptance": "prior existing-work/JPA criterion accepted; quota evidence is scoped regression, not complete release acceptance",
+  "full": "NOT_RUN: legitimate first-insert and other applicable failure gates remain unresolved; original UPDATE gate retained",
+  "production": "NO-GO"
+}

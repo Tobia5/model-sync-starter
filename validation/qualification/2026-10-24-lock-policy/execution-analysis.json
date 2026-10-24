@@ -1,0 +1,1013 @@
+{
+  "tested_sha": "2eea1d849dfd8d5f7f0ee1ee6f3386412b282477",
+  "tested_tree": "8338eff0badecc4be2b8855f1e4e9fedbc8da0d6",
+  "run_id": "d7f2d3fe-348c-41a5-89b3-0f7ed0785200",
+  "qualification": "SCOPED_DIAGNOSTIC_ONLY",
+  "full": "NOT_RUN",
+  "original_cancellation_gate": "UNCHANGED_FAILED_HISTORICAL_REQUIREMENT",
+  "production": "NO_GO",
+  "runs": [
+    {
+      "directory": "default-12b375d8-a99d-4c8b-9e6d-56fe1a2b0fc5",
+      "source_sha": "6465adc2f174407c140d25954423fe9da872e669",
+      "source_tree": "cde726b79f36894ed1e5c1298a6906e3e62a4261",
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+        "-B",
+        "-ntp",
+        "-s",
+        ".mvn/qualification-central.settings.xml",
+        "clean",
+        "verify"
+      ],
+      "exit": 1,
+      "elapsed_seconds": 102.04,
+      "run_id": "f8ed800d-198d-4ae5-af56-d78f98c1748e",
+      "collector_exit": 0,
+      "junit_surefire": {
+        "tests": 139,
+        "failures": 0,
+        "errors": 1,
+        "skipped": 0,
+        "suites": 30
+      }
+    },
+    {
+      "directory": "default-32ddd66b-e513-4264-96fc-892a380d17f5",
+      "source_sha": "2eea1d849dfd8d5f7f0ee1ee6f3386412b282477",
+      "source_tree": "8338eff0badecc4be2b8855f1e4e9fedbc8da0d6",
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+        "-B",
+        "-ntp",
+        "-s",
+        ".mvn/qualification-central.settings.xml",
+        "clean",
+        "verify"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 107.286,
+      "run_id": "fb25cfb1-075e-407a-8ca2-8bfb276278b3",
+      "collector_exit": 0,
+      "junit_surefire": {
+        "tests": 141,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "suites": 31
+      }
+    },
+    {
+      "directory": "default-8e900625-25a4-4528-bb3a-57aad4449627",
+      "source_sha": "f32213f363c54c6d76032f9c1b604991ec2177b1",
+      "source_tree": "8c5020049d2ee0d746467a1c533a4d2da76006a2",
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+        "-B",
+        "-ntp",
+        "-s",
+        ".mvn/qualification-central.settings.xml",
+        "clean",
+        "verify"
+      ],
+      "exit": 1,
+      "elapsed_seconds": 89.238,
+      "run_id": "0d3f9aea-04bb-4c33-b899-e47dbc36a39b",
+      "collector_exit": 0,
+      "junit_surefire": {
+        "tests": 24,
+        "failures": 0,
+        "errors": 1,
+        "skipped": 0,
+        "suites": 4
+      }
+    },
+    {
+      "directory": "default-c5b51c5d-13cd-424f-aa9a-aa68bb5e2f73",
+      "source_sha": "118526e661e82e1dd17efe33ac4fda97768d6d14",
+      "source_tree": "e8eb79f03cad9ae268db390b3b9338b1663d0541",
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+        "-B",
+        "-ntp",
+        "-s",
+        ".mvn/qualification-central.settings.xml",
+        "clean",
+        "verify"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 112.618,
+      "run_id": "97804af5-ea78-4851-a79f-23a8c6ca04fc",
+      "collector_exit": 0,
+      "junit_surefire": {
+        "tests": 141,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "suites": 31
+      }
+    },
+    {
+      "directory": "default-d4688555-8aa5-410b-bfad-64f23f8cc162",
+      "source_sha": "5fedde97646d24888f841b52c508f95794cbb5d8",
+      "source_tree": "147edb6be5c45ee43bc30c19b63cf6fe237175aa",
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+        "-B",
+        "-ntp",
+        "-s",
+        ".mvn/qualification-central.settings.xml",
+        "clean",
+        "verify"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 114.869,
+      "run_id": "14383024-8a93-4a2f-98f5-dba4b11a3cf2",
+      "collector_exit": 0,
+      "junit_surefire": {
+        "tests": 141,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0,
+        "suites": 31
+      }
+    },
+    {
+      "directory": "diagnostic-5b1ba0e6-538d-4b06-8012-53d4b42faeef",
+      "source_sha": "118526e661e82e1dd17efe33ac4fda97768d6d14",
+      "source_tree": "e8eb79f03cad9ae268db390b3b9338b1663d0541",
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "C:\\Python312\\python.exe",
+        "-u",
+        "scripts/full-oracle-container.py",
+        "--lock-policy-diagnostic"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 153.23,
+      "run_id": "b7564920-214b-40cc-84c8-c626c379244c",
+      "collector_exit": null,
+      "junit_launcher": [
+        {
+          "class": "io.modelsync.sample.OracleLockPolicyIT",
+          "found": 7,
+          "started": 7,
+          "succeeded": 7,
+          "failed": 0,
+          "skipped": 0,
+          "container_failures": 0,
+          "duration_ms": 11125,
+          "status": "PASS",
+          "failures": []
+        },
+        {
+          "class": "io.modelsync.sample.OracleAtomicityIT",
+          "found": 7,
+          "started": 7,
+          "succeeded": 7,
+          "failed": 0,
+          "skipped": 0,
+          "container_failures": 0,
+          "duration_ms": 8449,
+          "status": "PASS",
+          "failures": []
+        }
+      ]
+    },
+    {
+      "directory": "diagnostic-efa6354c-6a28-4cf8-b0d7-f0cd39740e89",
+      "source_sha": "5fedde97646d24888f841b52c508f95794cbb5d8",
+      "source_tree": "147edb6be5c45ee43bc30c19b63cf6fe237175aa",
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "C:\\Python312\\python.exe",
+        "-u",
+        "scripts/full-oracle-container.py",
+        "--lock-policy-diagnostic"
+      ],
+      "exit": 1,
+      "elapsed_seconds": 147.559,
+      "run_id": "e476fe40-f285-4e14-bf07-8c50372e544c",
+      "collector_exit": null,
+      "junit_launcher": [
+        {
+          "class": "io.modelsync.sample.OracleLockPolicyIT",
+          "found": 7,
+          "started": 7,
+          "succeeded": 5,
+          "failed": 2,
+          "skipped": 0,
+          "container_failures": 0,
+          "duration_ms": 11311,
+          "status": "FAILED",
+          "failures": [
+            {
+              "test": "enabledSuccessRetainsRefreshGenerationFencingAndLocalRevision()",
+              "exception": "org.opentest4j.AssertionFailedError"
+            },
+            {
+              "test": "resultRefusalRollsBackBeforeDurableRetryAndRespectsCooldown()",
+              "exception": "org.opentest4j.AssertionFailedError"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "directory": "diagnostic-f8e0c2a9-9774-43af-aa24-28959df7bb8e",
+      "source_sha": "2eea1d849dfd8d5f7f0ee1ee6f3386412b282477",
+      "source_tree": "8338eff0badecc4be2b8855f1e4e9fedbc8da0d6",
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "command": [
+        "C:\\Python312\\python.exe",
+        "-u",
+        "scripts/full-oracle-container.py",
+        "--lock-policy-diagnostic"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 157.537,
+      "run_id": "d7f2d3fe-348c-41a5-89b3-0f7ed0785200",
+      "collector_exit": null,
+      "junit_launcher": [
+        {
+          "class": "io.modelsync.sample.OracleLockPolicyIT",
+          "found": 7,
+          "started": 7,
+          "succeeded": 7,
+          "failed": 0,
+          "skipped": 0,
+          "container_failures": 0,
+          "duration_ms": 11473,
+          "status": "PASS",
+          "failures": []
+        },
+        {
+          "class": "io.modelsync.sample.OracleAtomicityIT",
+          "found": 7,
+          "started": 7,
+          "succeeded": 7,
+          "failed": 0,
+          "skipped": 0,
+          "container_failures": 0,
+          "duration_ms": 8582,
+          "status": "PASS",
+          "failures": []
+        },
+        {
+          "class": "io.modelsync.sample.NowaitOracleAtomicityIT",
+          "found": 7,
+          "started": 7,
+          "succeeded": 7,
+          "failed": 0,
+          "skipped": 0,
+          "container_failures": 0,
+          "duration_ms": 9429,
+          "status": "PASS",
+          "failures": []
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "disabled-compatible",
+      "status": "PASS",
+      "jdbc_policy": "DEFAULT",
+      "jpa_policy": "DEFAULT",
+      "execution_mode": "public headless coordinator/gateway",
+      "runtime_sessions": [
+        {
+          "serial": 32507,
+          "sid": 60
+        },
+        {
+          "serial": 18408,
+          "sid": 220
+        },
+        {
+          "serial": 6974,
+          "sid": 61
+        }
+      ],
+      "runtime_pool": 3,
+      "observer_pool": 2,
+      "manual_attempt_transaction_seconds": 2,
+      "manager_default_timeout_seconds": -1,
+      "socket_read_ms": 10000,
+      "connect_ms": 1500,
+      "acquire_ms": 1000,
+      "sql_capture": "read-only Hibernate StatementInspector returns identical SQL",
+      "pool_sessions_after": [
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "68wkq6sfb0j26",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 60,
+          "SERIAL": 32507
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "68wkq6sfb0j26",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 18408
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "526hzwkxubgmc",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 61,
+          "SERIAL": 6974
+        }
+      ],
+      "pool_active_after": 0,
+      "healthy_subsequent_query": true,
+      "owner_calls": 1,
+      "jpa_sql": [
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key from sample_customer ce1_0 where ce1_0.storage_key=? and ce1_0.local_version=? for update of ce1_0.storage_key",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "update sample_customer set display_name=?,expires_at=?,review_requested_at=?,source_id=?,customer_status=?,tenant_id=?,local_version=? where storage_key=? and local_version=?"
+      ],
+      "cleanup_verified": true
+    },
+    {
+      "name": "producer-refusal",
+      "status": "PASS",
+      "jdbc_policy": "ORACLE_NOWAIT",
+      "jpa_policy": "ORACLE_NOWAIT",
+      "execution_mode": "public headless coordinator/gateway",
+      "runtime_sessions": [
+        {
+          "serial": 281,
+          "sid": 61
+        },
+        {
+          "serial": 32490,
+          "sid": 220
+        },
+        {
+          "serial": 45916,
+          "sid": 60
+        }
+      ],
+      "runtime_pool": 3,
+      "observer_pool": 2,
+      "manual_attempt_transaction_seconds": 2,
+      "manager_default_timeout_seconds": -1,
+      "socket_read_ms": 10000,
+      "connect_ms": 1500,
+      "acquire_ms": 1000,
+      "sql_capture": "read-only Hibernate StatementInspector returns identical SQL",
+      "blocker_released_for_proof": false,
+      "attempt": {
+        "client_refusal_ms": 12,
+        "server_before_rollback": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "4rrcx6pxm100r",
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 61,
+          "SERIAL": 281
+        },
+        "server_sql": "select * from MS_WORK where work_id=:1 for update nowait",
+        "error_chain": [
+          {
+            "type": "io.modelsync.core.port.LocalContention"
+          },
+          {
+            "type": "java.sql.SQLException",
+            "oracle_code": 54
+          }
+        ],
+        "transaction_end_ms": 85,
+        "transaction_completion": 1,
+        "server_after_transaction": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "4rrcx6pxm100r",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 61,
+          "SERIAL": 281
+        },
+        "jpa_sql": []
+      },
+      "guard_write_rolled_back_and_lock_released": true,
+      "pool_sessions_after": [
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "4rrcx6pxm100r",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 61,
+          "SERIAL": 281
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "68wkq6sfb0j26",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 32490
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "9vx5nhk1tuj5z",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 60,
+          "SERIAL": 45916
+        }
+      ],
+      "pool_active_after": 0,
+      "healthy_subsequent_query": true,
+      "enqueue_accepted": false,
+      "physical_before_cleanup": 0,
+      "emergency_release": false,
+      "blocker_release_cleanup_only": true,
+      "owner_calls": 0,
+      "jpa_sql": [],
+      "cleanup_verified": true
+    },
+    {
+      "name": "uncontended-first-inserts",
+      "status": "PASS",
+      "jdbc_policy": "ORACLE_NOWAIT",
+      "jpa_policy": "ORACLE_NOWAIT",
+      "execution_mode": "public headless coordinator/gateway",
+      "runtime_sessions": [
+        {
+          "serial": 50647,
+          "sid": 60
+        },
+        {
+          "serial": 64553,
+          "sid": 220
+        },
+        {
+          "serial": 58852,
+          "sid": 61
+        }
+      ],
+      "runtime_pool": 3,
+      "observer_pool": 2,
+      "manual_attempt_transaction_seconds": 2,
+      "manager_default_timeout_seconds": -1,
+      "socket_read_ms": 10000,
+      "connect_ms": 1500,
+      "acquire_ms": 1000,
+      "sql_capture": "read-only Hibernate StatementInspector returns identical SQL",
+      "insert_conflict_bound": "UNQUALIFIED; no DML NOWAIT capability shipped",
+      "pool_sessions_after": [
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "68wkq6sfb0j26",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 60,
+          "SERIAL": 50647
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "68wkq6sfb0j26",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 64553
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "526hzwkxubgmc",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 61,
+          "SERIAL": 58852
+        }
+      ],
+      "pool_active_after": 0,
+      "healthy_subsequent_query": true,
+      "owner_calls": 1,
+      "jpa_sql": [
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=? for update of ce1_0.storage_key nowait",
+        "insert into sample_customer (display_name,expires_at,review_requested_at,source_id,customer_status,tenant_id,local_version,storage_key) values (?,?,?,?,?,?,?,?)"
+      ],
+      "cleanup_verified": true
+    },
+    {
+      "name": "actual-worker-contention-exhaustion",
+      "status": "PASS",
+      "jdbc_policy": "ORACLE_NOWAIT",
+      "jpa_policy": "ORACLE_NOWAIT",
+      "execution_mode": "actual auto-configured Reactor worker",
+      "runtime_sessions": [
+        {
+          "serial": 1434,
+          "sid": 61
+        },
+        {
+          "serial": 46838,
+          "sid": 220
+        },
+        {
+          "serial": 34533,
+          "sid": 60
+        }
+      ],
+      "runtime_pool": 3,
+      "observer_pool": 2,
+      "manual_attempt_transaction_seconds": 2,
+      "manager_default_timeout_seconds": -1,
+      "socket_read_ms": 10000,
+      "connect_ms": 1500,
+      "acquire_ms": 1000,
+      "sql_capture": "read-only Hibernate StatementInspector returns identical SQL",
+      "blocker_released_for_proof": false,
+      "fresh_projection_before_and_no_success_state": true,
+      "pool_sessions_after": [
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "9ctkkaf9p4sk4",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 61,
+          "SERIAL": 1434
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "68wkq6sfb0j26",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 46838
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "2r0ff1fzacgd9",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 60,
+          "SERIAL": 34533
+        }
+      ],
+      "pool_active_after": 0,
+      "healthy_subsequent_query": true,
+      "durable": {
+        "WORK_STATUS": "DEAD",
+        "ATTEMPTS": 3,
+        "LAST_ERROR_CODE": "LOCAL_CONTENTION",
+        "GENERATION": 1
+      },
+      "worker_activity": {
+        "ticks": 4,
+        "empty": 1,
+        "deferred": 0,
+        "failed": 3,
+        "fetched": 0,
+        "cancelled": 0,
+        "inFlight": 0,
+        "maximumInFlight": 1
+      },
+      "worker_shutdown": {
+        "status": "DRAINED",
+        "elapsedMillis": 0,
+        "logicalInFlight": 0,
+        "physicalOperations": 0,
+        "ownerOperations": 0
+      },
+      "worker_physical_after_stop": 0,
+      "completed_syncs": 0,
+      "physical_before_cleanup": 0,
+      "emergency_release": false,
+      "blocker_release_cleanup_only": true,
+      "owner_calls": 3,
+      "jpa_sql": [
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key from sample_customer ce1_0 where ce1_0.storage_key=? and ce1_0.local_version=? for update of ce1_0.storage_key nowait",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key from sample_customer ce1_0 where ce1_0.storage_key=? and ce1_0.local_version=? for update of ce1_0.storage_key nowait",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key from sample_customer ce1_0 where ce1_0.storage_key=? and ce1_0.local_version=? for update of ce1_0.storage_key nowait"
+      ],
+      "cleanup_verified": true
+    },
+    {
+      "name": "enabled-safety-controls",
+      "status": "PASS",
+      "jdbc_policy": "ORACLE_NOWAIT",
+      "jpa_policy": "ORACLE_NOWAIT",
+      "execution_mode": "public headless coordinator/gateway",
+      "runtime_sessions": [
+        {
+          "serial": 51483,
+          "sid": 60
+        },
+        {
+          "serial": 22885,
+          "sid": 220
+        },
+        {
+          "serial": 8318,
+          "sid": 61
+        }
+      ],
+      "runtime_pool": 3,
+      "observer_pool": 2,
+      "manual_attempt_transaction_seconds": 2,
+      "manager_default_timeout_seconds": -1,
+      "socket_read_ms": 10000,
+      "connect_ms": 1500,
+      "acquire_ms": 1000,
+      "sql_capture": "read-only Hibernate StatementInspector returns identical SQL",
+      "refresh_lock_retained_before_flush": true,
+      "successful_lookup_refresh_sql": [
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key from sample_customer ce1_0 where ce1_0.storage_key=? and ce1_0.local_version=? for update of ce1_0.storage_key nowait",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "update sample_customer set display_name=?,expires_at=?,review_requested_at=?,source_id=?,customer_status=?,tenant_id=?,local_version=? where storage_key=? and local_version=?"
+      ],
+      "generation_fencing_revision_preserved": true,
+      "pool_sessions_after": [
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "68wkq6sfb0j26",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 60,
+          "SERIAL": 51483
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "68wkq6sfb0j26",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 22885
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "9ctkkaf9p4sk4",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 61,
+          "SERIAL": 8318
+        }
+      ],
+      "pool_active_after": 0,
+      "healthy_subsequent_query": true,
+      "owner_calls": 1,
+      "jpa_sql": [
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key from sample_customer ce1_0 where ce1_0.storage_key=? and ce1_0.local_version=? for update of ce1_0.storage_key nowait",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "update sample_customer set display_name=?,expires_at=?,review_requested_at=?,source_id=?,customer_status=?,tenant_id=?,local_version=? where storage_key=? and local_version=?",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?"
+      ],
+      "cleanup_verified": true
+    },
+    {
+      "name": "result-refusal-recovery",
+      "status": "PASS",
+      "jdbc_policy": "ORACLE_NOWAIT",
+      "jpa_policy": "ORACLE_NOWAIT",
+      "execution_mode": "public headless coordinator/gateway",
+      "runtime_sessions": [
+        {
+          "serial": 54156,
+          "sid": 61
+        },
+        {
+          "serial": 53150,
+          "sid": 220
+        },
+        {
+          "serial": 5163,
+          "sid": 60
+        }
+      ],
+      "runtime_pool": 3,
+      "observer_pool": 2,
+      "manual_attempt_transaction_seconds": 2,
+      "manager_default_timeout_seconds": -1,
+      "socket_read_ms": 10000,
+      "connect_ms": 1500,
+      "acquire_ms": 1000,
+      "sql_capture": "read-only Hibernate StatementInspector returns identical SQL",
+      "blocker_released_for_proof": false,
+      "attempt": {
+        "client_refusal_ms": 7,
+        "server_before_rollback": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "apad3w6hckwc8",
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 61,
+          "SERIAL": 54156
+        },
+        "server_sql": "select ce1_0.storage_key from sample_customer ce1_0 where ce1_0.storage_key=:1 and ce1_0.local_version=:2 for update of ce1_0.storage_key nowait",
+        "error_chain": [
+          {
+            "type": "io.modelsync.core.port.LocalContention"
+          },
+          {
+            "type": "java.sql.SQLException",
+            "oracle_code": 54
+          }
+        ],
+        "transaction_end_ms": 13,
+        "transaction_completion": 1,
+        "server_after_transaction": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "apad3w6hckwc8",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 61,
+          "SERIAL": 54156
+        },
+        "jpa_sql": [
+          "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+          "select ce1_0.storage_key from sample_customer ce1_0 where ce1_0.storage_key=? and ce1_0.local_version=? for update of ce1_0.storage_key nowait"
+        ]
+      },
+      "guard_write_rolled_back_and_lock_released": true,
+      "pool_sessions_after": [
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "apad3w6hckwc8",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 61,
+          "SERIAL": 54156
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "68wkq6sfb0j26",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 53150
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "4rrcx6pxm100r",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 60,
+          "SERIAL": 5163
+        }
+      ],
+      "pool_active_after": 0,
+      "healthy_subsequent_query": true,
+      "fresh_projection_before_and_no_success_state": true,
+      "retry": {
+        "WORK_STATUS": "WAITING",
+        "ATTEMPTS": 1,
+        "LAST_ERROR_CODE": "LOCAL_CONTENTION",
+        "NEXT_AT_MS": 1792851257570,
+        "GENERATION": 1
+      },
+      "owner_calls_before_recovery": 1,
+      "cooldown_unchanged_ms": 1792851258882,
+      "physical_before_cleanup": 0,
+      "emergency_release": false,
+      "blocker_release_cleanup_only": true,
+      "later_completed_syncs": 1,
+      "repeated_owner_reads": 1,
+      "owner_calls": 2,
+      "jpa_sql": [
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key from sample_customer ce1_0 where ce1_0.storage_key=? and ce1_0.local_version=? for update of ce1_0.storage_key nowait",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key from sample_customer ce1_0 where ce1_0.storage_key=? and ce1_0.local_version=? for update of ce1_0.storage_key nowait",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "update sample_customer set display_name=?,expires_at=?,review_requested_at=?,source_id=?,customer_status=?,tenant_id=?,local_version=? where storage_key=? and local_version=?"
+      ],
+      "cleanup_verified": true
+    },
+    {
+      "name": "retry-metadata-refusal",
+      "status": "PASS",
+      "jdbc_policy": "ORACLE_NOWAIT",
+      "jpa_policy": "ORACLE_NOWAIT",
+      "execution_mode": "public headless coordinator/gateway",
+      "runtime_sessions": [
+        {
+          "serial": 20807,
+          "sid": 60
+        },
+        {
+          "serial": 41715,
+          "sid": 220
+        },
+        {
+          "serial": 56436,
+          "sid": 61
+        }
+      ],
+      "runtime_pool": 3,
+      "observer_pool": 2,
+      "manual_attempt_transaction_seconds": 2,
+      "manager_default_timeout_seconds": -1,
+      "socket_read_ms": 10000,
+      "connect_ms": 1500,
+      "acquire_ms": 1000,
+      "sql_capture": "read-only Hibernate StatementInspector returns identical SQL",
+      "blocker_released_for_proof": false,
+      "attempt": {
+        "client_refusal_ms": 5,
+        "server_before_rollback": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "4rrcx6pxm100r",
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 60,
+          "SERIAL": 20807
+        },
+        "server_sql": "select * from MS_WORK where work_id=:1 for update nowait",
+        "error_chain": [
+          {
+            "type": "io.modelsync.core.port.LocalContention"
+          },
+          {
+            "type": "java.sql.SQLException",
+            "oracle_code": 54
+          }
+        ],
+        "transaction_end_ms": 10,
+        "transaction_completion": 1,
+        "server_after_transaction": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "4rrcx6pxm100r",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 60,
+          "SERIAL": 20807
+        },
+        "jpa_sql": []
+      },
+      "guard_write_rolled_back_and_lock_released": true,
+      "pool_sessions_after": [
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "4rrcx6pxm100r",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 60,
+          "SERIAL": 20807
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "68wkq6sfb0j26",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 41715
+        },
+        {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "526hzwkxubgmc",
+          "TRANSACTION_ACTIVE": 0,
+          "LOCK_WAIT": 0,
+          "SID": 61,
+          "SERIAL": 56436
+        }
+      ],
+      "pool_active_after": 0,
+      "healthy_subsequent_query": true,
+      "fresh_projection_before_and_no_success_state": true,
+      "retry_metadata_call_ms": 3,
+      "retry_metadata_error_chain": [
+        {
+          "type": "io.modelsync.core.port.LocalContention"
+        },
+        {
+          "type": "java.sql.SQLException",
+          "oracle_code": 54
+        }
+      ],
+      "durable_after_metadata_refusal": {
+        "WORK_STATUS": "LEASED",
+        "LEASE_TOKEN": "c933d371-1eba-4a61-bcf1-348a9665f697",
+        "GENERATION": 1,
+        "ATTEMPTS": 0
+      },
+      "physical_before_cleanup": 0,
+      "emergency_release": false,
+      "blocker_release_cleanup_only": true,
+      "recovery_fixture_expiry_after_cleanup": true,
+      "later_completed_syncs": 1,
+      "owner_calls": 2,
+      "jpa_sql": [
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "select ce1_0.storage_key from sample_customer ce1_0 where ce1_0.storage_key=? and ce1_0.local_version=? for update of ce1_0.storage_key nowait",
+        "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+        "update sample_customer set display_name=?,expires_at=?,review_requested_at=?,source_id=?,customer_status=?,tenant_id=?,local_version=? where storage_key=? and local_version=?"
+      ],
+      "cleanup_verified": true
+    }
+  ],
+  "scope_limits": [
+    "first-work/projection/state insert conflicts",
+    "quota registration/update lock bounds",
+    "extra flush targets and custom SQL",
+    "transport/COMMIT uncertainty and universal server lifecycle"
+  ],
+  "source_review": "Oracle details stay in adapters; core sees LocalContention; no shipped SQL rewriting; typed mapping opt-in; failure persistence after rollback; detached SQL code/state cause; queue SQL unchanged."
+}

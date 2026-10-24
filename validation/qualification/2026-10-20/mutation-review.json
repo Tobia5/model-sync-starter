@@ -1,0 +1,75 @@
+{
+  "source_sha": "4f440807f20c568a2240ed5ce32f1aab8e9558b0",
+  "source_tree": "02faa6e6b9b5b8a28af6234d2b1de699a736b735",
+  "run_id": "3177a6c3-3b64-4e5b-b40b-dc18bf1c7884",
+  "threshold_percent": 85,
+  "score_definition": "100 * KILLED / all generated mutations",
+  "counts": {
+    "KILLED": 133,
+    "SURVIVED": 1,
+    "NO_COVERAGE": 1,
+    "TIMED_OUT": 0,
+    "RUN_ERROR": 0,
+    "UNKNOWN": 0
+  },
+  "generated": 135,
+  "score_percent": 98.51851851851852,
+  "exclusions": [],
+  "reviews": [
+    {
+      "status": "SURVIVED",
+      "class": "io.modelsync.core.domain.FreshnessPolicy",
+      "method": "<init>",
+      "line": 19,
+      "reason": "Removing positive(maxAge) is equivalent under the remaining constructor constraints: refreshAfter is strictly positive and refreshAfter <= maxAge. A nonpositive maxAge violates that comparison. A null maxAge still throws NullPointerException during compareTo. All three duration boundaries and equality are asserted. No exclusion applied."
+    },
+    {
+      "status": "NO_COVERAGE",
+      "class": "io.modelsync.core.application.SyncCoordinator",
+      "method": "options",
+      "line": 91,
+      "reason": "Null-return mutation of the direct immutable options accessor. Behavioral orchestration tests do not exercise the accessor. This is an acknowledged uncovered accessor, not a killed mutation or excluded business path; retained in the denominator."
+    }
+  ],
+  "qualification": "PIT PASS; configured full suite PASS",
+  "classes": {
+    "io.modelsync.core.application.SyncResultApplier": {
+      "KILLED": 32
+    },
+    "io.modelsync.core.application.SyncCoordinator": {
+      "KILLED": 22,
+      "NO_COVERAGE": 1
+    },
+    "io.modelsync.core.application.SyncFailurePolicy": {
+      "KILLED": 22
+    },
+    "io.modelsync.core.application.SyncJob": {
+      "KILLED": 18
+    },
+    "io.modelsync.core.domain.FreshnessPolicy": {
+      "KILLED": 16,
+      "SURVIVED": 1
+    },
+    "io.modelsync.core.application.SyncPlanner": {
+      "KILLED": 15
+    },
+    "io.modelsync.core.application.SyncAccess": {
+      "KILLED": 8
+    }
+  },
+  "pit_seconds": 10,
+  "tools": {
+    "pit": "1.25.9",
+    "pit_junit5_plugin": "1.2.3",
+    "junit_platform": "6.0.3"
+  },
+  "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "started_ns": 1792511609917958900,
+  "raw_xml_sha256": "f8cc3fe395409e6035193b9fe0233b6d4ec5fa14b8f615aa7e978bf19bfceef7",
+  "target_tests": [
+    "io.modelsync.testkit.CoreContractsTest",
+    "io.modelsync.testkit.TriggerContractsTest"
+  ],
+  "excluded_classes": [],
+  "excluded_methods": []
+}
