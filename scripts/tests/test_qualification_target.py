@@ -8,6 +8,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch, Mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from qualification_target import manifest, validate_host, collect, qualify, characterization, audit_source, ROOT
@@ -86,3 +87,23 @@ class QualificationTargetTests(unittest.TestCase):
             path = root / 'model-sync-sample/target/failsafe-reports/TEST-OracleIoIT.xml'
             path.write_text(path.read_text().replace('connectionLossBeforeCommitIsUncertainUntilFreshInspection', 'substitute'))
             with self.assertRaisesRegex(ValueError, 'OracleIoIT'): gate.oracle_suites(root)
+
+    def test_rejected_qualification_still_writes_diagnostics_and_preserves_build_exit(self):
+        spec = spec_from_file_location('qm_rejected_target', ROOT / 'scripts/qm-report.py')
+        qm = module_from_spec(spec); spec.loader.exec_module(qm)
+        with tempfile.TemporaryDirectory() as directory:
+            root, _ = self.fixture(directory)
+            (root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"/>')
+            run = begin(root)
+            for path in (root / 'model-sync-sample/target/qm').glob('qualification-host-*.json'):
+                path.write_text(json.dumps({**json.loads(path.read_text()), **run}))
+            with patch.object(qm, 'ROOT', root), patch.object(sys, 'argv', ['qm-report.py', '--full-command', 'fixture', '--full-status', 'PASS', '--full-exit', '0']), \
+                 patch.object(qm, 'load_checker', return_value=Mock(check=Mock(side_effect=ValueError('missing mandatory method')))), \
+                 patch.object(qm, 'command', return_value='fixture'), patch.object(qm, 'manifest', return_value={}), patch('builtins.print'):
+                with self.assertRaises(SystemExit) as ended: qm.main()
+            self.assertEqual(1, ended.exception.code)
+            report = json.loads((root / 'target/qm/evidence.json').read_text())
+            self.assertEqual(0, report['runs']['full']['exit'])
+            self.assertEqual(1, report['runs']['full']['qualification_exit'])
+            self.assertEqual('FAILED', report['runs']['full']['status'])
+            self.assertTrue((root / 'target/qm/QM.md').is_file())

@@ -2,10 +2,12 @@
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 import os
+import sys
 import unittest
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / 'scripts'))
 
 
 class CancellationDiagnosticTests(unittest.TestCase):
@@ -35,7 +37,8 @@ class CancellationDiagnosticTests(unittest.TestCase):
         self.assertIn('blocking_session=?', source)
         self.assertIn('"blocker_release_credited_as_cancellation", false', source)
         container = (ROOT / 'scripts/full-oracle-container.py').read_text()
-        self.assertIn("['-Xmx512m', '-XX:MaxDirectMemorySize=128m'] if cancellation or nowait or lock_policy or quota or creation else []", container)
+        self.assertTrue("['-Xmx512m', '-XX:MaxDirectMemorySize=128m'] if cancellation or nowait or lock_policy or quota or creation or characterization else []" in container,
+                        'Every small diagnostic, including characterization, must retain the heap/direct-memory caps')
 
     def test_cli_diagnostic_selection_is_exclusive(self):
         import subprocess

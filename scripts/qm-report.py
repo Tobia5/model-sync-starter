@@ -395,6 +395,7 @@ def main() -> None:
     parser.add_argument('--blocker', action='append', default=[])
     args = parser.parse_args()
     runs = {}
+    qualification_errors = []
     for lane in ('default', 'full'):
         status = getattr(args, lane + '_status')
         code = getattr(args, lane + '_exit')
@@ -405,8 +406,11 @@ def main() -> None:
             try:
                 load_checker(checker).check(ROOT)
             except (ValueError, OSError, ET.ParseError, json.JSONDecodeError) as error:
-                raise SystemExit(f'{lane} PASS lacks required raw evidence: {error}') from error
+                qualification_errors.append(f'{lane} qualification rejected: {error}')
+                status = 'FAILED'
         runs[lane] = {'command': getattr(args, lane + '_command'), 'exit': code, 'status': status}
+        if getattr(args, lane + '_status') == 'PASS':
+            runs[lane]['qualification_exit'] = 0 if status == 'PASS' else 1
     sha = command('git', 'rev-parse', 'HEAD')
     tree = command('git', 'rev-parse', 'HEAD^{tree}')
     dirty = bool(subprocess.run(['git', 'status', '--porcelain'], cwd=ROOT,
@@ -418,7 +422,7 @@ def main() -> None:
             'environment': {'java': command('java', '-version'),
                             'maven': command(str(ROOT / ('mvnw.cmd' if os.name == 'nt' else 'mvnw')), '-version'),
                             'python': command('python', '--version')},
-            'runs': runs, 'evidence': evidence, 'blockers': args.blocker}
+            'runs': runs, 'evidence': evidence, 'blockers': args.blocker + qualification_errors}
     out = ROOT / 'target/qm'
     out.mkdir(parents=True, exist_ok=True)
     (out / 'evidence.json').write_text(json.dumps(data, indent=2, sort_keys=True) + '\n', encoding='utf-8')
@@ -432,6 +436,8 @@ def main() -> None:
     if os.environ.get('GITHUB_STEP_SUMMARY'):
         with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
             summary.write('\n'.join(report.splitlines()[:14]) + '\n')
+    if qualification_errors:
+        raise SystemExit(1)
 
 
 if __name__ == '__main__':

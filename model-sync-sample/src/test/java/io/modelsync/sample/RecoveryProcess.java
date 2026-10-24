@@ -16,7 +16,7 @@ public final class RecoveryProcess {
         "model-sync.retry-base=100ms", "model-sync.quotas.recovery-owner=1ms"}) {
       int separator = value.indexOf('='); values.put(value.substring(0, separator), value.substring(separator + 1));
     }
-    if ("oracle26-nowait-ledger-first-v1".equals(System.getenv("MODELSYNC_QUALIFICATION_TARGET"))) {
+    if (QualificationTargetAssertions.named()) {
       values.put("model-sync.jdbc.point-lock-policy", "ORACLE_NOWAIT");
       values.put("model-sync.jdbc.quota-lock-policy", "ORACLE_NOWAIT");
       values.put("model-sync.jdbc.insert-policy", "ORACLE_26_NOWAIT");

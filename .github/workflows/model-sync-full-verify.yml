@@ -83,5 +83,6 @@ jobs:
             model-sync-performance/target/gatling/**
             model-sync-performance/target/qm/*
             model-sync-persistence-jdbc/target/qm/*
+            model-sync-sample/target/qm/**
           if-no-files-found: error
           retention-days: 30

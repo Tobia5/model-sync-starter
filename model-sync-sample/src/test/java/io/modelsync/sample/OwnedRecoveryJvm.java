@@ -13,7 +13,9 @@ final class OwnedRecoveryJvm implements AutoCloseable {
   OwnedRecoveryJvm(Path directory, RecoveryPoint point, String value) throws Exception {
     this.directory = directory; Files.createDirectories(directory);
     List<String> command = new ArrayList<>(List.of(Path.of(System.getProperty("java.home"), "bin", "java").toString(),
-        "-Xmx384m", "-Dmodelsync.repository.root=" + FaultEvidence.root(), "-cp", System.getProperty("java.class.path"),
+        "-Xmx384m", "-Dmodelsync.repository.root=" + FaultEvidence.root(),
+        "-Dmodelsync.qualification.target=" + System.getProperty("modelsync.qualification.target", "NONE"),
+        "-cp", System.getProperty("java.class.path"),
         RecoveryProcess.class.getName(), "--modelsync.recovery.point=" + point,
         "--modelsync.recovery.directory=" + directory.toAbsolutePath(), "--modelsync.recovery.value=" + value));
     process = new ProcessBuilder(command).redirectErrorStream(true).redirectOutput(directory.resolve("child.log").toFile()).start();
