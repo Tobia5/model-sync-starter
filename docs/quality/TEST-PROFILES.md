@@ -1,5 +1,18 @@
 # Verification profiles
 
+### Isolated database NOWAIT prototype
+
+`python scripts/full-oracle-container.py --nowait-diagnostic` runs seven small
+real JDBC/Hibernate/JPA prototype tests, including three refusal attempts per
+held blocker. It does not select the accepted A/B/C cancellation matrix, full
+verification or any large/load/mutation suite. Production defaults are unchanged;
+all SQL prototype seams are test-only and the host requires `nowait-oracle`.
+See [the audited paths and acceptance conditions](NOWAIT-PERSISTENCE-AUDIT.md).
+Cheap exact-SQL/scope/refusal guards compile/run in default. Actual SQL, Oracle54,
+server session/transaction observations and rollback/recovery are opt-in evidence,
+not promises derived from a JPA hint. This lane retains the small JVM/container
+caps and scoped12 GiB planning budget described below.
+
 ### Explicit process and I/O fault lane
 
 `python scripts/full-oracle-container.py --cancellation-diagnostic` explicitly selects
