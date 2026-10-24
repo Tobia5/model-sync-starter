@@ -1,3 +1,162 @@
+# NOWAIT diagnostic executed - 2026-10-24
+
+**Default PASS; seven-case Oracle diagnostic PASS; full NOT_RUN; production NO-GO.**
+Production adapters, configuration defaults and the original cancellation gate are
+unchanged. The accepted `2c39b75` findings remain: independent cancellation FAILED,
+network client containment measured, independent server termination unqualified,
+and recovery required fixture cleanup. That matrix and full were not rerun.
+The complete `a7a2bcf` report follows unchanged as history; all earlier evidence ZIPs
+were checked byte-for-byte against that commit.
+
+## Exact source and execution
+
+Final clean tested source **`eb182094dc168573accb8c12f8e63264f771f192`**, tree
+**`904b24d22194b2e4c303ce14538e8368f711b3ec`**, empty-change digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+The later report-only commit is not claimed as the tested source. Repository
+`Tobia5/model-sync-starter`, branch `review/layered-refactor-qm-20261020`.
+No concurrent build or unrelated source change was present.
+
+| Execution | Source/run, actual exit and result |
+|---|---|
+| Initial matching default | Clean `a7a2bcf612057b363d33e985a81d50377751061e`, tree `e7a13f272f39d0d701a32eaaefe7f27f8eccac21`; run `13e65e23-efb2-4bf0-b727-64eb92d4dc6f`, exit0/83.465s, collector0.125 JUnit/27 suites,67 Python; zero failures/errors/skips. |
+| First NOWAIT diagnostic | Same a7 source/tree, run `e96cd2cc-9dc7-40d9-9c25-4ea2e46c7625`, wrapper/launcher exit1/127.005s. Seven started,3 passed/4 failed,0 skipped/container failures. Four failed at claim before their intended operation: the SKIP LOCKED control had not disposed its claim, retaining the local provider reservation. JDBC point/refresh had three refusal proofs each; queue control also passed. This failed attempt is retained unchanged. |
+| Final matching default | Final eb18209 source/tree above; run `ff2ad62c-9be7-40b2-bb7a-927db14c5036`, exit0/88.319s, collector0. **125 JUnit/27 suites,67 Python**, zero failures/errors/skips. Architecture, docs, profile/lifecycle/default-log and fresh-report guards passed; no expensive goals. |
+| Final NOWAIT diagnostic | Final eb18209 source/tree; run **`c82fa300-a9e4-4a6e-ab9d-274d4f824936`**, infrastructure attempt `400fa8cf-c384-4bd3-bdba-4500941af774`; Maven preflight0, launcher0, wrapper0/120.358s. **7 found/started/passed,0 failures/skips/container failures**, launcher5581ms. |
+| Standalone cheap contracts | Git Bash `scripts/test-triggers.sh`, exit0 at final source:86 core/43 trigger assertions, separately counted, not JUnit. |
+| Full / PIT / Gatling / large seeds / old A/B/C | **NOT_RUN** in this session. No qualification credit is borrowed from older runs. |
+
+Actual default command, serially before each diagnostic:
+`mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify`.
+Actual diagnostic command: **`python scripts/full-oracle-container.py --nowait-diagnostic`**.
+Its Maven subprocess used the same project settings and only `-Pfull -N initialize`
+for the existing guarded preflight, then the explicitly selected JUnit launcher.
+It did not invoke full `clean verify`, PIT, Gatling or any large workload.
+Invocation-only acknowledgments were `MODELSYNC_ORACLE_CONTAINER=EXPLICIT_DISPOSABLE`
+and `MODELSYNC_FULL_ENV_ACK=DISPOSABLE_NONPRODUCTION`; external Oracle variables were
+cleared. Settings SHA-256
+`ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`;
+user/global settings were not changed. Original exits/logs and source/run/file
+manifests are retained separately for all four executions.
+
+## Resource admission and pinned environment
+
+Admission was checked after each matching default and collector finished, once
+per source, with three bounded samples each. At a7:12.565/12.555/12.579 GiB free,
+at eb:13.091/13.102/13.037 GiB. Both passed the unchanged **12 GiB** planning
+requirement (Oracle6 + diagnostic2 + reserve4); **full18 GiB remains unchanged**.
+Admission receipts `917f3a19-643e-4e43-9ff7-1a21e3e25383` and
+`76e3e84e-9a79-46f6-938e-e74cb969ec2b` are preserved. At eb, Docker had19.980 GiB
+capacity unused by containers; C65.753/D1069.987 GiB disk free. No unrelated
+workload was stopped or global resource setting changed.
+
+Oracle6 GiB/4 CPU; loopback-only published port; generated per-run credentials;
+separate `MS_TEST_RUNTIME`/`MS_TEST_MIGRATION` schemas; new labelled session volume;
+no host database/socket/directory mount. Diagnostic JVM heap512 MiB/direct128 MiB,
+runtime pool3/observer2, one owned execution lane, query2s/read10s/observation5s,
+lease60s/retry-base100ms/provider spacing1ms, worker/AOP disabled, Hibernate batching0.
+Actual JDK21.0.12.1+1-LTS, Maven3.9.9, Python3.12.10, Boot4.1.1,
+Hibernate7.4.5.Final, JUnit Jupiter/platform6.0.3, Surefire3.5.3, Docker29.8.2,
+Oracle26ai Free23.26.3.0.0 / JDBC23.26.3.0.0. Image:
+`ghcr.io/gvenzl/oracle-free:23.26.3-slim@sha256:6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd`.
+
+## Seven individual outcomes
+
+The five refusal cases each made three attempts while the **same original blocker
+remained held**. Times below are **attempt start to refusal / outer transaction
+return**, in ms; they include connection/guard work and observer/rollback overhead,
+not isolated JDBC execute latency. They are observations, not new production SLOs.
+
+| Case | Actual SQL/control and individual result | Refusal ms / transaction-end ms |
+|---|---|---|
+| JDBC point lock | **PASS**, exact `select * from MS_WORK where work_id=? for update nowait`; Oracle54 translated to Spring `PessimisticLockingFailureException`. No projection mutation/DML. Retry-metadata point lock also refused54 while the ledger blocker stayed held, leaving the durable lease recoverable. |17,5,4 /66,8,7 |
+| JPA mapping lookup | **PASS**, generated version-qualified `select ce1_0.storage_key ... where ... storage_key=? and ... local_version=? for update of ce1_0.storage_key nowait`; Oracle54 through Hibernate/JPA LockTimeoutException. No mapping update, refresh continuation or projection DML after refusal. |6,7,6 /9,10,9 |
+| Actual JPA refresh | **PASS**, deliberately unlocked lookup isolates the real store's `em.refresh`; session timeout0 generated full-column `select ... where ... storage_key=? for update of ce1_0.storage_key nowait`; Oracle54/JPA LockTimeoutException, no update/DML continuation. This is proof for the fixture's session configuration, not inference from a hint. |10,8,7 /14,11,10 |
+| Flush with an extra dirty row | **PASS within fixture**, two versioned `update sample_customer set ... where storage_key=? and local_version=? nowait` statements submitted; the separately blocked extra row refused54. No SQL followed refusal before rollback. Native DML extension explicitly enabled only for this single synthetic table; earlier attempt-owned ledger write/lock rolled back. |12,10,10 /16,13,14 |
+| Racing projection insert | **PASS within fixture**, actual `insert into sample_customer (...) values (?,?,?,?,?,?,?,?) nowait` refused54 against the still-uncommitted duplicate insert. SELECT NOWAIT alone did not provide this containment; native DML extension did. |13,8,7 /16,10,10 |
+| Queue SKIP LOCKED control | **PASS**, an unlocked later item was claimed while the earlier item stayed locked. Real WAITING/binding-ready/recovery cursor SQL retains `for update skip locked`. Disposing the control claim through `failed(RetryLater)` consumed no owner permit; a follow-up urgent claim succeeded. This control has no refusal/transaction timing or exact-session trace measurement. |Not separately timed; not a refusal bound |
+| Success/generation/fencing/local revision | **PASS**, normal locked lookup/refresh then ordinary versioned UPDATE; newer request remains WAITING, old token rejected, a concurrent local revision remains `local-change` with LOCAL_CONFLICT. This control has no contention timing/session-bound measurement. |Not separately timed; no refusal expected |
+
+Full submitted SQL, error chains, individual values and original snapshots are in
+[raw evidence and observed SQL](validation/qualification/2026-10-24-nowait-execution/README.md).
+These are library-coordinator persistence probes with a synthetic owner outside
+transactions; refusal attempts are not provider-admitted calls or sync throughput.
+
+### Server request, rollback and pool evidence
+
+All15 refusal attempts reused exact runtime **SID220/serial8623**. Before rollback,
+while each blocker remained held: `STATUS=INACTIVE`, `EVENT=SQL*Net message from client`,
+`STATE=WAITING`, `SQL_ID=null`, `LOCK_WAIT=0`, `TRANSACTION_ACTIVE=1`.
+The SQL*Net idle wait is not a TX row-lock wait. `PREV_SQL_ID` was respectively
+JDBC`4rrcx6pxm100r`, lookup`apad3w6hckwc8`, refresh`d7btmgvwcr0ak`,
+extra-row UPDATE`a5nx5hysw1v17`, INSERT`c57ndxp9jwvtx`.
+After rollback, the same exact session still had no row-lock wait and
+`TRANSACTION_ACTIVE=0`; no outstanding waits accumulated across the three attempts.
+These are discrete exact-session snapshots, not a continuously traced server-duration
+measurement. They show request return without blocker release in this fixture.
+
+In15/15: transaction synchronization reported ROLLED_BACK, an earlier ledger guard
+write was absent through a fresh connection and its lock could be reacquired NOWAIT,
+original target LEASED status/token/generation persisted, and no successful MS_STATE
+existed. No SQL was submitted after refusal before rollback. Physical activity and
+runtime pool active counts returned to0. The physical connection stayed open and
+subsequent pool queries succeeded; reuse of the same SID/serial across all attempts
+is observed. All five sequences then recovered and rejected old tokens **after
+cleanup**, using an explicit fixture expiry/due transition. This is not natural
+lease-expiry timing or pre-cleanup recovery proof. JPA failures separately persisted
+WAITING/attempts1/FETCH_FAILED under the existing policy; contended ledger metadata
+could not persist until recovery. Provider cooldown/backoff semantics were not changed.
+
+The raw queue cursor list also contains its own metadata query (`fqkda3cr4fg4q`).
+It is identified separately and excluded from the readable production SQL extract.
+Raw cumulative cursor executions are retained **without** conversion to interval
+deltas, selector callbacks, native DB work or performance claims.
+
+## Measured candidate decision and remaining gaps
+
+**Supported by this evidence:** opt-in database NOWAIT refusal for the existing-row
+JDBC point lock and this mapping/session-configured JPA lookup/refresh; separately,
+Oracle26 native UPDATE/INSERT NOWAIT on the sample's single-table, nonbatched mapping,
+including one extra dirty row and one immediate unique insert conflict. The SQL
+actually reached Oracle; all15 refusals were54, not transport/parser errors or a
+Java-only guard exception. Queue semantics and success safety controls passed.
+
+**Smallest production change justified for review, not implemented:** an explicit
+Oracle point-lock NOWAIT option in the JDBC adapter and explicit lookup/refresh
+lock-property support in the mapping/JPA adapter. Keep ledger-before-projection
+ordering and classify refusal as contention with bounded, durable retry behavior;
+retry-state persistence can itself refuse. A generic consumer SQL inspector is not
+qualified. Any native DML support needs version/capability checks and exact generated
+SQL coverage; it is a separate narrow extension, not necessary to ship the initial
+existing-row option. No adapter/API/configuration change is made by this diagnostic.
+
+**Still unqualified:** new ledger/state/quota insert conflicts, older Oracle versions,
+arbitrary mappings/additional tables, batching/RETURNING, custom adapter SQL, FK and
+deferred constraints, cascades/triggers, table locks, network loss/uncertain COMMIT,
+and universal server cleanup. Existing-row NOWAIT does not repair the original plain
+locked UPDATE cancellation test. The original active gate stays FAILED/open; no
+replacement contract is approved. Accepted atomicity, selection and worker milestones
+are preserved; applicable R01-R13 parents remain open. Production remains **NO-GO**.
+
+## Owned cleanup and immutable evidence
+
+First attempt: `msq-005024c39cfa` / `msq-005024c39cfa-data`; final:
+`msq-4999761759ec` / `msq-4999761759ec-data`. Both wrappers verified removal; independent
+post-run inspections returned the exact no-such-object/no-such-volume diagnostics.
+Final executor terminated, physical remaining0, owned pools closed and owned table
+removed. **No emergency lock release** occurred; blocker rollback happened only after
+refusal/rollback/pool proof and earns no mitigation credit. No residual owned resource
+was observed. Unrelated containers, volumes, networks and processes were untouched.
+
+[New raw execution archive](validation/qualification/2026-10-24-nowait-execution/README.md)
+retains both matching defaults, the original failed diagnostic, final passing
+seven-case diagnostic, admission/cleanup receipts, original and UTF-8-normalized logs,
+source/run/file manifests and this run-scoped summary. Historical blocked evidence,
+`ab7ae1d`, `a7a2bcf`, `2c39b75`, `43040e7` and older qualifications are unchanged.
+No full run, million-row seed, workflow dispatch, main change, merge or publication.
+
+---
+
 # Database NOWAIT prototype — 2026-10-24
 
 **Default PASS · New Oracle diagnostic BLOCKED / NOT_RUN · A/B/C and full NOT_RUN · Production NO-GO.**

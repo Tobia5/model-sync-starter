@@ -4,6 +4,41 @@
 [failure contract](FAILURE-CONTRACT.md) and original `OracleIoIT` gate are unchanged.
 This proposal does not authorize full qualification or claim production readiness.
 
+## Measured NOWAIT candidate - 2026-10-24
+
+Source `eb182094dc168573accb8c12f8e63264f771f192`, tree
+`904b24d22194b2e4c303ce14538e8368f711b3ec`, default
+`ff2ad62c-9be7-40b2-bb7a-927db14c5036` PASS/125 JUnit/67 Python/exit0;
+diagnostic `c82fa300-a9e4-4a6e-ab9d-274d4f824936` PASS/7 cases/exit0 after
+post-build12 GiB resource admission. The first a7 attempt (exit1,3/7) remains
+failed: an undisposed queue-control claim blocked four later setups. The fix is
+test-only and asserts a follow-up claim; production and active gates are unchanged.
+
+Existing-row JDBC point locks and pinned Hibernate lookup/real refresh generated
+NOWAIT SQL. Separate single-table extra-row UPDATE and racing INSERT native NOWAIT
+also refused54 on Oracle26. Across15 attempts with original blockers held, exact
+SID/serial snapshots showed no remaining lock wait before rollback, and no active
+transaction after rollback; earlier guard writes/locks were released. Refusal4-17ms,
+outer transaction return7-66ms, healthy pool/reuse and zero physical remainder.
+Release happened only after proof. This demonstrates database refusal without
+releasing the blocker for these statements, not independent cancellation of the
+original plain UPDATE or general server cleanup.
+
+The smallest supported candidate for review is explicit Oracle point-lock NOWAIT
+plus mapping/refresh lock properties; a production change still needs the approved
+contract, refusal classification and durable bounded retry behavior. Retry metadata
+can itself refuse under a ledger lock. Native DML is a separate version-specific
+extension; arbitrary mapping/SQL, additional tables, new ledger/state/quota insert
+races, FK/deferred constraints, cascades/triggers, older Oracle, transport failures
+and uncertain COMMIT remain unqualified. No generic SQL rewriting policy is approved.
+
+See [measured audit](NOWAIT-PERSISTENCE-AUDIT.md), [QM](../../QM.md) and
+[immutable raw attempts](../../validation/qualification/2026-10-24-nowait-execution/README.md).
+The active original gate remains FAILED/open; full was not run and production is
+NO-GO. This updates evidence within the existing proposal, not its approval status.
+The following unexecuted-prototype section is historical; its blocked attempt and
+all accepted2c39b75/43040e7 evidence remain unchanged.
+
 ## New database-enforced prototype — 2026-10-24
 
 [The persistence-path audit](NOWAIT-PERSISTENCE-AUDIT.md) identifies unbounded

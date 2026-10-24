@@ -1,5 +1,42 @@
 # Database-enforced lock-wait prototype
 
+## Executed evidence - 2026-10-24
+
+Clean source `eb182094dc168573accb8c12f8e63264f771f192`, tree
+`904b24d22194b2e4c303ce14538e8368f711b3ec`, passed matching default run
+`ff2ad62c-9be7-40b2-bb7a-927db14c5036` (125 JUnit/67 Python, exit0).
+After bounded post-build12 GiB admission passed, selected diagnostic run
+`c82fa300-a9e4-4a6e-ab9d-274d4f824936` passed all seven cases, wrapper/launcher0.
+The earlier a7 diagnostic exit1 is preserved: a queue-control claim was not
+disposed, retaining its provider reservation; four cases failed before their
+operation. Only test cleanup/evidence changed. Production adapters/defaults and
+the original failing gate are unchanged.
+
+Five refusal sequences/15 attempts produced real Oracle54 while their original
+blocker remained held. Client refusal4-17ms, outer transaction return7-66ms;
+these include setup/observation work. Exact SID220/serial8623 was INACTIVE with
+LOCK_WAIT0/TX_ACTIVE1 before rollback, then LOCK_WAIT0/TX_ACTIVE0. Earlier guard
+writes/locks rolled back, durable intent persisted, pools remained healthy and
+no physical operation remained. Blocker release was cleanup only, not mitigation.
+Queue and generation/fencing/revision controls passed separately.
+
+Measured existing-row support covers exact JDBC point NOWAIT plus this mapping's
+JPA lookup and session-configured real refresh. Separately, Oracle26ai23.26.3 /
+Hibernate7.4.5 native UPDATE/INSERT NOWAIT worked for the sample's nonbatched
+single-table flush-extra-row and unique-insert fixtures. This is not qualification
+of arbitrary generated SQL or other Oracle versions. Smallest justified change
+for review: an explicit Oracle point-lock option and explicit lookup/refresh lock
+properties, with durable bounded contention handling. No production SQL inspector
+or adapter/configuration change is shipped by this diagnostic.
+
+[QM](../../QM.md) / [raw evidence](../../validation/qualification/2026-10-24-nowait-execution/README.md)
+report each case, complete SQL, retries, limits, first failure and cleanup.
+New ledger/state/quota insert conflicts, additional tables, batching/RETURNING,
+FK/deferred constraints, cascades/triggers, custom SQL, table locks, network/COMMIT
+uncertainty and universal server cleanup remain unqualified. The earlier direct
+UPDATE cancellation failure is not repaired; no replacement contract is approved.
+Full/A-B-C/large seeds NOT_RUN. The original audit/prototype design follows.
+
 ## Audit before execution
 
 Baseline `43040e73258ecab1ebd761511523c744a0656bb7`; known-ID owner-to-Oracle/JPA
