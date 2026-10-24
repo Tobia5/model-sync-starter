@@ -139,6 +139,11 @@ class OracleNowaitDiagnostic {
           catch (TimeoutException timeout) { unresolved = true; result.put("uncertain_operation", true); write(); throw timeout; }
           measurements.add(attempt.evidence()); write(); lastFailure = attempt.failure();
           assertTrue(oracle54(attempt.failure()), "Expected real Oracle NOWAIT refusal, not transport/SQL guard failure");
+          @SuppressWarnings("unchecked") var refused = (Map<String, Object>) attempt.evidence().get("server_at_refusal_before_rollback");
+          assertEquals(0, ((Number) refused.get("LOCK_WAIT")).intValue());
+          assertEquals(1, ((Number) refused.get("TRANSACTION_ACTIVE")).intValue(), "NOWAIT statement refusal is not whole transaction rollback");
+          @SuppressWarnings("unchecked") var submitted = (List<String>) attempt.evidence().get("sql_submitted");
+          assertEquals(submitted.size(), attempt.evidence().get("sql_count_at_refusal"), "No SQL may follow refusal before rollback");
           assertEquals(TransactionSynchronization.STATUS_ROLLED_BACK, attempt.evidence().get("transaction_completion"));
           assertEquals(0, physical.get()); assertEquals(0, source.getHikariPoolMXBean().getActiveConnections());
           Map<String, Object> after = session(attempt.sid(), attempt.serial());
@@ -199,12 +204,13 @@ class OracleNowaitDiagnostic {
 
   private NowaitAttempt attempt(String mode, PreparedSync<?> p, WorkLease guard) {
     Map<String, Object> evidence = new LinkedHashMap<>(); var receipt = new NowaitTransactionReceipt();
-    int[] identity = new int[2]; long start = System.nanoTime(); Throwable failure = null;
+    int[] identity = new int[2]; Connection[] physicalConnection = new Connection[1]; long start = System.nanoTime(); Throwable failure = null;
     physical.incrementAndGet();
     try {
       tx.executeWithoutResult(status -> {
         em.setProperty("jakarta.persistence.lock.timeout", 0);
         TransactionSynchronizationManager.registerSynchronization(receipt);
+        physicalConnection[0] = jdbc.execute((org.springframework.jdbc.core.ConnectionCallback<Connection>) c -> c.unwrap(Connection.class));
         Map<String, Object> values = jdbc.queryForMap("select sid,serial# from v$session where sid=to_number(sys_context('USERENV','SID'))");
         identity[0] = ((Number) values.get("SID")).intValue(); identity[1] = ((Number) values.get("SERIAL#")).intValue();
         assertTrue(store.lockValid(guard, Instant.now()));
@@ -214,13 +220,16 @@ class OracleNowaitDiagnostic {
           else coordinator.finish(p, FetchResult.found(new Customer("attempt", "ACTIVE"), "attempt"));
           throw new AssertionError("Contended operation unexpectedly succeeded");
         } catch (RuntimeException refusal) {
-          evidence.put("client_refusal_ms", elapsed(start)); evidence.put("server_at_refusal_before_rollback", session(identity[0], identity[1]));
+          evidence.put("client_refusal_ms", elapsed(start)); evidence.put("sql_count_at_refusal", trace.submitted.size());
+          evidence.put("server_at_refusal_before_rollback", session(identity[0], identity[1]));
           throw refusal;
         }
       });
     } catch (Exception error) { failure = error; evidence.put("error_chain", errors(error)); }
     finally { physical.decrementAndGet(); }
     evidence.put("transaction_end_ms", elapsed(start)); evidence.put("transaction_completion", receipt.status);
+    try { evidence.put("physical_connection_closed", physicalConnection[0] == null || physicalConnection[0].isClosed()); }
+    catch (SQLException error) { evidence.put("connection_state_error", errors(error)); }
     evidence.put("sql_submitted", List.copyOf(trace.submitted)); evidence.put("mapping_update_calls", trace.updates);
     return new NowaitAttempt(evidence, failure, identity[0], identity[1]);
   }
@@ -253,7 +262,7 @@ class OracleNowaitDiagnostic {
     try (var blocker = observer.getConnection(); var s = blocker.prepareStatement("select work_id from MS_WORK where work_id=? for update")) {
       blocker.setAutoCommit(false); s.setString(1, CustomerJpaMapping.storageId(blocked)); try (var rows = s.executeQuery()) { assertTrue(rows.next()); }
       var claimed = coordinator.claim().orElseThrow(); assertEquals(free, claimed.key().subject());
-      assertTrue(tx.execute(status -> store.lockValid(claimed, Instant.now())));
+      assertTrue(Boolean.TRUE.equals(tx.execute(status -> store.lockValid(claimed, Instant.now()))));
       cases.add(new LinkedHashMap<>(Map.of("mode", "queue-skip-locked-separate", "status", "PROOF_PASS"))); blocker.rollback();
     }
     write();
@@ -288,7 +297,9 @@ class OracleNowaitDiagnostic {
     executor.shutdown(); boolean ended = executor.awaitTermination(12, TimeUnit.SECONDS);
     if (context != null) { String pool = source.getPoolName(); context.close(); FaultEvidence.awaitNoPoolThreads(pool); }
     if (observer != null) {
-      if (tableOwned) { view.execute("drop table SAMPLE_CUSTOMER purge"); view.update("delete from MS_QUOTA where quota_group='nowait-owner'"); }
+      if (tableOwned) { view.execute("drop table SAMPLE_CUSTOMER purge");
+        assertEquals(0, view.queryForObject("select count(*) from user_tables where table_name='SAMPLE_CUSTOMER'", Integer.class));
+        view.update("delete from MS_QUOTA where quota_group='nowait-owner'"); }
       observer.close(); FaultEvidence.awaitNoPoolThreads(observer.getPoolName());
     }
     report.put("owned_executor_terminated", ended); report.put("physical_remaining", physical.get());
