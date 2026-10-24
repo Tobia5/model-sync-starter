@@ -49,7 +49,9 @@ class ContentionPolicyTest {
     assertTrue(f.projection.load(f.key.subject()).isEmpty());
     f.coordinator.failed(lease, refusal);
     assertEquals("LOCAL_CONTENTION", f.store.inspect(f.key).lastCode());
-    assertEquals(until, f.gate.nextAdmission("owner").orElseThrow());
+    var admission = f.gate.acquire("owner");
+    assertFalse(admission.granted()); assertEquals(until, admission.retryAt());
+    assertEquals(1L, f.gate.grants(), "The already performed owner call keeps its admission");
     assertEquals(1, f.calls.get());
     assertTrue(f.coordinator.claim().isEmpty());
   }
