@@ -35,7 +35,7 @@ public final class OracleDiagnosticRunner {
       case "process-recovery-and-io" -> List.of("io.modelsync.sample.OracleRecoveryIT", "io.modelsync.sample.OracleIoIT");
       case "jdbc-cancellation" -> List.of("io.modelsync.sample.OracleCancellationDiagnostic");
       case "database-nowait" -> List.of("io.modelsync.sample.OracleNowaitDiagnostic");
-      case "production-lock-policy" -> List.of("io.modelsync.sample.OracleLockPolicyIT", "io.modelsync.sample.OracleAtomicityIT");
+      case "production-lock-policy" -> List.of("io.modelsync.sample.OracleLockPolicyIT", "io.modelsync.sample.OracleAtomicityIT", "io.modelsync.sample.NowaitOracleAtomicityIT");
       default -> throw new IllegalArgumentException("Unknown diagnostic scope");
     };
     report.put("selected_classes", suites);

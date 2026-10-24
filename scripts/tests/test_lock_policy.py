@@ -28,7 +28,7 @@ class LockPolicyTests(unittest.TestCase):
 
     def test_production_diagnostic_selects_only_integration_and_atomicity(self):
         runner = (ROOT/'model-sync-sample/src/test/java/io/modelsync/sample/OracleDiagnosticRunner.java').read_text()
-        self.assertIn('case "production-lock-policy" -> List.of("io.modelsync.sample.OracleLockPolicyIT", "io.modelsync.sample.OracleAtomicityIT");', runner)
+        self.assertIn('case "production-lock-policy" -> List.of("io.modelsync.sample.OracleLockPolicyIT", "io.modelsync.sample.OracleAtomicityIT", "io.modelsync.sample.NowaitOracleAtomicityIT");', runner)
         source = (ROOT/'model-sync-sample/src/test/java/io/modelsync/sample/OracleLockPolicyIT.java').read_text()
         self.assertEqual(7, source.count('@Test void '))
         self.assertNotIn('NowaitPointJdbcTemplate', source)

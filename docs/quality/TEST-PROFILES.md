@@ -11,7 +11,8 @@ No Oracle/PIT/Gatling is added to default or automatic workflows.
 After matching default verification and the existing12 GiB small-run admission,
 use `python scripts/full-oracle-container.py --lock-policy-diagnostic` under the
 existing disposable acknowledgments/settings/caps. It selects seven
-`OracleLockPolicyIT` cases and seven retained `OracleAtomicityIT` cases only.
+`OracleLockPolicyIT` cases and seven retained `OracleAtomicityIT` cases in each of
+DEFAULT and ORACLE_NOWAIT modes (`NowaitOracleAtomicityIT` reuses the assertions).
 The class uses actual starter work/quota beans, JpaTransactionManager, production
 JpaProjectionStore and an explicitly capable sample mapping. Its inspector records
 and returns identical SQL; there is no prototype or native DML replacement.

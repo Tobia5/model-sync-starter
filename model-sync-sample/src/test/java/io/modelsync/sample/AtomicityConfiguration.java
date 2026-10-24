@@ -5,6 +5,7 @@ import io.modelsync.core.FetchResult;
 import io.modelsync.core.domain.FreshnessPolicy;
 import io.modelsync.core.domain.Digests;
 import io.modelsync.jpa.JpaProjectionStore;
+import io.modelsync.jpa.JpaLockPolicy;
 import jakarta.persistence.EntityManagerFactory;
 import java.time.Duration;
 import javax.sql.DataSource;
@@ -23,9 +24,9 @@ class AtomicityConfiguration {
   @Bean AtomicityFaults atomicityFaults() { return new AtomicityFaults(); }
 
   @Bean ModelBinding<Customer> atomicityBinding(
-      EntityManagerFactory emf, DataSource source, AtomicityFaults faults) {
+      EntityManagerFactory emf, DataSource source, AtomicityFaults faults, JpaLockPolicy lockPolicy) {
     var projection = new JpaProjectionStore<>(
-        SharedEntityManagerCreator.createSharedEntityManager(emf), new CustomerJpaMapping());
+        SharedEntityManagerCreator.createSharedEntityManager(emf), new CustomerJpaMapping(), lockPolicy);
     return ModelBinding.builder("customer", Customer.class)
         .boundary("synthetic-atomicity")
         .owner("synthetic-owner", request -> {

@@ -95,6 +95,7 @@ def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker
         fresh(root / 'model-sync-sample/target/test-classes/io/modelsync/sample/OracleNowaitDiagnostic.class', root)
     if lock_policy:
         fresh(root / 'model-sync-sample/target/test-classes/io/modelsync/sample/OracleLockPolicyIT.class', root)
+        fresh(root / 'model-sync-sample/target/test-classes/io/modelsync/sample/NowaitOracleAtomicityIT.class', root)
     jdbc_tests = root / 'model-sync-persistence-jdbc/target/test-classes'
     fresh(jdbc_tests / ('io/modelsync/jdbc/OracleOptimizationIT.class' if queue_comparison else 'io/modelsync/jdbc/OracleScaleIT.class'), root)
     java_home = os.environ.get('JAVA_HOME')
