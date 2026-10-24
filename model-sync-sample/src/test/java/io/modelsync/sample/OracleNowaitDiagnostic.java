@@ -228,6 +228,7 @@ class OracleNowaitDiagnostic {
     } catch (Exception error) { failure = error; evidence.put("error_chain", errors(error)); }
     finally { physical.decrementAndGet(); }
     evidence.put("transaction_end_ms", elapsed(start)); evidence.put("transaction_completion", receipt.status);
+    evidence.put("server_session", Map.of("sid", identity[0], "serial", identity[1]));
     try { evidence.put("physical_connection_closed", physicalConnection[0] == null || physicalConnection[0].isClosed()); }
     catch (SQLException error) { evidence.put("connection_state_error", errors(error)); }
     evidence.put("sql_submitted", List.copyOf(trace.submitted)); evidence.put("mapping_update_calls", trace.updates);
@@ -262,8 +263,28 @@ class OracleNowaitDiagnostic {
     try (var blocker = observer.getConnection(); var s = blocker.prepareStatement("select work_id from MS_WORK where work_id=? for update")) {
       blocker.setAutoCommit(false); s.setString(1, CustomerJpaMapping.storageId(blocked)); try (var rows = s.executeQuery()) { assertTrue(rows.next()); }
       var claimed = coordinator.claim().orElseThrow(); assertEquals(free, claimed.key().subject());
-      assertTrue(Boolean.TRUE.equals(tx.execute(status -> store.lockValid(claimed, Instant.now()))));
-      cases.add(new LinkedHashMap<>(Map.of("mode", "queue-skip-locked-separate", "status", "PROOF_PASS"))); blocker.rollback();
+      try { assertTrue(Boolean.TRUE.equals(tx.execute(status -> store.lockValid(claimed, Instant.now())))); }
+      finally {
+        // A claim-only control must release its local provider reservation as a real worker does.
+        // Defer without owner admission; row cleanup below is not a coordinator disposition.
+        coordinator.failed(claimed, new RetryLater(Instant.now().plusSeconds(60)));
+      }
+      var next = key(); gateway.request("customer", next.tenant(), next.id(), Priority.URGENT, true);
+      var followup = coordinator.claim().orElseThrow();
+      try { assertEquals(next, followup.key().subject(), "A prior control must not strand the next case's claim"); }
+      finally { coordinator.failed(followup, new RetryLater(Instant.now().plusSeconds(60))); }
+      var selectedSql = view.queryForList("select sql_id,child_number,sql_fulltext,executions from v$sql "
+          + "where parsing_schema_name=user and upper(sql_text) like 'SELECT%MS_WORK%FOR UPDATE SKIP LOCKED%' "
+          + "and executions>0");
+      assertFalse(selectedSql.isEmpty(), "Executed queue SQL must be retained separately from point-lock SQL");
+      var evidence = new LinkedHashMap<String, Object>();
+      evidence.put("mode", "queue-skip-locked-separate"); evidence.put("status", "PROOF_PASS");
+      evidence.put("followup_claim_after_disposition", true);
+      evidence.put("executed_queue_sql", selectedSql.stream().map(row -> Map.of("sql_id", row.get("SQL_ID"),
+          "child_number", row.get("CHILD_NUMBER"), "sql", view.queryForObject(
+              "select sql_fulltext from v$sql where sql_id=? and child_number=?", String.class,
+              row.get("SQL_ID"), row.get("CHILD_NUMBER")), "cumulative_executions_not_window_delta", row.get("EXECUTIONS"))).toList());
+      cases.add(evidence); blocker.rollback();
     }
     write();
   }
