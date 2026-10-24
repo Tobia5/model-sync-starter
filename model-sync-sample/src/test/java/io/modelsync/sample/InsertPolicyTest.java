@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import io.modelsync.core.domain.*;
+import io.modelsync.core.Priority;
 import io.modelsync.core.port.LocalContention;
 import io.modelsync.jdbc.*;
 import java.sql.*;
