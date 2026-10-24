@@ -58,7 +58,7 @@ class JpaLockPolicyTest {
   @Test void transportAndOtherFailuresDoNotBecomeLockRefusal() {
     for (int code : new int[] {1, 1013, 18730, 17002}) {
       var failure = new PersistenceException("synthetic", new SQLException("synthetic", "72000", code));
-      when(mapping.find(em, key, LockModeType.PESSIMISTIC_WRITE, JpaLockPolicy.ORACLE_NOWAIT)).thenThrow(failure);
+      doThrow(failure).when(mapping).find(em, key, LockModeType.PESSIMISTIC_WRITE, JpaLockPolicy.ORACLE_NOWAIT);
       assertSame(failure, assertThrows(PersistenceException.class, () ->
           new JpaProjectionStore<>(em, mapping, JpaLockPolicy.ORACLE_NOWAIT).compareAndSet(key, "0", "after", null)));
     }
