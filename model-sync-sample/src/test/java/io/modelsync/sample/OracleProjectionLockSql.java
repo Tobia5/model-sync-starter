@@ -58,7 +58,7 @@ final class OracleProjectionLockSql {
         char open = sql.charAt(q + 2);
         char close = switch (open) { case '[' -> ']'; case '(' -> ')'; case '{' -> '}'; case '<' -> '>'; default -> open; };
         int end = sql.indexOf("" + close + '\'', q + 3);
-        if (end < 0) return new ArrayList<>(); i = end + 2; out.add("LITERAL"); continue;
+        if (end < 0) return new ArrayList<>(); i = end + 2; out.add("<LITERAL>"); continue;
       }
       if (c == '\'' || c == '"') {
         char quote = c; var value = new StringBuilder(); boolean ended = false; i++;
@@ -70,7 +70,7 @@ final class OracleProjectionLockSql {
           } else value.append(c);
         }
         if (!ended) return new ArrayList<>();
-        out.add(quote == '"' ? "Q:" + value : "LITERAL"); continue;
+        out.add(quote == '"' ? "Q:" + value : "<LITERAL>"); continue;
       }
       if (Character.isLetter(c) || c == '_') {
         int start = i++;

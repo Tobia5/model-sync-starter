@@ -27,6 +27,8 @@ class OracleProjectionLockSqlTest {
       "select p.x from sample_customer p for update /* nowait */",
       "select p.x from sample_customer p for update of nowait",
       "select p.x from sample_customer p for update of p.x, nowait",
+      "select p.x from sample_customer p for update of 'column' nowait",
+      "select p.x from sample_customer p for update of q'[column]' nowait",
       "select p.x from sample_customer p for update of p.x skip locked nowait",
       "select p.x from sample_customer p for update wait 1 nowait",
       "select p.x from sample_customer p for update nowait;select 1 from dual",

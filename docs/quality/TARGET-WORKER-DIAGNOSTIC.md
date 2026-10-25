@@ -13,6 +13,9 @@ cooldown, applicability or queue change is proposed by this diagnostic.
    with adaptive lanes, with real reservations and authoritative 20 ms admission.
    This tests the synchronization hypothesis without attributing a runtime cause
    from an approximate throughput ratio.
+   Unknown-hint controls are labelled separately: MemoryQuotaGate itself exposes
+   no hints, so those controls do not prove reservation behavior. ModelHintQuota
+   adds a known hint after actual delegated admission for the reservation cases.
 3. Oracle diagnostic cells run independently: fresh/fixed, fresh/adaptive,
    recorded-statistics/fixed, recorded-statistics/adaptive. Each keeps four lanes,
    runtime pool8, persistence4/owner8 threads, 20 ms owner spacing/5 ms latency,
