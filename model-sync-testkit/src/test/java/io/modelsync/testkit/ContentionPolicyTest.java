@@ -5,10 +5,29 @@ import static org.junit.jupiter.api.Assertions.*;
 import io.modelsync.core.*;
 import io.modelsync.core.application.SyncCoordinator;
 import io.modelsync.core.port.LocalContention;
+import io.modelsync.core.port.*;
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
 class ContentionPolicyTest {
+  @Test void acceptedPendingHasExplicitStateAndDoesNotSpendOrRefundOwnerAdmission() {
+    for(boolean absolute:new boolean[]{false,true}) {
+      var f=new CoreFixture();var gate=new PendingCooldownGate(f.gate);
+      var c=new SyncCoordinator(f.registry,f.store,f.tx,gate,f.clock,f.coordinator.options(),WeightedPriorities.defaults(),()->.5);
+      f.enqueue();var lease=c.claim().orElseThrow();c.prepare(lease).orElseThrow();
+      var until=f.clock.instant().plusSeconds(30);
+      c.failed(lease,absolute?new RateLimited(until):new RateLimitedAfter(Duration.ofSeconds(30)));
+      assertEquals("COOLDOWN_PENDING",f.store.inspect(f.key).lastCode());assertEquals(until,f.store.inspect(f.key).due());
+      assertEquals(1,f.gate.grants());assertEquals(0,f.calls.get());assertFalse(f.gate.acquire("owner").granted());
+    }
+    assertThrows(IllegalArgumentException.class,()->new CooldownReceipt(new CooldownRequest("fake","owner",java.time.Instant.EPOCH),CooldownState.DURABLE_PENDING,false));
+  }
+  @Test void unrecordedCooldownIsInfrastructureNotHandledDeferredOrOwnerFailure() {
+    var f=new CoreFixture();f.enqueue();var lease=f.coordinator.claim().orElseThrow();
+    var until=f.clock.instant().plusSeconds(30);f.coordinator.failed(lease,new CooldownUnavailable(until));
+    assertEquals("COOLDOWN_UNRECORDED",f.store.inspect(f.key).lastCode());assertEquals(0,f.store.inspect(f.key).attempts());
+    assertEquals(until,f.store.inspect(f.key).due());assertEquals(0,f.calls.get());
+  }
   @Test void refusedCooldownIsReportedOnceAndDurableLeaseRemainsRecoverable() {
     var f = new CoreFixture(); var gate = new RefusingCooldownGate(f.gate);
     var coordinator = new SyncCoordinator(f.registry, f.store, f.tx, gate, f.clock,

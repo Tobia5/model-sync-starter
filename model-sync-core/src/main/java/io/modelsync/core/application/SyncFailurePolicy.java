@@ -33,13 +33,22 @@ final class SyncFailurePolicy {
       next = now.plus(r.delay().isZero() ? Duration.ofMillis(1) : r.delay());
       count = false;
       code = "DEFERRED";
-      gate.cooldown(registry.get(lease.key().binding()).quota(), next);
+      var receipt = gate.publishCooldown(new CooldownRequest(Digests.sha256Fields(lease.key().storageId(),lease.token()), registry.get(lease.key().binding()).quota(), next));
+      next = receipt.request().until();
+      if (receipt.state() == CooldownState.DURABLE_PENDING) code = "COOLDOWN_PENDING";
     } else if (e instanceof RetryLater r) {
       next = r.retryAt().isAfter(now) ? r.retryAt() : now.plusMillis(1);
       count = false;
       code = "DEFERRED";
-      if (e instanceof RateLimited)
-        gate.cooldown(registry.get(lease.key().binding()).quota(), next);
+      if (e instanceof RateLimited) {
+        var receipt = gate.publishCooldown(new CooldownRequest(Digests.sha256Fields(lease.key().storageId(),lease.token()), registry.get(lease.key().binding()).quota(), next));
+        next = receipt.request().until();
+        if (receipt.state() == CooldownState.DURABLE_PENDING) code = "COOLDOWN_PENDING";
+      }
+    } else if (e instanceof CooldownUnavailable unavailable) {
+      next = unavailable.retryAt().isAfter(now) ? unavailable.retryAt() : now.plusMillis(1);
+      count = false;
+      code = "COOLDOWN_UNRECORDED";
     } else {
       long cap = options.retryMax().toMillis();
       long factor = 1L << Math.min(lease.attempts(), 20);
@@ -56,11 +65,12 @@ final class SyncFailurePolicy {
     }
     final Instant when = next;
     final boolean isFailure = count;
+    final String errorCode = code;
     final int max = e instanceof Permanent ? 1 : options.maxAttempts();
     tx.required(
         () -> {
           if (store.lockValid(lease, clock.instant()))
-            store.reschedule(lease, when, code, isFailure, max, clock.instant());
+            store.reschedule(lease, when, errorCode, isFailure, max, clock.instant());
           return null;
         });
   }

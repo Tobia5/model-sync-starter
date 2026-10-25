@@ -37,4 +37,16 @@ public interface QuotaGate {
    * @param until cooldown end instant
    */
   void cooldown(String group, Instant until);
+
+  /**
+   * Publish one outcome without another owner call/admission. Legacy adapters commit directly;
+   * only an explicitly durable adapter may return DURABLE_PENDING. Duplicate durable identities
+   * return the canonical first-accepted deadline, never a recomputed relative delay.
+   */
+  default CooldownReceipt publishCooldown(CooldownRequest request) {
+    cooldown(request.group(), request.until());
+    return new CooldownReceipt(request, CooldownState.APPLIED, false);
+  }
+  /** Explicit capability declaration; memory-only adapters cannot promise cross-process pending state. */
+  default boolean supportsDurableCooldowns() { return false; }
 }

@@ -23,6 +23,9 @@ public final class JdbcQuotaGate implements QuotaGate {
   private final Clock clock;
   private final JdbcQuotaLockPolicy lockPolicy;
   private final JdbcInsertPolicy insertPolicy;
+  private final JdbcCooldownPolicy cooldownPolicy;
+  private final JdbcCooldownPublications publications;
+  private final Map<String,Instant> unrecorded = new java.util.concurrent.ConcurrentHashMap<>();
 
   public JdbcQuotaGate(JdbcTemplate jdbc, PlatformTransactionManager manager, Clock databaseClock) {
     this(jdbc, manager, databaseClock, JdbcQuotaLockPolicy.DEFAULT);
@@ -42,6 +45,18 @@ public final class JdbcQuotaGate implements QuotaGate {
   /** Explicit work/quota creation capability; existing-row lock behavior stays independent. */
   public JdbcQuotaGate(JdbcTemplate jdbc, PlatformTransactionManager manager, Clock databaseClock,
       JdbcQuotaLockPolicy lockPolicy, JdbcInsertPolicy insertPolicy) {
+    this(jdbc,manager,databaseClock,lockPolicy,insertPolicy,JdbcCooldownPolicy.DIRECT);
+  }
+
+  public JdbcQuotaGate(JdbcTemplate jdbc, PlatformTransactionManager manager, Clock databaseClock,
+      JdbcQuotaLockPolicy lockPolicy, JdbcInsertPolicy insertPolicy, JdbcCooldownPolicy cooldownPolicy) {
+    this(jdbc,manager,databaseClock,lockPolicy,insertPolicy,cooldownPolicy,
+        new CooldownRetry(()->java.util.concurrent.ThreadLocalRandom.current().nextDouble(),CooldownRetry::sleep));
+  }
+
+  JdbcQuotaGate(JdbcTemplate jdbc, PlatformTransactionManager manager, Clock databaseClock,
+      JdbcQuotaLockPolicy lockPolicy, JdbcInsertPolicy insertPolicy, JdbcCooldownPolicy cooldownPolicy,
+      CooldownRetry retry) {
     this.jdbc = Objects.requireNonNull(jdbc);
     this.clock = Objects.requireNonNull(databaseClock);
     this.lockPolicy = Objects.requireNonNull(lockPolicy);
@@ -54,6 +69,9 @@ public final class JdbcQuotaGate implements QuotaGate {
     independent = new TransactionTemplate(manager);
     independent.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
     independent.setName("modelSyncQuota");
+    this.cooldownPolicy=Objects.requireNonNull(cooldownPolicy);
+    publications=cooldownPolicy==JdbcCooldownPolicy.DURABLE
+        ? new JdbcCooldownPublications(jdbc,manager,clock,lockPolicy,insertPolicy,retry) : null;
   }
 
   public void register(String group, Duration spacing) {
@@ -95,6 +113,8 @@ public final class JdbcQuotaGate implements QuotaGate {
 
   @Override
   public QuotaAdmission acquire(String group) {
+    Instant blocked=localBlock(group);
+    if(blocked!=null)throw new CooldownUnavailable(blocked);
     return lockOperation("quota admission", () -> Objects.requireNonNull(
         independent.execute(
             status -> {
@@ -105,12 +125,20 @@ public final class JdbcQuotaGate implements QuotaGate {
                       (r, n) -> new long[] {r.getLong(1), r.getLong(2)},
                       group);
               if (q == null) throw new IllegalStateException("Unknown quota: " + group);
+              long floor=publications==null?q[1]:Math.max(q[1],publications.floor(group));
               long now = clock.millis();
-              if (now < q[1]) return QuotaAdmission.waitUntil(Instant.ofEpochMilli(q[1]));
+              if (now < floor) {
+                if(publications!=null) {
+                  jdbc.update("update MS_QUOTA set next_allowed_ms=? where quota_group=?",floor,group);
+                  publications.recoverOne(group,floor);
+                }
+                return QuotaAdmission.waitUntil(Instant.ofEpochMilli(floor));
+              }
               jdbc.update(
                   "update MS_QUOTA set next_allowed_ms=? where quota_group=?",
                   Math.addExact(now, q[0]),
                   group);
+              if(publications!=null)publications.recoverOne(group,Math.max(floor,Math.addExact(now,q[0])));
               return QuotaAdmission.allow();
             })));
   }
@@ -121,7 +149,46 @@ public final class JdbcQuotaGate implements QuotaGate {
     Long next = jdbc.queryForObject(
         "select next_allowed_ms from MS_QUOTA where quota_group=?", Long.class, group);
     if (next == null) throw new IllegalStateException("Unknown quota: " + group);
+    if(publications!=null)next=Math.max(next,publications.floor(group));
+    Instant blocked=localBlock(group);
+    if(blocked!=null)next=Math.max(next,blocked.toEpochMilli());
     return Optional.of(Instant.ofEpochMilli(next));
+  }
+
+  public JdbcCooldownPolicy cooldownPolicy() { return cooldownPolicy; }
+  @Override public boolean supportsDurableCooldowns() { return publications!=null; }
+
+  @Override public CooldownReceipt publishCooldown(CooldownRequest request) {
+    if(publications==null)return QuotaGate.super.publishCooldown(request);
+    JdbcCooldownPublications.requireOutsideTransaction();
+    CooldownReceipt accepted;
+    try {accepted=publications.accept(request);}
+    catch(RuntimeException | Error failure) {
+      // Local protection only. Other nodes cannot be promised knowledge of an unrecorded response.
+      unrecorded.merge(request.group(),request.until(),(a,b)->a.isAfter(b)?a:b);
+      throw failure;
+    }
+    return publications.materialize(accepted);
+  }
+
+  /** Bounded recovery without owner I/O or admission consumption; returns observed applied receipts. */
+  public int recoverCooldowns(String group,int limit) {
+    if(publications==null)throw new IllegalStateException("DURABLE cooldown policy required");
+    if(limit<1 || limit>64)throw new IllegalArgumentException("Cooldown recovery limit must be 1..64");
+    JdbcCooldownPublications.requireOutsideTransaction();
+    int done=0;
+    while(done<limit) {
+      var next=publications.oldest(group);if(next.isEmpty())break;
+      if(publications.materialize(new CooldownReceipt(next.orElseThrow(),CooldownState.DURABLE_PENDING,true)).state()!=CooldownState.APPLIED)break;
+      done++;
+    }
+    return done;
+  }
+
+  private Instant localBlock(String group) {
+    Instant block=unrecorded.get(group);
+    if(block!=null && !clock.instant().isBefore(block)){unrecorded.remove(group,block);return null;}
+    return block;
   }
 
   @Override

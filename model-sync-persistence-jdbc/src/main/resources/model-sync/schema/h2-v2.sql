@@ -38,3 +38,17 @@ CREATE TABLE MS_QUOTA (
  spacing_ms BIGINT NOT NULL CHECK (spacing_ms > 0),
  next_allowed_ms BIGINT NOT NULL
 );
+
+-- Explicit optional extension to ledger schema v2. Stop compliant writers for migration.
+-- No FK to MS_QUOTA: acceptance must not wait for an unresolved quota-row transaction.
+-- Registered groups are validated by the adapter; quota deletion while workers run is unsupported.
+CREATE TABLE MS_COOLDOWN (
+ operation_id VARCHAR(64) PRIMARY KEY,
+ quota_group VARCHAR(128) NOT NULL,
+ deadline_ms BIGINT NOT NULL,
+ accepted_at_ms BIGINT NOT NULL,
+ publication_status VARCHAR(8) NOT NULL CHECK (CASE publication_status WHEN 'PENDING' THEN TRUE WHEN 'APPLIED' THEN TRUE ELSE FALSE END)
+);
+CREATE INDEX MS_COOLDOWN_DUE_IX ON MS_COOLDOWN(quota_group,publication_status,deadline_ms);
+CREATE INDEX MS_COOLDOWN_AGE_IX ON MS_COOLDOWN(quota_group,publication_status,accepted_at_ms,operation_id);
+INSERT INTO MS_META(meta_name,meta_value) VALUES ('cooldown_schema_version','1');

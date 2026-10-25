@@ -28,6 +28,15 @@ import org.springframework.transaction.PlatformTransactionManager;
 @ConditionalOnProperty(prefix = "model-sync", name = "enabled", havingValue = "true")
 @EnableConfigurationProperties({ModelSyncProperties.class, ModelSyncJdbcProperties.class})
 public class ModelSyncJdbcAutoConfiguration {
+  @Bean
+  @ConditionalOnProperty(prefix="model-sync.jdbc",name="cooldown-policy",havingValue="DURABLE")
+  org.springframework.beans.factory.SmartInitializingSingleton modelSyncCooldownCapability(
+      QuotaGate gate, ModelSyncJdbcProperties properties) {
+    return () -> {
+      if(properties.getCooldownPolicy()==JdbcCooldownPolicy.DURABLE && !gate.supportsDurableCooldowns())
+        throw new IllegalStateException("Configured DURABLE cooldowns require an explicitly capable QuotaGate");
+    };
+  }
   @Bean(name = "modelSyncClock")
   @ConditionalOnMissingBean(name = "modelSyncClock")
   Clock modelSyncClock(DataSource dataSource) {
@@ -56,7 +65,7 @@ public class ModelSyncJdbcAutoConfiguration {
       ModelSyncJdbcProperties jdbcProperties,
       ModelRegistry registry) {
     validateTransactionDataSource(dataSource, manager);
-    JdbcQuotaGate gate = new JdbcQuotaGate(new JdbcTemplate(dataSource), manager, clock, jdbcProperties.getQuotaLockPolicy(), jdbcProperties.getInsertPolicy());
+    JdbcQuotaGate gate = new JdbcQuotaGate(new JdbcTemplate(dataSource), manager, clock, jdbcProperties.getQuotaLockPolicy(), jdbcProperties.getInsertPolicy(), jdbcProperties.getCooldownPolicy());
     properties.getQuotas().forEach(gate::register);
     for (ModelBinding<?> b : registry.all())
       if (!properties.getQuotas().containsKey(b.quota()))
