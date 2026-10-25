@@ -27,6 +27,7 @@ class OracleOptimizationIT {
   private static final Path REPORT=Path.of("target/qm/oracle-optimization.json");
 
   @Test void comparesIndependentChangesOnTheSameOraclePopulation() throws Exception {
+    OracleAcquisitionProbe.run();
     assertEquals("DEDICATED_TEST_SCHEMA",System.getenv("MODELSYNC_ORACLE_TEST_SCHEMA_ACK"));
     String user=System.getenv("MODELSYNC_ORACLE_USER");
     assertNotNull(user);assertTrue(user.matches("MS_TEST_[A-Za-z0-9_]{1,20}"));
@@ -47,6 +48,8 @@ class OracleOptimizationIT {
       report.put("rows",ROWS);report.put("due_rows",ROWS);report.put("workers",4);report.put("pool",8);
       report.put("owner_spacing_ms",20);report.put("owner_latency_ms",List.of(5,25));
       report.put("provider_429_every",17);report.put("timeout_every",29);report.put("owner_call_target",230);
+      report.put("quota_policy","ORACLE_NOWAIT");report.put("insert_policy","ORACLE_26_NOWAIT");
+      report.put("accounting_scope","bounded test-only observation of unchanged SyncCoordinator.runOne; same quota policy in every variant");
       report.put("statistics","ALL; gathered no-histogram table/index stats before each round");
       report.put("cache_control","Same physical table/index catalog; no shared/global cache flush; 10 owner-entry warmup per variant; forward/reverse order; touched rows reset between variants");
       List<Map<String,Object>> results=new ArrayList<>();report.put("results",results);
@@ -100,6 +103,11 @@ class OracleOptimizationIT {
           long selectorDenials=(long)selectorOnly.get("quota_denials");
           assertTrue(selectorDenials==0 ? (long)combined.get("quota_denials")==0
               : (long)combined.get("quota_denials")<selectorDenials,"Admission scheduling must reduce selector-only denial churn, preserving zero when already zero");
+          long combinedChurn=(long)combined.get("quota_denials")+(long)combined.get("quota_failures");
+          long baselineChurn=(long)baseline.get("quota_denials")+(long)baseline.get("quota_failures");
+          long selectorChurn=selectorDenials+(long)selectorOnly.get("quota_failures");
+          assertTrue(combinedChurn<=baselineChurn,"Refusals must not conceal increased baseline churn");
+          assertTrue(selectorChurn==0?combinedChurn==0:combinedChurn<selectorChurn,"Refusals must not masquerade as reduced selector-only churn");
         }
         report.put("status","PASS");
       } finally {
@@ -135,9 +143,10 @@ class OracleOptimizationIT {
         result.put("selector_queries",jdbc.selectorQueries.get()-queriesBefore);
         result.put("empty_polls",20);result.put("selection_attempts",counted.selections.get());
         result.put("quota_grants",quota.granted.get());result.put("quota_denials",quota.denied.get());result.put("owner_calls",0);
+        result.put("quota_acquisitions",quota.acquisitions.get());result.put("quota_failures",quota.failures.get());result.put("quota_active",quota.active.get());
         result.put("elapsed_ms",(System.nanoTime()-start)/1_000_000);
         result.put("work",OracleMeasurements.difference(before,OracleMeasurements.snapshot(jdbc)));results.add(result);
-        assertEquals(0,quota.granted.get());assertEquals(0,quota.denied.get());
+        assertEquals(0,quota.granted.get());assertEquals(0,quota.denied.get());assertEquals(0,quota.acquisitions.get());assertEquals(0,quota.failures.get());
         assertEquals(0L,jdbc.queryForObject("select next_allowed_ms from MS_QUOTA where quota_group=?",Long.class,group));
       } finally {jdbc.update("delete from MS_QUOTA where quota_group=?",group);}
     }
@@ -147,38 +156,50 @@ class OracleOptimizationIT {
   private static void measure(SelectorJdbcTemplate jdbc,String binding,String variant,Map<String,Object> result) throws Exception {
     String group="comparison-"+UUID.randomUUID();
     var manager=new DataSourceTransactionManager(jdbc.getDataSource());
-    var tx=new SpringLocalTransactions(manager);
+    var accounting=new ComparisonAccounting();
+    var tx=new ObservedLocalTransactions(new SpringLocalTransactions(manager),accounting);
     WorkStore selected=OracleQualificationStores.work(jdbc);
     if(variant.equals("baseline")||variant.equals("admission-only"))selected=new LegacyOracleWorkStore(jdbc,selected);
-    var store=new CountedWorkStore(selected);
+    var store=new CountedWorkStore(new ObservedWorkStore(selected,tx));
     var gate=OracleQualificationStores.quota(jdbc,manager,Clock.systemUTC());gate.register(group,Duration.ofMillis(20));
-    var quota=new MeasuredQuotaGate(gate,variant.equals("admission-only")||variant.equals("combined"));
-    var calls=new AtomicInteger();var limited=new AtomicInteger();var timeouts=new AtomicInteger();
+    var quota=new MeasuredQuotaGate(gate,variant.equals("admission-only")||variant.equals("combined"),accounting);
+    var calls=new AtomicInteger();var limited=new AtomicInteger();var timeouts=new AtomicInteger();var ownerActive=new AtomicInteger();
     try {
-      var model=ModelBinding.builder(binding,String.class).boundary("oracle-comparison").owner("controlled-local-owner",request->{
+      var model=ModelBinding.builder(binding,String.class).boundary("oracle-comparison").owner("controlled-local-owner",new ObservedOwner<String>(request->{
         assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
-        int call=calls.incrementAndGet();Thread.sleep(call%3==0?25:5);
-        if(call%29==0){timeouts.incrementAndGet();throw new SocketTimeoutException("synthetic timeout");}
-        if(call%17==0){limited.incrementAndGet();throw new RateLimitedAfter(Duration.ofMillis(100));}
-        return FetchResult.found("source-"+request.key().id(),"v1");
-      }).replica(new OracleTestProjectionStore(jdbc)).repairFromOwner().fingerprint(Digests::sha256Fields)
+        ownerActive.incrementAndGet();
+        try {
+          int call=calls.incrementAndGet();Thread.sleep(call%3==0?25:5);
+          if(call%29==0){timeouts.incrementAndGet();throw new SocketTimeoutException("synthetic timeout");}
+          if(call%17==0){limited.incrementAndGet();throw new RateLimitedAfter(Duration.ofMillis(100));}
+          return FetchResult.found("source-"+request.key().id(),"v1");
+        } finally {ownerActive.decrementAndGet();}
+      },accounting)).replica(new OracleTestProjectionStore(jdbc)).repairFromOwner().fingerprint(Digests::sha256Fields)
           .quota(group).freshness(new FreshnessPolicy(Duration.ofMinutes(5),Duration.ofMinutes(10),Duration.ofHours(1))).build();
       var c=new SyncCoordinator(new ModelRegistry(List.of(model)),store,tx,quota,Clock.systemUTC(),SyncOptions.defaults(),WeightedPriorities.defaults(),()->.5);
       long warmupStarted=System.nanoTime();
-      while(calls.get()<10) {assertTrue(System.nanoTime()-warmupStarted<TimeUnit.SECONDS.toNanos(30));c.runOne();Thread.sleep(5);}
+      accounting.begin("warmup",quota);
+      try {while(calls.get()<10) {assertTrue(System.nanoTime()-warmupStarted<TimeUnit.SECONDS.toNanos(30));accounting.runOne(c);Thread.sleep(5);}}
+      finally {result.put("warmup_accounting",accounting.finish(quota));}
       result.put("warmup_ms",(System.nanoTime()-warmupStarted)/1_000_000);
       long warmCalls=calls.get();long warmCompleted=completed(jdbc,binding);
+      ComparisonAccountingValidator.check((Map<String,Object>)result.get("warmup_accounting"),warmCalls,warmCompleted);
       long grants=quota.granted.get(),denied=quota.denied.get(),selections=store.selections.get(),empty=store.empty.get(),queriesBefore=jdbc.selectorQueries.get();
+      long failures=quota.failures.get(),refusals=quota.refusals.get();
       var before=OracleMeasurements.snapshot(jdbc);
       var polls=new AtomicLong();var attempts=new AtomicLong();var emptyPolls=new AtomicLong();
       List<Long> claimedLatency=Collections.synchronizedList(new ArrayList<>());
       List<Long> emptyLatency=Collections.synchronizedList(new ArrayList<>());
       long started=System.nanoTime();long deadline=started+TimeUnit.MINUTES.toNanos(3);
-      try(var workers=Executors.newFixedThreadPool(4)) {
+      accounting.begin("measurement",quota);
+      var workers=Executors.newFixedThreadPool(4);
+      try(workers) {
         List<Future<?>> futures=new ArrayList<>();
         for(int i=0;i<4;i++)futures.add(workers.submit(()->{
-          while(calls.get()<230&&System.nanoTime()<deadline) {
-            long callStart=System.nanoTime();boolean claimed=c.runOne();polls.incrementAndGet();
+          while(true) {
+            long callStart=System.nanoTime();var observed=accounting.runIf(c,()->calls.get()<230&&System.nanoTime()<deadline);
+            if(observed.isEmpty())break;
+            boolean claimed=observed.orElseThrow();polls.incrementAndGet();
             long latency=(System.nanoTime()-callStart)/1_000_000;
             if(claimed){attempts.incrementAndGet();claimedLatency.add(latency);}
             else {emptyPolls.incrementAndGet();emptyLatency.add(latency);}
@@ -187,7 +208,7 @@ class OracleOptimizationIT {
           return null;
         }));
         for(var f:futures)f.get(200,TimeUnit.SECONDS);
-      }
+      } finally {result.put("accounting",accounting.finish(quota));result.put("worker_threads_terminated",workers.isTerminated());}
       long elapsed=(System.nanoTime()-started)/1_000_000;
       var after=OracleMeasurements.snapshot(jdbc);
       var counters=OracleMeasurements.delta(OracleMeasurements.statisticsFrom(before),OracleMeasurements.statisticsFrom(after));
@@ -197,6 +218,9 @@ class OracleOptimizationIT {
       result.put("measurement_ms",elapsed);result.put("polls",polls.get());result.put("empty_polls",emptyPolls.get());
       result.put("ledger_attempts",attempts.get());result.put("selection_attempts",store.selections.get()-selections);result.put("empty_selections",store.empty.get()-empty);
       result.put("quota_grants",measuredGrants);result.put("quota_denials",measuredDenials);
+      result.put("quota_failures",quota.failures.get()-failures);result.put("quota_refusals",quota.refusals.get()-refusals);
+      var boundary=(Map<String,Long>)((Map<String,Object>)result.get("accounting")).get("quota_boundary");
+      for(String name:List.of("cooldown_attempts","cooldown_published","cooldown_failures"))result.put(name,boundary.get(name));
       result.put("measured_owner_calls",measuredCalls);result.put("total_owner_calls",calls.get());
       result.put("measured_completed_syncs",measuredCompleted);result.put("total_completed_syncs",completed);
       result.put("completed_syncs_per_second",1000.0*measuredCompleted/Math.max(1,elapsed));
@@ -206,10 +230,16 @@ class OracleOptimizationIT {
       result.put("claim_plans",OracleMeasurements.claimPlans(jdbc,OracleMeasurements.sqlFrom(before)));
       result.put("lag_ms",percentiles(jdbc.query("select s.reconciled_at_ms-w.requested_at_ms from MS_STATE s join MS_WORK w on w.work_id=s.work_id where w.binding_id=? and s.outcome in ('MATCH','APPLIED')",(r,n)->r.getLong(1),binding)));
       result.put("provider_429",limited.get());result.put("timeouts",timeouts.get());
+      var drain=OraclePhysicalDrain.observe(jdbc,workers.isTerminated(),ownerActive.get());result.put("physical_drain",drain);
       // Always write partial measurements before assertions; the caller's finally retains them.
       assertTrue(calls.get()>=230);assertTrue(completed>=150);assertTrue(measuredCompleted>0);
       assertEquals(completed,jdbc.queryForObject("select count(*) from MS_TEST_PROJECTION",Long.class));
-      assertEquals(measuredCalls,measuredGrants);assertEquals(attempts.get(),measuredGrants+measuredDenials);
+      assertEquals(measuredCalls,measuredGrants);
+      ComparisonAccountingValidator.check((Map<String,Object>)result.get("accounting"),measuredCalls,measuredCompleted);
+      var attributed=(Map<String,Long>)((Map<String,Object>)result.get("accounting")).get("totals");
+      assertEquals(attempts.get(),attributed.get("claims"));
+      assertEquals(attempts.get(),measuredGrants+measuredDenials+(quota.failures.get()-failures)+attributed.get("no_acquisition_claims"));
+      OraclePhysicalDrain.check(drain);
       assertEquals(polls.get(),attempts.get()+emptyPolls.get());
       assertTrue(limited.get()>0&&timeouts.get()>0);
       result.put("status","PASS");

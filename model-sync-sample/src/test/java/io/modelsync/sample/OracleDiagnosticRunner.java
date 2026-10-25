@@ -30,6 +30,7 @@ public final class OracleDiagnosticRunner {
     boolean passed = true;
     List<String> suites = switch (System.getProperty("modelsync.oracle.diagnostic", "transactions-and-scale")) {
       case "transactions-and-scale" -> List.of("io.modelsync.sample.OracleAtomicityIT", "io.modelsync.jdbc.OracleSelectionIT", "io.modelsync.jdbc.OracleScaleIT");
+      case "comparison-accounting" -> List.of("io.modelsync.jdbc.OracleOptimizationIT");
       case "queue-comparison" -> List.of("io.modelsync.jdbc.OracleSelectionIT", "io.modelsync.jdbc.OracleOptimizationIT");
       case "worker-pacing" -> List.of("io.modelsync.sample.OracleWorkerIT");
       case "process-recovery-and-io" -> List.of("io.modelsync.sample.OracleRecoveryIT", "io.modelsync.sample.OracleIoIT");

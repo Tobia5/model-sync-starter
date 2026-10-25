@@ -200,6 +200,17 @@ def collect(full: bool, root: Path = ROOT) -> dict:
     if measured is None and full and 'OracleCapacityIT' in executed_oracle:
         measured = {'status': 'FAILED', 'reason': 'OracleCapacityIT executed without JSON report'}
     comparison = None
+    acquisition_probe = None
+    probe_path = root / 'model-sync-persistence-jdbc/target/qm/oracle-acquisition-probe.json'
+    if full and probe_path.is_file():
+        try:
+            fresh(probe_path, root)
+            acquisition_probe = json.loads(probe_path.read_text(encoding='utf-8'))
+            if (not isinstance(acquisition_probe, dict)
+                    or any(acquisition_probe.get(k) != v for k, v in current(root).items())):
+                raise ValueError('Malformed or source/run-mismatched acquisition proof')
+        except (OSError, ValueError, json.JSONDecodeError) as error:
+            acquisition_probe = {'status': 'REJECTED', 'reason': str(error)}
     comparison_path = root / 'model-sync-persistence-jdbc/target/qm/oracle-optimization.json'
     if full and comparison_path.is_file():
         try:
@@ -289,7 +300,8 @@ def collect(full: bool, root: Path = ROOT) -> dict:
             'qualification_target': target, 'independent_cancellation': characterization(faults.get('oracle-io')),
             'oracle_faults': faults,
             'oracle_worker': worker,
-            'oracle_workload': measured, 'oracle_optimization': comparison, 'rejected': log_rejected + [reason for module in modules.values()
+            'oracle_workload': measured, 'oracle_optimization': comparison, 'oracle_acquisition_probe': acquisition_probe,
+            'rejected': log_rejected + [reason for module in modules.values()
                 for suite in module.values() for reason in suite.get('rejected', [])],
             'attribution': run['run_id']}
 

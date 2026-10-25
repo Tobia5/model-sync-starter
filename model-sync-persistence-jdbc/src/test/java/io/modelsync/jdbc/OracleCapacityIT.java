@@ -93,32 +93,39 @@ class OracleCapacityIT {
         assertEquals(ROWS, jdbc.queryForObject("select count(*) from MS_WORK where binding_id=?", Integer.class, binding));
         assertEquals(DUE, jdbc.queryForObject("select count(*) from MS_WORK where binding_id=? and next_at_ms=0", Integer.class, binding));
         var manager = new DataSourceTransactionManager(source);
-        var tx = new SpringLocalTransactions(manager);
-        var store = new CountedWorkStore(OracleQualificationStores.work(jdbc));
+        var accounting = new ComparisonAccounting();
+        var baseTx = new SpringLocalTransactions(manager);
+        var tx = new ObservedLocalTransactions(baseTx, accounting);
+        var baseStore = OracleQualificationStores.work(jdbc);
+        var store = new CountedWorkStore(new ObservedWorkStore(baseStore, tx));
         var quota = OracleQualificationStores.quota(jdbc, manager, Clock.systemUTC());
         quota.register(quotaGroup, Duration.ofMillis(20)); // 50 physical calls/s, shared by all workers.
-        var measuredQuota = new MeasuredQuotaGate(quota);
+        var measuredQuota = new MeasuredQuotaGate(quota, true, accounting);
         AtomicInteger ownerCalls = new AtomicInteger();
+        AtomicInteger ownerActive = new AtomicInteger();
         AtomicInteger limited = new AtomicInteger();
         AtomicInteger timedOut = new AtomicInteger();
         var projection = new OracleTestProjectionStore(jdbc);
         var bindingValue = ModelBinding.builder(binding, String.class)
             .boundary("synthetic-oracle-capacity")
-            .owner("instrumented-local-owner", request -> {
+            .owner("instrumented-local-owner", new ObservedOwner<String>(request -> {
               assertFalse(TransactionSynchronizationManager.isActualTransactionActive(),
                   "Owner call ran inside the local transaction");
+              ownerActive.incrementAndGet();
+              try {
               int call = ownerCalls.incrementAndGet();
               Thread.sleep(call % 3 == 0 ? 25 : 5);
               if (call % 29 == 0) { timedOut.incrementAndGet(); throw new SocketTimeoutException("synthetic timeout"); }
               if (call % 17 == 0) { limited.incrementAndGet(); throw new RateLimitedAfter(Duration.ofMillis(100)); }
               return FetchResult.found("source-" + request.key().id(), "v1");
-            })
+              } finally { ownerActive.decrementAndGet(); }
+            }, accounting))
             .replica(projection).repairFromOwner()
             .fingerprint(Digests::sha256Fields).quota(quotaGroup)
             .freshness(new FreshnessPolicy(Duration.ofMinutes(5), Duration.ofMinutes(10), Duration.ofHours(1)))
             .build();
         var registry = new ModelRegistry(List.of(bindingValue));
-        var gateway = new SyncGateway(registry, store, tx, Clock.systemUTC());
+        var gateway = new SyncGateway(registry, baseStore, baseTx, Clock.systemUTC());
         for (int i = 0; i < 100; i++)
           gateway.request(binding, "synthetic", "1", Priority.URGENT, true);
         assertEquals(ROWS, jdbc.queryForObject("select count(*) from MS_WORK", Integer.class),
@@ -128,10 +135,13 @@ class OracleCapacityIT {
         // Warm the pool and JIT with bounded real work; measurement starts afterwards.
         var warmupBefore = OracleMeasurements.snapshot(jdbc);
         long warmupStarted = System.nanoTime();
-        for (int i = 0; i < 10; i++) coordinator.runOne();
+        accounting.begin("warmup", measuredQuota);
+        try {for (int i = 0; i < 10; i++) accounting.runOne(coordinator);}
+        finally {phases.put("warmup_accounting", accounting.finish(measuredQuota));}
         long warmupElapsedMs = (System.nanoTime() - warmupStarted) / 1_000_000;
         long warmupCalls = ownerCalls.get();
         long warmupCompleted = jdbc.queryForObject("select count(*) from MS_STATE s join MS_WORK w on w.work_id=s.work_id where w.binding_id=? and s.outcome in ('MATCH','APPLIED')", Long.class, binding);
+        ComparisonAccountingValidator.check((Map<String,Object>)phases.get("warmup_accounting"),warmupCalls,warmupCompleted);
         phases.put("warmup_work", OracleMeasurements.difference(warmupBefore, OracleMeasurements.snapshot(jdbc)));
         var measurementBefore = OracleMeasurements.snapshot(jdbc);
         long grantsBefore = measuredQuota.granted.get();
@@ -149,12 +159,16 @@ class OracleCapacityIT {
         List<Long> claimedLatencies = Collections.synchronizedList(new ArrayList<>());
         List<Long> emptyLatencies = Collections.synchronizedList(new ArrayList<>());
         List<Long> latencies = Collections.synchronizedList(new ArrayList<>());
-        try (var workers = Executors.newFixedThreadPool(WORKERS)) {
+        accounting.begin("measurement", measuredQuota);
+        var workers = Executors.newFixedThreadPool(WORKERS);
+        try (workers) {
           List<java.util.concurrent.Future<?>> futures = new ArrayList<>();
           for (int i = 0; i < WORKERS; i++) futures.add(workers.submit(() -> {
-            while (ownerCalls.get() < OWNER_CALL_TARGET && System.nanoTime() < deadline) {
+            while (true) {
               long callStarted = System.nanoTime();
-              boolean claimed = coordinator.runOne();
+              var observed = accounting.runIf(coordinator,()->ownerCalls.get()<OWNER_CALL_TARGET && System.nanoTime()<deadline);
+              if(observed.isEmpty()) break;
+              boolean claimed = observed.orElseThrow();
               polls.incrementAndGet();
               long latency = (System.nanoTime() - callStarted) / 1_000_000;
               if (claimed) { attempts.incrementAndGet(); claimedLatencies.add(latency); }
@@ -165,7 +179,7 @@ class OracleCapacityIT {
             }
           }));
           for (var future : futures) future.get(200, TimeUnit.SECONDS);
-        }
+        } finally {phases.put("accounting",accounting.finish(measuredQuota));}
         long elapsedMs = (System.nanoTime() - started) / 1_000_000;
         long dbWork = jdbc.queryForObject(SESSION_WORK, Long.class) - beforeWork;
         phases.put("measurement_work", OracleMeasurements.difference(measurementBefore, OracleMeasurements.snapshot(jdbc)));
@@ -183,7 +197,11 @@ class OracleCapacityIT {
         phases.put("empty_selections", store.empty.get() - emptySelectionsBefore);
         phases.put("measured_quota_grants", measuredGrants);
         phases.put("measured_quota_denials", measuredDenials);
-        phases.put("measured_provider_cooldowns", measuredQuota.cooldowns.get() - cooldownsBefore);
+        var boundary=(Map<String,Long>)((Map<String,Object>)phases.get("accounting")).get("quota_boundary");
+        phases.put("measured_quota_failures",boundary.get("acquisition_failures"));
+        phases.put("measured_quota_refusals",boundary.get("acquisition_refusals"));
+        for(String name:List.of("cooldown_attempts","cooldown_published","cooldown_failures"))phases.put(name,boundary.get(name));
+        phases.put("physical_drain",OraclePhysicalDrain.observe(jdbc,workers.isTerminated(),ownerActive.get()));
         phases.put("measured_ledger_attempts", attempts.get());
         OracleMeasurements.write(phaseReport, phases);
         long completed = jdbc.queryForObject("select count(*) from MS_STATE s join MS_WORK w on w.work_id=s.work_id where w.binding_id=? and s.outcome in ('MATCH','APPLIED')", Long.class, binding);
@@ -229,6 +247,12 @@ class OracleCapacityIT {
         workload.put("measured_quota_denials", measuredDenials);
         workload.put("db_work_per_ledger_attempt", attempts.get() == 0 ? null : (double) dbWork / attempts.get());
         workload.put("db_work_per_completed_sync", measuredCompleted == 0 ? null : (double) dbWork / measuredCompleted);
+        workload.put("warmup_accounting",phases.get("warmup_accounting"));
+        workload.put("accounting",phases.get("accounting"));
+        workload.put("physical_drain",phases.get("physical_drain"));
+        workload.put("measured_quota_failures",boundary.get("acquisition_failures"));
+        workload.put("measured_quota_refusals",boundary.get("acquisition_refusals"));
+        for(String name:List.of("cooldown_attempts","cooldown_published","cooldown_failures"))workload.put(name,boundary.get(name));
         workload.put("phase_diagnostics", phases);
         OracleMeasurements.write(report, workload);
         assertTrue(ownerCalls.get() >= OWNER_CALL_TARGET, "Owner-call target not reached before bounded deadline");
@@ -238,7 +262,11 @@ class OracleCapacityIT {
         assertTrue(dbWork >= 0);
         assertTrue(measuredCompleted > 0 && measuredOwnerCalls > 0);
         assertEquals(measuredOwnerCalls, measuredGrants, "Each admission must have exactly one controlled owner entry");
-        assertEquals(attempts.get(), measuredGrants + measuredDenials, "Separate quota-denial churn from admitted work");
+        ComparisonAccountingValidator.check((Map<String,Object>)phases.get("accounting"),measuredOwnerCalls,measuredCompleted);
+        var attributed=(Map<String,Long>)((Map<String,Object>)phases.get("accounting")).get("totals");
+        assertEquals(attempts.get(),attributed.get("claims"));
+        assertEquals(attempts.get(),measuredGrants+measuredDenials+boundary.get("acquisition_failures")+attributed.get("no_acquisition_claims"));
+        OraclePhysicalDrain.check((Map<String,Object>)phases.get("physical_drain"));
         assertTrue(limited.get() > 0 && timedOut.get() > 0, "Failure injection was not exercised");
       } finally {
         var cleanupBefore = OracleMeasurements.snapshot(jdbc);

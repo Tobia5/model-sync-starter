@@ -504,9 +504,16 @@ class QualityGateTests(unittest.TestCase):
             data.parent.mkdir(parents=True)
             data.write_text(json.dumps({'scope': 'controlled-oracle-queue-comparison-not-production-capacity',
                                         'results': [{'variant': 'baseline', 'quota_denials': 17}]}))
-            evidence = module.collect(True, root)['oracle_optimization']
+            probe = data.with_name('oracle-acquisition-probe.json')
+            probe.write_text(json.dumps({**current(root), 'status': 'FAILED',
+                                         'cases': [{'name': 'held-acquisition', 'client_return_ms': 23}]}))
+            collected = module.collect(True, root)
+            evidence = collected['oracle_optimization']
             self.assertEqual('FAILED', evidence['status'])
             self.assertEqual(17, evidence['results'][0]['quota_denials'])
+            self.assertEqual(23, collected['oracle_acquisition_probe']['cases'][0]['client_return_ms'])
+            begin(root)
+            self.assertEqual('REJECTED', module.collect(True, root)['oracle_acquisition_probe']['status'])
 
     def test_container_uses_selected_project_settings_and_keeps_full_goals(self):
         spec = spec_from_file_location('oracle_container_maven', ROOT / 'scripts/full-oracle-container.py')

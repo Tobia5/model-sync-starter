@@ -272,3 +272,33 @@ all ten worker phases PASS. [QM](../../QM.md) reports actual config/resources an
 other-provider33ms raw field uses application reconciled-at before COMMIT, not exact committed
 observation latency; a fresh committed read verifies the outcome. Other wake fields use observer
 timestamps/commit brackets. Polling helpers do not replace production DB statement timeouts.
+
+
+## Comparison boundary accounting
+
+`ComparisonAccountingTest` exercises the unchanged real coordinator with deterministic test-only
+ports. The observer counts committed claim returns, actual acquisition entries, returned grants,
+returned denials and thrown acquisition failures independently, before coordinator failure handling.
+A bounded numeric attempt ID links preparation, admission, physical owner entry, committed result
+and separate retry-metadata transactions. It retains only detached type, SQLState and vendor code,
+never unrestricted messages, Throwable graphs, keys, tokens or connections. Unknown, uncertain,
+missing, duplicate, active or unattributed outcomes fail qualification. A fresh/no-fetch completion
+is not a new reconciliation. Post-grant owner/result failures are not acquisition failures.
+Cooldown attempts, committed publications and thrown publication failures are distinct counters.
+The quota port has no refund operation; one returned committed grant may enter the owner once.
+
+`python scripts/full-oracle-container.py --comparison-accounting-diagnostic` selects only
+`OracleOptimizationIT`: a one-row held-quota acquisition/publication proof followed by the existing
+100k population and all eight forward/reverse measurements. It requires matching current-source
+default evidence and 12 GiB diagnostic admission; it retains the pinned 6 GiB/4 CPU Oracle cap.
+It does not execute the million-row fixture or qualify full. All variants use the same named-target
+quota/insert policies. Existing completion floors, denial and native-work comparisons remain;
+denials plus directly observed acquisition failures must also improve, so changing denials into
+refusals cannot conceal churn. Full still requires all 77 Oracle methods, including this method
+and the separately instrumented million-row workload. Full admission remains 18 GiB.
+
+Warmup, measurement and drain retain original boundary snapshots and bounded event inventories.
+Physical owner activity, terminated worker threads, pool activity, server requests/transactions,
+committed projection/state counts and selector/native cursor counters remain separate evidence.
+The historical unexplained 55 at source `25297fd` remains unclassified; new failure facts cannot
+retroactively supply its vendor codes. No production locking/scheduling behavior changes here.
