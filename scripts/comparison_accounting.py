@@ -24,8 +24,8 @@ def number(value, key):
 
 def fact(value):
     require(isinstance(value, dict) and set(value) ==
-            {'category', 'type', 'sql_state', 'vendor_code', 'truncated'}, 'unsafe/missing detached facts')
-    require(isinstance(value['type'], str) and re.fullmatch(r'[A-Za-z0-9_.$]{1,160}', value['type']),
+            {'category', 'exception_type', 'sql_state', 'vendor_code', 'truncated'}, 'unsafe/missing detached facts')
+    require(isinstance(value['exception_type'], str) and re.fullmatch(r'[A-Za-z0-9_.$]{1,160}', value['exception_type']),
             'invalid detached type')
     state = value['sql_state']
     require(state is None or isinstance(state, str) and re.fullmatch(r'[A-Za-z0-9]{5}', state), 'invalid SQLState')

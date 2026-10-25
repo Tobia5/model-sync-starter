@@ -88,11 +88,15 @@ class OracleOptimizationIT {
             result.put("nls_session",jdbc.queryForList("select parameter,value from nls_session_parameters where parameter in ('NLS_LANGUAGE','NLS_SORT','NLS_COMP') order by parameter"));
             result.put("table_statistics",jdbc.queryForList("select num_rows,blocks,to_char(last_analyzed,'YYYY-MM-DD\"T\"HH24:MI:SS') last_analyzed_db_local from user_tab_statistics where table_name='MS_WORK'"));
             results.add(result);OracleMeasurements.write(REPORT,report);
-            measure(jdbc,binding,variant,result);
+            try {measure(jdbc,binding,variant,result);}
+            catch(Exception | AssertionError failure) {
+              result.put("status","FAILED");result.put("diagnostic_assertion_type",failure.getClass().getName());
+            }
             OracleMeasurements.write(REPORT,report);
           }
         }
         assertEquals(8,results.size());
+        assertTrue(results.stream().allMatch(r->"PASS".equals(r.get("status"))),"All eight variants must pass; original detached worker/fault evidence retained per variant");
         for(int round=0;round<2;round++) {
           int current=round;
           var baseline=results.stream().filter(r->r.get("variant").equals("baseline")&&(int)r.get("round")==current).findFirst().orElseThrow();
@@ -185,9 +189,10 @@ class OracleOptimizationIT {
       long warmCalls=calls.get();long warmCompleted=completed(jdbc,binding);
       ComparisonAccountingValidator.check((Map<String,Object>)result.get("warmup_accounting"),warmCalls,warmCompleted);
       long grants=quota.granted.get(),denied=quota.denied.get(),selections=store.selections.get(),empty=store.empty.get(),queriesBefore=jdbc.selectorQueries.get();
-      long failures=quota.failures.get(),refusals=quota.refusals.get();
+      long failures=quota.failures.get(),refusals=quota.refusals.get(),committedClaimsBefore=tx.committedClaims.get();
       var before=OracleMeasurements.snapshot(jdbc);
-      var polls=new AtomicLong();var attempts=new AtomicLong();var emptyPolls=new AtomicLong();
+      var polls=new AtomicLong();var attempts=new AtomicLong();var emptyPolls=new AtomicLong();var escapedPolls=new AtomicLong();
+      var workerErrors=new ArrayList<Map<String,Object>>();
       List<Long> claimedLatency=Collections.synchronizedList(new ArrayList<>());
       List<Long> emptyLatency=Collections.synchronizedList(new ArrayList<>());
       long started=System.nanoTime();long deadline=started+TimeUnit.MINUTES.toNanos(3);
@@ -197,7 +202,9 @@ class OracleOptimizationIT {
         List<Future<?>> futures=new ArrayList<>();
         for(int i=0;i<4;i++)futures.add(workers.submit(()->{
           while(true) {
-            long callStart=System.nanoTime();var observed=accounting.runIf(c,()->calls.get()<230&&System.nanoTime()<deadline);
+            long callStart=System.nanoTime();Optional<Boolean> observed;
+            try {observed=accounting.runIf(c,()->calls.get()<230&&System.nanoTime()<deadline);}
+            catch(RuntimeException | Error failure) {polls.incrementAndGet();escapedPolls.incrementAndGet();throw failure;}
             if(observed.isEmpty())break;
             boolean claimed=observed.orElseThrow();polls.incrementAndGet();
             long latency=(System.nanoTime()-callStart)/1_000_000;
@@ -207,7 +214,7 @@ class OracleOptimizationIT {
           }
           return null;
         }));
-        for(var f:futures)f.get(200,TimeUnit.SECONDS);
+        for(var f:futures)try {f.get(200,TimeUnit.SECONDS);} catch(ExecutionException failure) {workerErrors.add(DetachedFailure.capture(failure).facts());}
       } finally {result.put("accounting",accounting.finish(quota));result.put("worker_threads_terminated",workers.isTerminated());}
       long elapsed=(System.nanoTime()-started)/1_000_000;
       var after=OracleMeasurements.snapshot(jdbc);
@@ -216,7 +223,7 @@ class OracleOptimizationIT {
       long measuredCalls=calls.get()-warmCalls,measuredGrants=quota.granted.get()-grants,measuredDenials=quota.denied.get()-denied;
       result.put("selector_queries",jdbc.selectorQueries.get()-queriesBefore);
       result.put("measurement_ms",elapsed);result.put("polls",polls.get());result.put("empty_polls",emptyPolls.get());
-      result.put("ledger_attempts",attempts.get());result.put("selection_attempts",store.selections.get()-selections);result.put("empty_selections",store.empty.get()-empty);
+      result.put("ledger_attempts",tx.committedClaims.get()-committedClaimsBefore);result.put("returned_claim_ticks",attempts.get());result.put("escaped_polls",escapedPolls.get());result.put("worker_failures",workerErrors);result.put("selection_attempts",store.selections.get()-selections);result.put("empty_selections",store.empty.get()-empty);
       result.put("quota_grants",measuredGrants);result.put("quota_denials",measuredDenials);
       result.put("quota_failures",quota.failures.get()-failures);result.put("quota_refusals",quota.refusals.get()-refusals);
       var boundary=(Map<String,Long>)((Map<String,Object>)result.get("accounting")).get("quota_boundary");
@@ -235,12 +242,13 @@ class OracleOptimizationIT {
       assertTrue(calls.get()>=230);assertTrue(completed>=150);assertTrue(measuredCompleted>0);
       assertEquals(completed,jdbc.queryForObject("select count(*) from MS_TEST_PROJECTION",Long.class));
       assertEquals(measuredCalls,measuredGrants);
+      assertTrue(workerErrors.isEmpty(),"Worker exceptions remain failed; see detached worker_failures and attempt faults");
       ComparisonAccountingValidator.check((Map<String,Object>)result.get("accounting"),measuredCalls,measuredCompleted);
       var attributed=(Map<String,Long>)((Map<String,Object>)result.get("accounting")).get("totals");
-      assertEquals(attempts.get(),attributed.get("claims"));
-      assertEquals(attempts.get(),measuredGrants+measuredDenials+(quota.failures.get()-failures)+attributed.get("no_acquisition_claims"));
+      assertEquals(tx.committedClaims.get()-committedClaimsBefore,attributed.get("claims"));
+      assertEquals(tx.committedClaims.get()-committedClaimsBefore,measuredGrants+measuredDenials+(quota.failures.get()-failures)+attributed.get("no_acquisition_claims"));
       OraclePhysicalDrain.check(drain);
-      assertEquals(polls.get(),attempts.get()+emptyPolls.get());
+      assertEquals(polls.get(),attempts.get()+emptyPolls.get()+escapedPolls.get());
       assertTrue(limited.get()>0&&timeouts.get()>0);
       result.put("status","PASS");
     } finally {jdbc.update("delete from MS_QUOTA where quota_group=?",group);}

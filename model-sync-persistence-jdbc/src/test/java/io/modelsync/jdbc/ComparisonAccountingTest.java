@@ -17,6 +17,11 @@ class ComparisonAccountingTest {
   private static Map<?, ?> only(Map<String,Object> report) { return (Map<?,?>)((List<?>)report.get("attempts")).getFirst(); }
   private static long count(Map<String,Object> r, String key) { return ((Number)((Map<?,?>)r.get("totals")).get(key)).longValue(); }
 
+  @Test void actualDetachedExportMatchesTheSharedPythonSchemaFixture() throws Exception {
+    var expected=JsonMapper.builder().build().readValue(java.nio.file.Files.readString(
+        java.nio.file.Path.of("../scripts/tests/fixtures/acquisition-refusal.json")),Map.class);
+    assertEquals(expected,DetachedFailure.capture(refusal()).facts());
+  }
   @Test void grantIsCountedAfterCommitAndSeparatelyFromCommittedReconciliation() {
     var f = new ComparisonTestFixture(); assertTrue(f.accounting.runOne(f.coordinator));
     var r=f.finish(); ComparisonAccountingValidator.check(r,f.physical.get(),1);

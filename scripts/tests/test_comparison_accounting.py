@@ -1,5 +1,5 @@
 """Cheap corruption tests for measured boundary/attempt evidence, never Oracle substitutes."""
-import copy
+import json
 import sys
 from pathlib import Path
 import unittest
@@ -52,9 +52,11 @@ class ComparisonEvidenceTests(unittest.TestCase):
             validate(value, 1, 1)
 
     def test_unknown_uncertain_or_unrestricted_faults_are_rejected(self):
-        good = dict(category='LOCAL_CONTENTION', type='io.modelsync.core.port.LocalContention',
+        good = dict(category='LOCAL_CONTENTION', exception_type='io.modelsync.core.port.LocalContention',
                     sql_state='61000', vendor_code=54, truncated=False)
-        fact(good)
+        fixture=json.loads((Path(__file__).parent/'fixtures/acquisition-refusal.json').read_text())
+        self.assertEqual(fixture,good)
+        fact(fixture)
         for key, bad in [('category', 'UNKNOWN'), ('category', 'UNCERTAIN_COMMIT'),
                          ('truncated', True), ('sql_state', 'arbitrary secret'), ('message', 'secret')]:
             value = dict(good)

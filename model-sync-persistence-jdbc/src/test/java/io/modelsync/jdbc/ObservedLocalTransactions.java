@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 
 /** Test-only observation outside the real transaction return/commit boundary. */
 final class ObservedLocalTransactions implements LocalTransactions {
+  final java.util.concurrent.atomic.AtomicLong committedClaims = new java.util.concurrent.atomic.AtomicLong();
   private final LocalTransactions delegate;
   private final ComparisonAccounting accounting;
   private final ThreadLocal<ComparisonTransaction> frame = new ThreadLocal<>();
@@ -32,7 +33,7 @@ final class ObservedLocalTransactions implements LocalTransactions {
     } finally { accounting.current().fenceRejections += transaction.fenceRejections; frame.remove(); }
     // A successful callback alone is not a committed claim or completed reconciliation.
     var attempt = accounting.current();
-    if (transaction.claimReturned) attempt.claims++;
+    if (transaction.claimReturned) { attempt.claims++; committedClaims.incrementAndGet(); }
     attempt.completions += transaction.completions;
     attempt.reschedules += transaction.reschedules;
     attempt.localConflicts += transaction.localConflicts;
