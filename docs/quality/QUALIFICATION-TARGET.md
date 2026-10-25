@@ -8,17 +8,18 @@ source-bound reports and the plain-UPDATE cancellation failure remain unchanged.
 ## Target and executable inventory
 
 `oracle26-nowait-ledger-first-v1` means the pinned Oracle26ai / 23.26.3 database
-and JDBC23.26.3.0.0, Hibernate7.4.5.Final, with all four explicit options:
+and JDBC23.26.3.0.0, Hibernate7.4.5.Final, with the four accepted lock/insert options plus explicit durable publication:
 
 | Property | Required value |
 |---|---|
 | model-sync.jdbc.point-lock-policy | ORACLE_NOWAIT |
 | model-sync.jdbc.quota-lock-policy | ORACLE_NOWAIT |
 | model-sync.jdbc.insert-policy | ORACLE_26_NOWAIT |
+| model-sync.jdbc.cooldown-policy | DURABLE, extension version1 |
 | model-sync.jpa.lock-policy | ORACLE_NOWAIT, consumed by the qualified mapping/store |
 
 The [machine-readable inventory](qualification-target.json) names every mandatory
-Oracle test method (77 methods in16 suites), the exact optional characterization,
+Oracle test method (the original77 retained plus6 cooldown methods,83 in18 suites), the exact optional characterization,
 qualified platform, policies and deliberate compatibility controls. The default
 source audit and effective-POM audit enforce that selection. Full validation
 requires exact discovered method inventories, no failed/skipped cases, fresh
@@ -92,3 +93,15 @@ cooldown extension that failed to commit is still unpublished; provider-wide
 publication/recovery requirements remain open. Security, operations, consumer
 compatibility and other parent release gates stay open. A configured full PASS
 does not establish complete bounded persistence or production readiness.
+
+## Cooldown publication extension
+
+The current implementation adds opt-in DURABLE publication to the same named
+configuration. [Ordering/retry contract](COOLDOWN-PUBLICATION.md) and the explicit
+schema extension apply to its standard coordinator path. `OracleCooldownIT` adds
+five small refusal/restart/metadata cases, `OracleCooldownWorkerIT` adds the actual
+worker case, and the existing migration method verifies extension preservation.
+All original77 methods and independent-characterization applicability are retained.
+This is an implementation and executable inventory; current measured results belong
+to the source/run-specific QM report. It does not close the unrecorded-response,
+uncertain-outcome, retention, security or operations release gates.

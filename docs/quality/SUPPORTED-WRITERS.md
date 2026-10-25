@@ -5,7 +5,7 @@ reader into Oracle/JPA using one correctly enlisted datasource/JpaTransactionMan
 Multiple concurrent compliant application instances are in scope. Single-instance
 deployment is not a workaround for an unqualified multi-instance path.
 
-Starter-owned MS_WORK, MS_STATE, MS_QUOTA and MS_META are written only through
+Starter-owned MS_WORK, MS_STATE, MS_QUOTA, optional MS_COOLDOWN and MS_META are written only through
 the schema-compatible starter adapters and reviewed versioned migrations (workers
 stopped for migration). Instances use identical bindings, quota configuration and
 compatible policies. Ledger locks precede projection locks; successful state and
@@ -38,8 +38,13 @@ defaults retain their measured unbounded concurrent-insert wait. Arbitrary mappe
 tables/unique constraints, triggers and external SQL are not added to support.
 Full/release acceptance remains separate; original failing requirements are retained.
 
-Provider limitation is unchanged: a cooldown extension that failed to commit is
-unpublished to other instances. Previous committed cooldown/admission and recoverable
+The opt-in [durable cooldown contract](COOLDOWN-PUBLICATION.md) separates pending
+acceptance from quota materialization. A durably accepted receipt is an admission
+barrier for other compliant instances; acceptance does not lock the quota row.
+Concurrent receipt updates require the quota fence. No out-of-protocol receipt
+writer, concurrent quota deletion or admin purge is supported.
+
+An extension whose pending acceptance failed to commit remains unpublished to other instances. Previous committed cooldown/admission and recoverable
 intent do not guarantee that the new Retry-After extension is globally respected.
 This remains an open provider-budget publication/recovery requirement.
 

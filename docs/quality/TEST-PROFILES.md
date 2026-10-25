@@ -1,8 +1,19 @@
+## Small cooldown/recovery diagnostic
+
+After matching clean default verification and the existing12GiB admission, run
+`python scripts/full-oracle-container.py --cooldown-diagnostic` explicitly. It
+selects five OracleCooldownIT methods, the extension migration method and the
+actual Reactor worker case. Same6GiB/4CPU Oracle,512MiB heap/128MiB direct launcher
+caps, project settings and disposable acknowledgments apply. No100k or million-row
+seed occurs. Then `--comparison-accounting-diagnostic` retains all eight100k
+forward/reverse measurements. Selected PASS never substitutes for the complete
+named-target full run, which retains18GiB admission and every other mandatory gate.
+
 ## Current named full target
 
 The full profile now qualifies only `oracle26-nowait-ledger-first-v1`, as explicitly
 approved by the owner. [Contract and applicability](QUALIFICATION-TARGET.md) and
-[77-method Oracle inventory](qualification-target.json) retain every applicable
+[83-method Oracle inventory (77 retained)](qualification-target.json) retain every applicable
 suite and separate exactly one preserved plain-UPDATE driver characterization.
 Runtime policy/platform/mapping/enlistment receipts are mandatory. Compatibility
 controls remain; their results cannot qualify DEFAULT bounded behavior.

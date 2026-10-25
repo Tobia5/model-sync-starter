@@ -1,7 +1,24 @@
+## Durable cooldown publication (opt-in)
+
+Set `model-sync.jdbc.cooldown-policy=DURABLE` after the explicit optional schema
+migration. The coordinator commits a pending receipt before retrying quota
+materialization in four fresh transactions, with bounded jitter outside database
+resources. Other compliant instances check accepted pending deadlines at admission.
+`COOLDOWN_PENDING` is shared deferral, not an APPLIED receipt. Bounded
+`recoverCooldowns(group, limit)` uses neither owner I/O nor another permit.
+Duplicate delivery retains the original absolute deadline; committed cooldowns
+survive a later failed work-metadata update. DIRECT remains compatible.
+
+If durable acceptance fails, the operation throws an infrastructure failure and
+retains local-only stop/defer protection. Other nodes cannot be promised knowledge
+of an unrecorded response. Already admitted/in-flight reads are not recalled.
+See the [ordering, retry and recovery contract](quality/COOLDOWN-PUBLICATION.md).
+Production acceptance, unknown outcomes and retention remain separate gates.
+
 ## Named qualification configuration (review branch)
 
-[The accepted target](quality/QUALIFICATION-TARGET.md) requires all four Oracle
-NOWAIT options together, a qualified mapping consuming JPA options, supported
+[The accepted target](quality/QUALIFICATION-TARGET.md) requires the Oracle
+NOWAIT/INSERT options and explicit durable cooldown publication together, a qualified mapping consuming JPA options, supported
 ledger-first writers and correctly enlisted local transactions. DEFAULT remains
 compatible without the same bounded-wait guarantee. Only the exact independent
 plain-UPDATE cancellation mechanism changes gate applicability; its historical
