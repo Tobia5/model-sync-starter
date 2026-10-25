@@ -1,3 +1,10 @@
+Current measured result: [cooldown/recovery qualification](../validation/qualification/2026-10-25-cooldown-publication/README.md)
+records7 focused Oracle methods and8 controlled comparison variants passing.
+Final-source default passed189 JUnit/98 Python checks; integrated full is BLOCKED
+by16.272-16.316GiB available memory versus18GiB required. Production remains NO-GO.
+Every instance sharing a quota group must select DURABLE and consume the same
+pending state; mixed DIRECT/DURABLE deployment is not qualified.
+
 ## Durable cooldown publication (opt-in)
 
 Set `model-sync.jdbc.cooldown-policy=DURABLE` after the explicit optional schema

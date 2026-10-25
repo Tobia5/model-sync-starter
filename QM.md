@@ -1,3 +1,28 @@
+## Latest cooldown publication/recovery evidence - 2026-10-25
+
+## Sources and outcomes
+
+- Final clean source: `1cfbefb5be942b97bba0825af7ca83063ae39b16`, tree `a80a1da1e645c6d74291f1072dc9771ac0f62e92`.
+- Target: `oracle26-nowait-ledger-first-v1`, named configuration only, now requiring explicit `cooldown-policy=DURABLE` and optional schema extension version1 alongside the existing NOWAIT/INSERT/JPA policies.
+- Final default: PASS, run `e21b2c6f-4d99-4f9c-b331-32ce89af0956`,189 JUnit tests/98 Python guards,38 XML reports,0 failures/errors/skips; build/audit/qualification/collector exits0. Maven runtime321.574s. Offline core86/trigger43 assertions also passed on final source; these are not extra JUnit tests.
+- Focused Oracle: source `5b96b47c1ab24f2afa0b8fe656a6be4c724f07c6`, tree `c12839418f69987414ea27f636b63beb3d29f8ac`, run `943ef32d-9474-40db-8887-e92df5b880b8`:7/7 methods PASS (five publication, one migration, one actual worker); preflight/launcher/evidence exits0,297.481s overall. Production/Java fixtures are identical at final source; the later four-line change only tightened Python unknown-outcome validation/tests. This focused run is not current full qualification.
+- Controlled comparison: final-source run `6edac4cd-17e1-44c9-bd34-d7e8657d31b1`, eight of eight variants and independent detailed validation PASS; preflight/launcher/evidence exits0,932.494s overall.
+- Integrated full: BLOCKED at resource admission attempt `266ba1b2-6acb-42ae-aa88-f5c57c45c2cd`, Python admission exit2. Host samples16.304/16.272/16.316GiB versus unchanged18GiB minimum. Docker19.974GiB unallocated capacity and C66.878/D1069.897GiB free passed. Full wrapper/Maven/83 mandatory Oracle methods/PIT/Gatling NOT_RUN; no full resources created. The prior default marker was invalidated; blocked collection has attribution NONE and no reused suites. Corrected diagnostic collector exit0; an initial report-orchestration KeyError exit1 and its outputs are retained separately.
+- Production: NO-GO. Configured full acceptance, unrecorded-response/failure windows, uncertain outcomes, receipt retention, security and operations remain open.
+
+
+Current commands: `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify` (build/audit/qualification/collector0), `bash scripts/test-triggers.sh` (0), `python scripts/full-oracle-container.py --cooldown-diagnostic` (preflight/launcher/evidence0 on5b96b47), and `python scripts/full-oracle-container.py --comparison-accounting-diagnostic` (all0 on1cfbefb). Both diagnostics used invocation-only disposable acknowledgments and the approved settings. `python ../qualification-evidence/cooldown-20261025/capacity.py full` returned2; the full entry point `python scripts/full-oracle-container.py` was NOT_EXECUTED, so its Maven exit is NOT_RUN. Actual JDK21.0.12.1/Maven3.9.9/Boot4.1.1/JUnit6.0.3/Hibernate7.4.5.Final/Oracle26ai23.26.3.0.0/JDBC23.26.3.0.0; same6GiB/4CPU Oracle caps.
+
+Responsibility/contract review: core creates the immutable deadline/identity and explicit work outcome; the JDBC receipt adapter owns separate acceptance/materialization transactions and bounded retry; shared admission consumes committed pending state under the quota fence. Projection success still belongs to the existing fenced local transaction. The implementation adds no queue-selection or pacing redesign and changes no cancellation applicability decision.
+
+Detailed commands, counts, limitations and original failed attempts: [qualification report](validation/qualification/2026-10-25-cooldown-publication/README.md) and [raw evidence](validation/qualification/2026-10-25-cooldown-publication/raw-evidence.zip).
+
+Current comparison:3182 claims/acquisitions;1766 grants/owner reads,947 denials,469 confirmed LocalContention refusals,1604 committed syncs.104 logical cooldowns all APPLIED;114 physical materialization attempts including10 refused/rolled-back attempts;0 logical publication failures/unknowns/unresolved outcomes. All32 lane runs completed normally. Acquisition refusals increased versus historical102 and are reported as cost. Source5b96b47 small worker drained in8ms with physical0/pool0.
+
+Historical full FAILED, unclassified55, five earlier publication failures and all previous baselines below remain unchanged. Current independent characterization NOT_RUN; historical cancellation FAILED.
+
+---
+
 # Quota acquisition and comparison accounting - 2026-10-25
 
 **Default PASS. Focused Oracle comparison FAILED. Integrated full NOT_RUN. Production NO-GO.**

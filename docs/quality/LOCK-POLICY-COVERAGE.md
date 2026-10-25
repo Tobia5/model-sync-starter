@@ -1,3 +1,28 @@
+## Durable cooldown publication milestone - 2026-10-25
+
+Opt-in DURABLE adds a separate receipt/admission protocol to the accepted point-lock
+scope. [Exact report and original failures](../../validation/qualification/2026-10-25-cooldown-publication/README.md).
+Small Oracle source5b96b47/run943ef32d-9474-40db-8887-e92df5b880b8 passed7/7;
+comparison source1cfbefb/run6edac4cd-17e1-44c9-bd34-d7e8657d31b1 passed8/8.
+Current integrated full is BLOCKED at unchanged18GiB admission, all83 methods/PIT/
+Gatling NOT_RUN. These results do not reopen accepted queue/pacing/atomicity or
+cancellation applicability decisions, nor qualify complete bounded persistence.
+
+| Path | Demonstrated scope / remaining limit |
+|---|---|
+| MS_COOLDOWN first acceptance | Native Oracle26 INSERT NOWAIT;8 refusals while duplicate competitor remained unresolved, commit/rollback alternatives, canonical identity/deadline. Failed acceptance is not shared acceptance. |
+| Existing quota plus receipt materialization | Quota first, exact receipt second, both NOWAIT; four known-refusal retries in fresh transactions with jitter outside resources. One refusal then success85ms; four refusals then durable pending123ms. Exact SQL/server LOCK_WAIT0, rollback/TX0 and healthy pool observed with competitor held. |
+| Cross-instance admission / pending restart | Committed pending maximum is checked under quota fence. New admission refused/denied; other provider progressed. An already-in-flight admission may complete. Owned JVM died after committed pending acceptance; fresh independent gate observed/recovered, exact child server session absent. |
+| Work metadata after cooldown commit | Real JDBC work lock refused after APPLIED receipt committed; fresh rows showed recoverable LEASED intent/no success state. Canonical retry used one owner read and no deadline drift. |
+| Actual Reactor/JPA/JDBC worker | COOLDOWN_PENDING persisted, independent provider completed, worker remained running;8ms DRAINED with physical0/pool0 before competitor release, later recovery without another owner read. |
+| Controlled load |104 logical cooldowns all APPLIED,10 physical refusal rollbacks,0 unknown/unresolved publication outcomes; all four lanes finished in each of eight variants. Acquisition refusals469 versus historical102 remain visible cost. |
+| Unrecorded response / uncertain completion | Still a release limitation. An unaccepted response is not known to other nodes; unexpected/uncertain completion is not retried as confirmed refusal. APPLIED retention/operations and all other release gates remain open. |
+
+The complete first-work/quota/projection/state and extra-flush/transport coverage
+below remains in force. Historical plain-UPDATE cancellation FAILED remains; current
+characterization NOT_RUN. DIRECT/older platforms/arbitrary replacement beans are not
+qualified by DURABLE evidence. No million-row seed occurred in focused development.
+
 ## Current accepted named configuration - 2026-10-24
 
 The owner approved [QUALIFICATION-TARGET](QUALIFICATION-TARGET.md) and its exact

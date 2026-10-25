@@ -90,3 +90,15 @@ The interval between provider response and durable acceptance, inability to reco
 acceptance, uncertain commit inspection, receipt retention/maintenance, security and
 operations remain release requirements. A passing configured test suite does not
 prove those operational gates or production readiness.
+
+## Current measured scope
+
+[Source-bound report](../../validation/qualification/2026-10-25-cooldown-publication/README.md)
+retains the initial launcher failure, subsequent7/7 Oracle PASS and8/8 controlled
+comparison PASS.104 requests all materialized;10 physical materialization refusals
+were retried without another owner call. The current integrated full is BLOCKED
+by18GiB resource admission; default PASS and focused PASS are separate evidence.
+Every sharing instance must consume DURABLE pending state. A DIRECT participant
+is outside this shared-barrier guarantee; coordinate rollout/migration with writers
+stopped. Unrecorded response windows, unknown completion, retention, security and
+operations remain release requirements.
