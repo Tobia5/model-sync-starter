@@ -1,3 +1,182 @@
+# Quota acquisition and comparison accounting - 2026-10-25
+
+**Default PASS. Focused Oracle comparison FAILED. Integrated full NOT_RUN. Production NO-GO.**
+
+Repository `Tobia5/model-sync-starter`; checkout
+`D:/04_PROJECTS/model-sync-spring-boot-starter-0.1.0/model-sync-starter`; review branch
+`review/layered-refactor-qm-20261020`. Started at clean PR/report `d196236`.
+Tested source is **`36ec8cac6cb5143d8f6f0a2e5a0818114652f724`**, tree
+**`fd6d1bf049ed00b5116684240fd1a8c728815ff5`**. This later report commit is not
+claimed as that tested source. No production Java, locking policy, scheduling policy,
+qualification target, applicability, threshold, workload or resource cap changed.
+
+## Matching default and implementation
+
+`mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify`:
+**exit 0**, 119.683 s, run `e9fcb790-d87c-41c7-be04-e4cb88399a85`, attempt
+`5589ae2b-3bac-4dd1-831b-8768df2562e8`. **174 JUnit / 35 XML suites**, 92 Python
+guards; zero failures/errors/skips. Separate test-report gate 0, recorded-execution
+audit 0 (102 plugin goals, none expensive), QM collector 0. Architecture/source,
+docs, profile/effective-lifecycle and unchanged 77-method named-target inventory
+checks passed. Git Bash `scripts/test-triggers.sh` separately passed 86 core and 43
+trigger standalone assertions, exit0; these are not JUnit counts.
+
+Eighteen new cheap real-coordinator tests cover grants, denials, acquisition contention,
+unknown/uncertain errors, pre-admission failure, fresh/no-fetch completion, owner/result
+failure, retry-persistence failure, cooldown failure/success, concurrent active counters,
+warmup/measurement/drain barriers, missing/double events, independent-count mismatch,
+bounded correlation and the shared Java/Python detached-failure schema. Eight new
+Python tests reject malformed, missing, double-counted, mixed-phase, active, unknown,
+uncertain and falsely published evidence. Production `runOne()` semantics are unchanged.
+
+Test-only observers instrument real quota entry/return/throw and actual local transaction
+returns, before coordinator exception handling. Bounded numeric run-local correlation
+retains no Throwable/entity graphs, connections, credentials, keys/tokens or unrestricted
+exception messages. Failure facts contain category, exception type, SQLState and vendor
+code. Strict validators require complete acquisition and claim partitions, one admission
+use per owner entry, independently queried committed outcomes and physical drain.
+They fail rather than calculating acquisition failures from a remainder.
+
+## Current Oracle execution
+
+**FAILED. Full NOT_RUN. Production NO-GO.**
+
+Tested source `36ec8cac6cb5143d8f6f0a2e5a0818114652f724`, tree `fd6d1bf049ed00b5116684240fd1a8c728815ff5`, clean source-change digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`; run `1451f5ce-a4c4-4654-ba9a-947dc493ccc6`, infrastructure `55abb83c-50da-4c2c-b0ec-05807248c4da`.
+Command: `python scripts/full-oracle-container.py --comparison-accounting-diagnostic`.
+Approved project settings `.mvn/qualification-central.settings.xml`; SHA-256
+`ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`. Generated credentials and isolated runtime/migration
+schemas; pinned Oracle image, 6 GiB / 4 CPU, loopback port. No external database.
+
+Nested Maven full-preflight exit0; selected JUnit launcher1; wrapper1; supervisor1;
+strict comparison evidence gate1. One OracleOptimizationIT method found/started/failed,
+zero skipped/aborted. All eight variants ran. Post-run collection/parser check exit0
+preserves failures: six variants accepted, two rejected for failed cooldown publication.
+Original reports, exits and manifests remain unchanged.
+
+| Round | Variant | Committed claims | Grants | Denials | Acquisition refusals | Owner entries | Committed syncs | Cooldowns published | Cooldown failures | Status |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 0 | baseline | 363 | 221 | 120 | 22 | 221 | 201 | 13 | 0 | PASS |
+| 0 | selector-only | 460 | 220 | 231 | 9 | 220 | 200 | 10 | 3 | FAILED |
+| 0 | admission-only | 220 | 220 | 0 | 0 | 220 | 200 | 13 | 0 | PASS |
+| 0 | combined | 224 | 220 | 4 | 0 | 220 | 200 | 13 | 0 | PASS |
+| 1 | combined | 224 | 220 | 3 | 1 | 220 | 200 | 13 | 0 | PASS |
+| 1 | admission-only | 220 | 220 | 0 | 0 | 220 | 200 | 13 | 0 | PASS |
+| 1 | selector-only | 711 | 220 | 447 | 44 | 220 | 200 | 11 | 2 | FAILED |
+| 1 | baseline | 382 | 223 | 133 | 26 | 223 | 202 | 13 | 0 | PASS |
+
+Measured totals: 2,804 independently observed acquisitions =1,764 returned grants +938
+returned denials +102 thrown refusals. All102 acquisition faults are LocalContention,
+SQLState61000, vendor54. Zero other known acquisition failures, unknown/uncertain outcomes,
+active operations or unclassified attempts. These current facts do not classify historical55.
+Claims partition into1,603 reconciled,938 denied,102 acquisition refusals,156 owner failures
+with committed retry metadata, and5 post-grant cooldown-publication failures before retry
+metadata. Every owner entry has exactly one committed grant/use; no refund capability exists.
+
+Cooldowns:104 actual attempts,99 publications,5 thrown failures. The5 refused extensions
+are not persisted. They are separate from acquisition failures and from retry-metadata SQL
+failures (none observed here). Owner failures:104 synthetic429 and57 timeouts. No grant
+or physical owner call is forgotten after its later failure. Both selector-only measurements
+lost worker lanes after their failures; their performance values cannot qualify an equivalent
+four-lane comparison. Completion floors and denial/native-work assertions remain in source;
+aggregate qualification requires all eight PASS and remains failed.
+
+Small probe: held acquisition returned in110ms; held publication in11ms. Actual SQL is
+`select spacing_ms,next_allowed_ms from MS_QUOTA where quota_group=:1 for update nowait`
+and `select next_allowed_ms from MS_QUOTA where quota_group=:1 for update nowait`.
+Both sessions had LOCK_WAIT0/TX_ACTIVE1 before rollback, LOCK_WAIT0/TX_ACTIVE0 afterward
+while the competing lock remained held; the guard write rolled back. No owner without
+admission, failed extension unchanged, later recovery grant/owner/success1 each, monotonic
+publication, pool active0 and owned executor terminated. Cleanup release earns no refusal credit.
+
+100,000 seeded/due records, seed92,581ms; configured4 coordinator workers, pool8,
+20ms owner spacing,5/25ms latency,429 every17th call, timeout every29th. All variants use
+ORACLE_NOWAIT quota and ORACLE_26_NOWAIT insertion; original table/index statistics,
+forward/reverse order, warmups and cache/history caveats are in raw evidence. Measurement
+is direct runOne with5ms sleep, not the auto-configured Reactor worker. Warmup is separate:
+1,844 owner entries /1,683 committed syncs including warmup versus1,764/1,603 measured.
+Probe recovery adds one owner entry outside these comparison counts. No million-row seed.
+Latency percentiles exclude escaped failed ticks; lag covers completed warmup and measurement
+rows. No capacity or production-SLO claim follows from these failed comparisons.
+
+All eight physical drain snapshots show terminated worker pools and0 owner operations,
+pool connections, other active server requests and server transactions. Fixture rows remaining0;
+only this run's owned container `msq-3f0c315fc9e8` and volume `msq-3f0c315fc9e8-data`
+were removed. Wrapper cleanup and independent Docker absence inspections PASS.
+
+Full entry point was not launched: the complete focused comparison is an unmet prerequisite.
+The unchanged 77-method full inventory, JPA runtime-policy receipts, PIT and Gatling are NOT_RUN
+for this attempt. Named target oracle26-nowait-ledger-first-v1 and applicability are unchanged.
+Historical full25297fd remains FAILED; historical independent cancellation remains FAILED,
+current characterization NOT_RUN. Provider cooldown publication/recovery, other budget,
+security, operations and consumer release gates remain open. No merge/publication/production approval.
+
+## Attempt history and remaining prerequisite
+
+The initial source691ba50 default runs `529884a0-48f9-4deb-aded-f89a65ac9418` and
+`4900cd74-8f2c-4209-b41d-c8d8c8773a6c` passed173 JUnit/92 Python, build/gates/collector 0.
+An initial diagnostic preflight exit2/run_id null created no resources: the local supervisor
+incorrectly invalidated its default marker. It was corrected and a new default was obtained;
+no previous marker was borrowed. The later691ba50 diagnostic `47de1b2d-a415-47d9-97af-196a68a45e75`
+failed after two variants: baseline acquisition401=221 grants+162 denials+18 captured
+refusals; selector-only had one failed post-grant cooldown publication. Original Maven
+preflight0, launcher/wrapper/supervisor1 and evidence-check1 are retained. Its separate
+Python field-name mismatch (`type` versus the actual `exception_type`) is fixed through
+one shared fixture; the previous checker failure is not rewritten. Original cleanup
+inspection and its case-sensitive parser error are retained alongside the corrected
+case-insensitive Docker-absence receipt. Neither failure is relabelled PASS.
+
+Source36ec8ca collects all eight variants even when one fails; the final JUnit assertion
+still requires all eight PASS. Its641.196s supervisor result,505.457s Oracle method,
+source-bound raw events, original exits, fresh diagnostic QM, separate successful
+post-run collection/parser receipts and owned-resource cleanup are archived. Post-run
+strict parsing independently accepts the six successful variants and rejects both
+failed ones for failed cooldown publication. This is collection success, not qualification.
+
+The concrete remaining execution prerequisite is **successful controlled comparison**.
+The five failed cooldown extensions are the documented publication/recovery limitation:
+`SyncFailurePolicy.failed` invokes cooldown before its retry transaction; Oracle NOWAIT
+refusal escapes before that metadata is written. Existing committed admission is retained;
+new cooldown persistence is not promised on failure. No SQL/pacing redesign, retry loop,
+serialization of the measurement wrapper, assertion waiver or green rerun was used to
+hide this result. Failed lanes make the selector-only performance comparisons unsuitable
+for qualification. Address that provider-publication/recovery requirement before another
+integrated qualification; a speculative locking change is not justified by this accounting task.
+
+The named target remains `oracle26-nowait-ledger-first-v1`; DEFAULT compatibility and its
+weaker wait guarantees remain unchanged. All applicable77 Oracle methods, JPA runtime
+policy/mapping receipts, atomicity/recovery/shutdown/transport/uncertain-COMMIT checks,
+PIT at85% killed/generated and six Gatling scenarios remain required for integrated full.
+Their current full execution is NOT_RUN, not an attribution of historical passing results.
+The former plain-UPDATE cancellation reproducer/assertions and historical FAILED outcome
+are unchanged; current characterization is NOT_RUN. Security, operations, consumer,
+provider-budget/cooldown and other production gates remain open.
+
+## Environment, artifacts and preservation
+
+Windows development host; JDK21.0.12.1, Maven3.9.9, Python3.12.10, Boot4.1.1,
+JUnit6.0.3, Surefire/Failsafe3.5.3, Hibernate7.4.5.Final. Actual disposable Oracle
+26ai Free23.26.3.0.0 /JDBC23.26.3.0.0. Docker server29.8.2,8 visible CPUs,
+25,201,692,672-byte Docker capacity; last admission20.120-20.133GiB free host memory,
+19.962GiB unallocated Docker capacity, C85.256GiB/D1069.953GiB free disk. Three bounded
+post-default samples passed the12GiB diagnostic budget (6 Oracle+4 runtime+2 reserve).
+The18GiB full budget remains unchanged; no full admission/launch was attempted after
+the focused failure. No unrelated resource, datasource, process or global setting changed.
+
+[Raw evidence and attempt index](validation/qualification/2026-10-25-comparison-accounting/README.md)
+includes the failed attempts, matching defaults, independent raw-event analysis, native
+plans/cursor/session counters, SQL/refusal/rollback receipts, run-scoped QM and nonsecret
+infrastructure/cleanup evidence. ZIP SHA-256 `11cdd81a0d0a7b3a8ee362d0a04729fcc2c2560f50976f1b9783b8a0ffb5f223`,
+946593bytes/323 entries, CRC PASS; bounded generated-credential/password-property
+scan passed. All15 earlier raw ZIP hashes were verified unchanged. Tested25297fd/report
+d196236, original cancellation failure, all earlier successful/failed evidence and the
+entire prior canonical root QM below remain unchanged. No merge, main change, workflow
+bootstrap, package publication or production acceptance occurred.
+
+---
+
+# Preserved preceding root QM (report d196236; unchanged)
+
 # Integrated named-target qualification - 2026-10-25
 
 **Default PASS. Configured full FAILED. Production NO-GO.** Resource admission

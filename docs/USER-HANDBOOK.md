@@ -535,3 +535,16 @@ Use `IdentityResolver` to integrate MDM identifiers, aliases and ambiguity. Do n
 Vista/DWH dataset ports support a separate analytical integration. Compare manifests only when grain, snapshot/cutoff, filters and schema/mapping versions agree. Distinct MDM ID count alone is not a universal duplicate rule, especially for transaction-grain facts. Track missing/unresolved coverage; excluding failed subjects and reconciling only the rest would hide incompleteness.
 
 No product-specific IBM MDM/Vista client or durable downstream publication mechanism is introduced by the trigger extension. Do not use an analytical mismatch to write back to the operational owner automatically.
+
+
+### Interpreting qualification counters
+
+The test-only comparison observer counts acquisition entry, returned grant, returned denial
+and thrown failure separately, before coordinator handling. Physical owner entry and committed
+projection/state reconciliation are different outcomes. A post-grant owner/result or cooldown
+publication failure is not an acquisition failure, and a requested cooldown is persisted only
+when its transaction returns successfully. Source36ec8ca measured five such failed publications
+under the existing supported protocol; the focused comparison is FAILED and integrated full
+NOT_RUN. [Current evidence](../validation/qualification/2026-10-25-comparison-accounting/README.md)
+retains all eight variants, source/run identities and exact exits. The known provider-publication
+limitation and production NO-GO remain; no new retry/persistence guarantee is introduced.
