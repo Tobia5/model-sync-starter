@@ -1,3 +1,14 @@
+## Fresh execution attempt - 2026-10-25
+
+Clean source09f371c/tree43135c7 passed a fresh default run4c0e79ad with156 JUnit/
+84 Python checks, build/qualification/collection0. Post-collection admission
+failed at11.115/11.224/11.046GiB against unchanged18GiB. Integrated full, all77
+Oracle methods/runtime receipts, PIT/Gatling and current characterization NOT_RUN.
+[QM](../QM.md) and [raw evidence](../validation/qualification/2026-10-25-integrated-named-target/README.md)
+preserve exact identities and exits. No implementation/applicability change.
+Provider cooldown publication/recovery, security/operations and other release
+gates remain open. Production **NO-GO**; earlier reports below remain history.
+
 ## Current named-target evidence - 2026-10-24
 
 The owner approved the exact [qualification mapping](quality/QUALIFICATION-TARGET.md)

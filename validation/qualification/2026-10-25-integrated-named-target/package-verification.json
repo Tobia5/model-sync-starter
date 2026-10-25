@@ -1,0 +1,8 @@
+{
+  "sha256": "77d95bec98dacba14f5f9b43ba0d5979c407554029623b1f77cab7887f581812",
+  "bytes": 202568,
+  "entries": 108,
+  "crc_and_input_hashes_verified": true,
+  "prior_archives_unchanged": 13,
+  "bounded_nonsecret_scan": "No generated 48-hex credential or nonempty XML password/secret property found; not a universal secret audit"
+}

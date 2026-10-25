@@ -1,3 +1,104 @@
+# Current qualification evidence - fresh attempt, 2026-10-25
+
+**Default PASS. Integrated full BLOCKED by host-memory admission; full suites
+NOT_RUN. Production NO-GO.** The accepted named-target applicability decision is
+unchanged. No implementation, prototype, threshold or scope change was made.
+
+## Frozen source and fresh default evidence
+
+Repository `Tobia5/model-sync-starter`, checkout
+`D:/04_PROJECTS/model-sync-spring-boot-starter-0.1.0/model-sync-starter`, branch
+`review/layered-refactor-qm-20261020`. Clean HEAD matched PR #1:
+**`09f371cc013641a7723e7c355cb58cc86e04b666`**, tree
+**`43135c799934192b8a3b5b14da6f3fc4b01cba89`**, empty source-change digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+No matching build process was running before launch. Source remained unchanged
+through build and collection. This later documentation/evidence commit is not
+claimed as the tested source. Sourcef9f6551/report09f371c and all13 earlier raw
+archives remain unchanged; the entire earlier QM is preserved below.
+
+| Check / actual command | Result and original exits |
+|---|---|
+| `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify` | **PASS**, fresh run `4c0e79ad-253c-4c96-9256-3f364c5e7abe`, supervisor attempt `2057251d-80d7-4af8-b836-7f091c8b33e7`; build0 / qualification0 / collection0 / recorded-execution audit0. Build185.023s. **156 JUnit /34 XML suites,84 Python guards**, zero failures/errors/skips. |
+| Architecture, docs, source inventory and effective lifecycle | PASS within default; full retains cheap checks, ordinary execution has no expensive goals. |
+| `python scripts/check-default-log.py target/qm/default-build.log` | Exit0;102 recorded plugin goals, none expensive. |
+| Git Bash `scripts/test-triggers.sh` | Exit0,4.563s;86 core /43 trigger standalone assertions, separately counted from JUnit. |
+| `python ../qualification-evidence/integrated-named-target-20261025/full_capacity.py` | **BLOCKED**, actual child/tool exit2, attempt `ae8cf055-7e4f-4b1a-a7d4-57a7852d40a5`. Host11.115/11.224/11.046GiB versus required18GiB. No retry loop. |
+| Intended `python scripts/full-oracle-container.py` | **NOT_RUN** because admission failed. Wrapper exit, nested `-fae -Pfull clean verify` Maven exit, and full qualification exit are absent, not test failures. |
+| Blocked-attempt QM diagnostics | Collection0. Default marker invalidated only after fresh default reports were archived; blocked evidence attribution NONE, without borrowed JUnit/PIT/Oracle results. |
+
+## Target and unexecuted full requirements
+
+**`oracle26-nowait-ledger-first-v1`**, named configuration only: pinned
+Oracle26ai/23.26.3/JDBC23.26.3.0.0; JDBC point and quota ORACLE_NOWAIT,
+JDBC INSERT ORACLE_26_NOWAIT; JPA ORACLE_NOWAIT consumed by a qualified mapping;
+supported ledger-first writers and correctly enlisted datasource/JpaTransactionManager.
+[The accepted contract](docs/quality/QUALIFICATION-TARGET.md) and
+[77-method/16-suite inventory](docs/quality/qualification-target.json) are unchanged.
+
+All77 Oracle methods, effective runtime-policy/mapping receipts and the other full
+atomicity, shutdown, transport, uncertain-COMMIT, recovery, quota, creation,
+mutation and Gatling requirements remain **NOT_RUN** for this attempt. PIT scope
+and85% killed/all-generated threshold remain intact. No new mutation score,
+Oracle plan/counter/version, load latency, owner-call count, completed-sync
+throughput or reconciliation lag is claimed. No million-row fixture was seeded.
+Deliberate DEFAULT/legacy compatibility controls remain required; DEFAULT and
+arbitrary mappings/beans are not qualified for the named bounded-wait guarantees.
+
+Independent plain-UPDATE cancellation remains **historically FAILED** at
+source2c39b75/report43040e7; the exact preserved reproducer/assertions and approved
+applicability mapping were not changed or rerun. Its separate current
+characterization is **NOT_RUN**, never a fresh PASS.
+
+## Environment, admission and cleanup
+
+Actual default environment: Windows/PowerShell, Temurin21.0.12.1+1-LTS,
+Maven3.9.9, Python3.12.10; pinned/resolved default Boot4.1.1, JUnit6.0.3,
+Hibernate7.4.5.Final and Surefire3.5.3 unchanged. Oracle/Failsafe/PIT/Gatling
+execution here is NOT_RUN; no runtime compatibility claim is inferred for them.
+The approved project Central settings were explicit and selected through
+`MODELSYNC_MAVEN_SETTINGS=.mvn/qualification-central.settings.xml`, SHA-256
+`ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`.
+Wrapper forwarding, pinned image, disposable acknowledgments and limits remain
+unchanged; the wrapper was not invoked. No global settings, DNS or TLS change.
+
+The bounded admission ran only after the build, report collection and standalone
+contracts finished. UTC samples08:02:36.838/08:02:40.395/08:02:44.041 showed
+**11.115/11.224/11.046GiB available host memory**, below the unchanged18GiB plan
+(Oracle6GiB +Maven/PIT/Gatling8GiB +reserve4GiB). Docker29.8.2 reported19.924GiB
+unallocated container capacity,3.547GiB existing usage,8 CPUs; free diskC82.491GiB
+andD1069.961GiB passed the existing20GiB minimum. Oracle remains6GiB/4CPU.
+
+No unrelated workload, container, volume or process was stopped, reconfigured or
+deleted. No test Oracle resource or generated credential was created, so owned
+Oracle cleanup is **NO_RESOURCES_CREATED**, not a fabricated cleanup PASS.
+The selected disposable mode is blocked by host memory, not external Oracle secrets.
+The precise remaining execution prerequisite is **at least18GiB available host
+memory plus the existing Docker/disk checks**. No unchanged full run was repeated.
+
+## Evidence and release limitations
+
+[Raw index](validation/qualification/2026-10-25-integrated-named-target/README.md)
+contains fresh default XML/logs/markers/run-scoped QM, admission samples and
+observed exit, source contracts, blocked run-scoped QM and preservation hashes.
+ZIP SHA-256 `77d95bec98dacba14f5f9b43ba0d5979c407554029623b1f77cab7887f581812`,
+202568 bytes /108 entries; CRC and every input hash verified. The nonsecret scan
+was bounded, not a universal audit. `target/qm/QM.md` now describes the blocked
+attempt; the successful default retains its separate archived run-scoped report.
+
+**Production NO-GO remains.** Configured integrated full is still unexecuted.
+Provider cooldown publication/recovery, security, operations, applicable transport
+and unprotected-path limits, consumer/supply-chain, provider-budget and production
+capacity/SLO requirements remain open. Even a configured full PASS would not be
+production approval. No merge, main change, workflow bootstrap or publication.
+
+---
+
+# Immutable earlier report at 09f371c
+
+The following bytes are preserved from that report. Earlier runs/blocks are their
+own evidence, not measurements or markers for this attempt.
+
 # Current qualification evidence - accepted named target, 2026-10-24
 
 **Default PASS. Configured full BLOCKED at resource admission; full suites NOT_RUN.
