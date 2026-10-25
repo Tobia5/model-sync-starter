@@ -37,7 +37,7 @@ class CancellationDiagnosticTests(unittest.TestCase):
         self.assertIn('blocking_session=?', source)
         self.assertIn('"blocker_release_credited_as_cancellation", false', source)
         container = (ROOT / 'scripts/full-oracle-container.py').read_text()
-        self.assertTrue("['-Xmx512m', '-XX:MaxDirectMemorySize=128m'] if cancellation or nowait or lock_policy or quota or creation or characterization or cooldown else []" in container,
+        self.assertTrue("['-Xmx512m', '-XX:MaxDirectMemorySize=128m'] if cancellation or nowait or lock_policy or quota or creation or characterization or cooldown or target_worker else []" in container,
                         'Every small diagnostic, including characterization, must retain the heap/direct-memory caps')
 
     def test_cli_diagnostic_selection_is_exclusive(self):

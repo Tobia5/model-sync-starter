@@ -26,6 +26,13 @@ segment/cache history. Record actual table/index statistics, rows, quota/pending
 state, owned sessions and thread/pool cleanup separately. No global cache flush,
 resource increase, million-row seed or unchanged comparison is permitted here.
 
+The copied table estimates are NUM_ROWS=100000/BLOCKS=2260, from source7c1abe5,
+run d7fd02b7-1d9d-430c-a8ef-dfa883e8add6, final `all-future-with-stats` entry
+in `oracle-scale.json` (DB-local analysis timestamp2026-10-25T18:20:38).
+Only these two table estimates are set. Index statistics, physical high-water
+mark and cache state are measured rather than claimed reproduced. Original raw
+archive SHA256: f430ab0dc388fe1f413862366d492dbe0feed7c30c838c808332fd1e096fccf5.
+
 Bounded test-only traces record lane/generation and tick/wakeup times, coordinator
 claim/prepare/finish durations, local reservation before/after transitions, hint
 deadlines and clocks, eligible binding sets and selector outcomes. Endpoints record
