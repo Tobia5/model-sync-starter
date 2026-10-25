@@ -105,7 +105,38 @@ def qualify(root=ROOT):
     result = collect(root)
     if result['status'] != 'PASS':
         raise ValueError('Named configuration runtime roles absent/incomplete')
+    path = root / 'model-sync-sample/target/qm/oracle-target-projection.json'
+    fresh(path, root)
+    proof = json.loads(path.read_text(encoding='utf-8'))
+    run = current(root)
+    if not isinstance(proof, dict) or any(proof.get(key) != run[key] for key in
+            ('run_id', 'started_ns', 'source_sha', 'source_tree', 'source_change_digest')):
+        raise ValueError('Projection SQL proof source/run mismatch')
+    validate_projection(proof)
+    result['projection_proof'] = proof
     return result
+
+
+def validate_projection(proof):
+    if (not isinstance(proof, dict) or proof.get('status') != 'PASS'
+            or proof.get('scope') != 'named-target-changed-existing-projection'
+            or proof.get('sql_phase') != 'changed-existing-B' or proof.get('matched_nowait_select') is not True
+            or proof.get('sql_dropped') != 0 or proof.get('owner_calls') != 2):
+        raise ValueError('Changed projection SQL/phase proof failed or absent')
+    sql = proof.get('sql')
+    if not isinstance(sql, list) or not 1 <= len(sql) <= 256 or any(not isinstance(s, str) or len(s) > 8192 for s in sql):
+        raise ValueError('Bounded projection SQL evidence malformed')
+    phases = proof.get('phases')
+    if not isinstance(phases, list) or [p.get('phase') for p in phases] != ['created-A', 'changed-existing-B']:
+        raise ValueError('Projection committed phases absent')
+    rows = [p.get('committed') for p in phases]
+    for row, value, validator, generation in zip(rows, ['A', 'changed-B'], ['A', 'B'], [1, 2]):
+        if (not isinstance(row, dict) or row.get('DISPLAY_NAME') != value or row.get('OWNER_VALIDATOR') != validator
+                or row.get('GENERATION') != generation or row.get('OUTCOME') != 'APPLIED' or row.get('WORK_STATUS') != 'IDLE'
+                or not isinstance(row.get('LOCAL_VERSION'), int) or not re.fullmatch('[0-9a-f]{64}', str(row.get('MATCHED_DIGEST')))):
+            raise ValueError('Committed projection/state pair or generation missing')
+    if rows[1]['LOCAL_VERSION'] != rows[0]['LOCAL_VERSION'] + 1 or rows[0]['MATCHED_DIGEST'] == rows[1]['MATCHED_DIGEST']:
+        raise ValueError('Changed projection revision/digest missing')
 
 
 def characterization(faults):

@@ -36,7 +36,8 @@ class LockPolicyOracleConfiguration {
     return ModelBinding.builder("customer", Customer.class).boundary("synthetic-lock-policy")
         .owner("synthetic-owner", request -> {
           if (TransactionSynchronizationManager.isActualTransactionActive()) throw new AssertionError("Owner under transaction");
-          observation.ownerCalls.incrementAndGet(); return FetchResult.found(new Customer("after", "ACTIVE"), "after");
+          observation.ownerCalls.incrementAndGet(); observation.validatorSeen.set(request.validator());
+          return observation.ownerResult.get();
         }).replica(projection).repairFromOwner().quota("policy-owner").refreshMode(RefreshMode.ON_DEMAND)
         .fingerprint(c -> Digests.sha256Fields(c.displayName(), c.status()))
         .freshness(new FreshnessPolicy(Duration.ofHours(1), Duration.ofDays(1), Duration.ofDays(2))).build();

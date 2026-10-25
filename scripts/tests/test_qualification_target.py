@@ -11,11 +11,40 @@ import unittest
 from unittest.mock import patch, Mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from qualification_target import manifest, validate_host, collect, qualify, characterization, audit_source, ROOT
-from run_evidence import begin, invalidate
+from qualification_target import manifest, validate_host, validate_projection, collect, qualify, characterization, audit_source, ROOT
+from run_evidence import begin, invalidate, current
 
 
 class QualificationTargetTests(unittest.TestCase):
+    def projection(self):
+        return {'scope': 'named-target-changed-existing-projection', 'status': 'PASS',
+                'sql_phase': 'changed-existing-B', 'matched_nowait_select': True, 'sql_dropped': 0, 'owner_calls': 2,
+                'sql': ['select p.x from sample_customer p for update of p.x nowait'],
+                'phases': [{'phase': phase, 'committed': {'DISPLAY_NAME': value, 'OWNER_VALIDATOR': validator,
+                    'GENERATION': generation, 'OUTCOME': 'APPLIED', 'WORK_STATUS': 'IDLE',
+                    'LOCAL_VERSION': generation-1, 'MATCHED_DIGEST': digest*64}}
+                    for phase,value,validator,generation,digest in [('created-A','A','A',1,'a'), ('changed-existing-B','changed-B','B',2,'b')]]}
+
+    def test_projection_requires_changed_committed_pair_and_bounded_phase_sql(self):
+        validate_projection(self.projection())
+        for key,bad in [('status','FAILED'),('sql_phase','created-A'),('sql_dropped',1),
+                        ('matched_nowait_select',False),('owner_calls',1),('sql',[])]:
+            with self.subTest(key=key):
+                value=self.projection();value[key]=bad
+                with self.assertRaises(ValueError):validate_projection(value)
+        for field,bad in [('LOCAL_VERSION',0),('OWNER_VALIDATOR','A'),('OUTCOME','MATCH'),('MATCHED_DIGEST','a'*64)]:
+            with self.subTest(field=field):
+                value=self.projection();value['phases'][1]['committed'][field]=bad
+                with self.assertRaises(ValueError):validate_projection(value)
+
+    def test_missing_or_wrong_run_projection_prevents_qualification(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root,_=self.fixture(directory);path=root/'model-sync-sample/target/qm/oracle-target-projection.json'
+            path.unlink()
+            with self.assertRaises(ValueError):qualify(root)
+            path.write_text(json.dumps({**current(root),**self.projection(),'run_id':'earlier'}))
+            with self.assertRaisesRegex(ValueError,'mismatch'):qualify(root)
+
     def receipt(self):
         value = manifest()
         return {'scope': 'named-qualification-host', 'qualification_target': value['target'],
@@ -63,6 +92,7 @@ class QualificationTargetTests(unittest.TestCase):
             path = folder / f'qualification-host-{role}.json'
             path.write_text(json.dumps({**run, **self.receipt(), 'role': role}))
             paths.append(path)
+        (folder/'oracle-target-projection.json').write_text(json.dumps({**run,**self.projection()}))
         return root, paths
 
     def test_stale_wrong_run_malformed_and_blocked_following_success(self):

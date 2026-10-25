@@ -12,6 +12,10 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 final class LockPolicyObservation implements StatementInspector {
   final List<String> sql = new CopyOnWriteArrayList<>();
   final AtomicInteger ownerCalls = new AtomicInteger();
+  final java.util.concurrent.atomic.AtomicReference<io.modelsync.core.FetchResult<Customer>> ownerResult =
+      new java.util.concurrent.atomic.AtomicReference<>(io.modelsync.core.FetchResult.found(new Customer("after", "ACTIVE"), "after"));
+  final java.util.concurrent.atomic.AtomicReference<String> validatorSeen = new java.util.concurrent.atomic.AtomicReference<>();
+  final AtomicInteger sqlDropped = new AtomicInteger();
   final List<Map<String, Integer>> runtimeSessions = new ArrayList<>();
   Runnable beforeProjectionUpdate;
   LockPolicyObservation(DataSource source) throws SQLException {
@@ -28,7 +32,10 @@ final class LockPolicyObservation implements StatementInspector {
     } finally { for (Connection connection : connections) connection.close(); }
   }
   @Override public String inspect(String statement) {
-    sql.add(statement);
+    synchronized (sql) {
+      if (sql.size() < 256 && statement.length() <= 8192) sql.add(statement);
+      else sqlDropped.incrementAndGet();
+    }
     if (beforeProjectionUpdate != null && statement.toLowerCase(Locale.ROOT).startsWith("update sample_customer"))
       beforeProjectionUpdate.run();
     return statement;
