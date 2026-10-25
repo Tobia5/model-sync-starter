@@ -1,3 +1,116 @@
+# Integrated DURABLE named-target qualification - 2026-10-25
+
+**Default PASS. Configured full FAILED. Production NO-GO.**
+
+Tested clean source **`7c1abe5dce3cb9ee83ae0110bb86de234dc7556d`**, tree **`c604e462bd63b1a2a2bcdcdfd1b66aa8f3af7663`**, branch
+`review/layered-refactor-qm-20261020` in `Tobia5/model-sync-starter`.
+The later report-only commit is not claimed as tested code. No production code,
+locking, scheduling, applicability, workload, threshold or resource setting changed.
+Sources5b96b47/1cfbefb, report7c1abe5 and all17 earlier raw archives remain unchanged;
+the seven-method diagnostic stays attributed to5b96b47.
+
+## Commands, identities and exits
+
+Approved Maven settings: `.mvn/qualification-central.settings.xml`, SHA-256
+`ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`.
+
+| Execution | Current evidence | Original exits |
+|---|---|---|
+| `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify` | PASS; run `c789975e-1a6f-4d90-9d0c-ae0c73eee998`;189 JUnit/98 Python/38 XML,0 bad;216.100s supervisor runtime | build0, report0, execution audit0, collection0 |
+| Git Bash `scripts/test-triggers.sh` |86 core/43 trigger assertions PASS; separate from JUnit |0 |
+| Post-collection `python capacity.py full` (archived helper) | PASS; host21.563/21.648/21.564GiB >=18; Docker19.969GiB available; C83.048/D1069.891GiB free |0 |
+| `python scripts/full-oracle-container.py` | FAILED; run `d7fd02b7-1d9d-430c-a8ef-dfa883e8add6`;5976.738s wrapper runtime;191 Surefire PASS,83 Oracle/18 suites:81 PASS,2 FAILED,0 errors/skips | wrapper1, Maven1, qualification1, collection0 |
+
+The full wrapper used invocation-only `MODELSYNC_ORACLE_CONTAINER=EXPLICIT_DISPOSABLE`,
+`MODELSYNC_FULL_ENV_ACK=DISPOSABLE_NONPRODUCTION` and the same
+`MODELSYNC_MAVEN_SETTINGS`. Nested Maven retained `-B -ntp -s <approved-settings>
+-fae -Pfull clean verify`. No diagnostic selector or unchanged retry ran.
+
+## Required failures retained
+
+1. **OracleQualificationTargetIT FAILED**, line42: no captured Hibernate SQL
+   contained `for update nowait`. Adapter/platform/mapping/enlistment receipts
+   passed; they do not satisfy this separate SQL assertion. The fixture owner
+   returns the same replica value twice: first creation then the equal-value
+   `MATCH` path, which skips projection CAS. This source inspection explains a
+   missing existing-row exercise; the failing fixture did not persist its SQL
+   list, so no replacement SQL observation is invented. Separate lock-policy
+   cases passed and are not reopened. Follow-up: exercise the actual existing-row
+   lookup/refresh in this fixture, retaining the assertion and all policies.
+2. **OracleWorkerIT FAILED**, fixed-mode productive phase: the20,000ms condition
+   timed out at20,003ms. Four lanes,250ms poll/productive/maximum-idle delays,
+   persistence4/owner8 threads, pool8, owner20ms spacing/5ms latency.
+   Completions94 total (10 warmup +84 measured),76 WAITING/94 IDLE.
+   Interval deltas:295 ticks,211 empty,84 owner calls/grants/completions,
+   0 failed ticks,1670 selector callbacks; stable eight-session interval,
+   416334 consistent gets,7753 block gets,1 physical read.
+   Worker running=true and physical/logical0 at the failure snapshot do not
+   prove lane health or successful drain. Cause remains unestablished; no pacing
+   redesign, deadline extension or arbitrary error acceptance was made.
+   Bounded/adaptive, idle, wakeup and recovery phases in this method are NOT_RUN.
+
+## Passing partial evidence
+
+- All83 mandatory Oracle method names matched the current83/18 inventory.
+  Both seven-case atomicity modes, six process-recovery cases, eleven applicable
+  I/O cases, seven lock-policy, six quota, twelve first-creation and six new
+  cooldown methods executed. All except the two methods above passed.
+- Runtime receipts verified actual point/quota/JPA `ORACLE_NOWAIT`,
+  `ORACLE_26_NOWAIT`, `DURABLE`, qualified mappings and shared datasource/
+  `JpaTransactionManager`. All five required host roles are present. Oracle
+  migration consumed extension version1; schema/runtime receipts are retained.
+  The SQL-proof failure still prevents target qualification.
+- PIT1.25.9/provider1.2.3:167 KILLED/1 SURVIVED/168 generated,**99.40% killed/generated**,
+  0 NO_COVERAGE/TIMED_OUT/RUN_ERROR.85% gate unchanged. The surviving
+  `FreshnessPolicy.positive(maxAge)` removal remains counted; positive refresh
+  plus refresh<=max rejects nonpositive max, and null comparison rejects null.
+  Existing equivalence review does not equate exception messages.
+- Eight comparison variants PASS:3425 claims/acquisitions =1765 grants +1138
+  denials +522 captured LocalContention refusals (SQLState61000/vendor54).
+  1765 measured owner calls,1603 committed reconciliations; no unknown/uncertain
+  acquisition outcomes, escaped lanes or active operations.104 logical cooldowns,
+  104 acceptance commits,119 apply attempts =104 commits +15 refused rollbacks;
+  all104 final APPLIED,0 unresolved/logical failures.32/32 lanes finished normally.
+- Oracle capacity:1,000,000 seeded (100,000 due/900,000 future),100 hot requests,
+  seed4,327,625ms. Four direct coordinator workers/pool8:200 measured completions
+  from220 measured owner calls in9584ms (20.868 syncs/s);210 completions/230 calls
+  with warmup.13 synthetic429s/7 timeouts.338.191 summed DB work units per measured
+  owner call; individual counters retained. Claimed runOne p50/p95/p99=37/59/62ms;
+  lag4340740/4345255/4345702ms includes seeding. This is not actual-worker capacity,
+  a production SLO or a million completed synchronizations.
+- Separate actual cooldown worker PASS:2 owner calls/2 committed admissions,
+  unrelated-provider completion, shared pending proof with blocker held, recovery
+  without another read; DRAINED11ms, physical/owner/pool0. This does not replace the
+  failed pacing method. Six in-memory Gatling scenarios and their HTTP assertions
+  PASS:367 requests,0 HTTP errors; not Oracle capacity evidence.
+
+Environment: JDK21.0.12.1, Maven3.9.9, Python3.12.10, Docker29.8.2,
+Boot4.1.1, JUnit/launcher6.0.3, Hibernate7.4.5.Final, Oracle26ai23.26.3.0.0/
+JDBC23.26.3.0.0, Surefire/Failsafe3.5.3, Gatling3.13.1/plugin4.11.0.
+Pinned Oracle image and unchanged6GiB/4CPU caps are in the infrastructure receipt.
+
+## Cleanup, applicability and remaining gates
+
+Container `msq-f84fcf0a6e32` and volume `msq-f84fcf0a6e32-data` removed; wrapper
+checks and independent exact-name inspections agree. All12 PIDs from current-run
+host receipts are absent. No residual owned infrastructure was observed.
+Historical independent cancellation remains FAILED (`2c39b75`/`43040e7`);
+current characterization NOT_RUN. DEFAULT, older Oracle and arbitrary replacement
+beans have no named bounded-persistence qualification.
+
+The two current failures prevent configured full acceptance. Unrecorded provider
+response/failed acceptance windows, uncertain outcomes, receipt retention and
+maintenance, compliant rollout, security, operations and other parent release
+gates remain open. Even a future configured full PASS is not production acceptance.
+
+[Detailed current evidence](validation/qualification/2026-10-25-integrated-durable-target/README.md)
+includes inventory, comparison/Gatling tables and raw reports. Archive SHA-256:
+`f430ab0dc388fe1f413862366d492dbe0feed7c30c838c808332fd1e096fccf5`. Original run-scoped `target/qm/QM.md`, logs, partial checks and raw
+reports are inside the archive. No merge, main change, workflow bootstrap or
+package publication occurred. Earlier QM content below is preserved byte-for-byte.
+
+---
+
 ## Latest cooldown publication/recovery evidence - 2026-10-25
 
 ## Sources and outcomes

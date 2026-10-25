@@ -1,3 +1,10 @@
+## Integrated execution follow-up - 2026-10-25
+
+- [x] Execute the complete named DURABLE target once on clean source7c1abe5/treec604e462, full run d7fd02b7-1d9d-430c-a8ef-dfa883e8add6:83 methods/18 suites,81 PASS/2 FAILED,0 skipped. Default189 JUnit/98 Python, PIT167/168, six Gatling scenarios and all eight comparison variants passed;104 cooldowns all APPLIED. [QM](QM.md) / [raw evidence](validation/qualification/2026-10-25-integrated-durable-target/README.md). This closes execution only, not qualification.
+- [ ] Make OracleQualificationTargetIT actually exercise the existing-row lookup/refresh while retaining its actual-SQL assertion; current identical owner responses take first-create then MATCH. No production lock-policy defect was established by this fixture failure.
+- [ ] Investigate OracleWorkerIT fixed250ms productive timeout using retained20,003ms snapshot:10 warmup+84 measured completions/76 WAITING, running=true, physical/logical0. Root cause unestablished; do not assume lane loss, extend its bound or redesign pacing from this snapshot. Later phases NOT_RUN.
+- [ ] Obtain passing integrated named-target evidence after resolving the current failed requirements. Preserve this failed attempt and every prior scoped milestone. Unrecorded-response windows, uncertainty, receipt retention, security/operations and all incomplete parent gates remain open; production NO-GO.
+
 # Production qualification backlog
 
 Reconciled on 2026-10-22 on the review branch against the source-bound qualifications below; the original main assessment was `a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6`.

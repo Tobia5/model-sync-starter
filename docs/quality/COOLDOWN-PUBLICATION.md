@@ -1,3 +1,16 @@
+## Latest integrated execution - 2026-10-25
+
+Clean source7c1abe5/treec604e462 passed fresh default189 JUnit/98 Python.
+Named full d7fd02b7 executed all83 Oracle methods/18 suites:81 PASS,2 FAILED
+(target fixture missing observed NOWAIT SQL; fixed-mode worker backlog timeout).
+PIT167/168 and six in-memory Gatling scenarios passed. All eight comparison
+variants passed,104 cooldowns APPLIED/0 logical failures. One million seeded rows
+produced200 measured reconciliations, not a million completions. Maven/wrapper/
+qualification1, collection0; owned container/volume and12 receipt PIDs absent.
+[Current QM](../../QM.md) / [raw report](../../validation/qualification/2026-10-25-integrated-durable-target/README.md). Production remains NO-GO;
+accepted scoped milestones and applicability are unchanged. Earlier sections
+below describe historical evidence, not this integrated run.
+
 # Durable provider cooldown publication
 
 The opt-in `model-sync.jdbc.cooldown-policy=DURABLE` requires the explicit
