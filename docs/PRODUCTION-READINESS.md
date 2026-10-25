@@ -1,3 +1,31 @@
+## Integrated named-target execution - 2026-10-25
+
+Clean source25297fd/tree5696753 passed fresh default156 JUnit/84 Python,
+then passed the unchanged18GiB admission and actually ran the full container entry
+point once. Full5fa399f7 **FAILED**: Maven/wrapper1, qualification1, collection0;
+103 passing unit tests,19 Oracle methods with one accounting failure.58 required
+Oracle methods and runtime mapping/enlistment receipts did not run because the
+sample was skipped after JDBC failure. Earlier accepted scoped milestones and
+all historical evidence remain unchanged; the missing current suites are not
+substituted with old receipts.
+
+OracleOptimizationIT line212 failed426 ledger attempts versus220 quota grants
+plus151 denials. The valid quota cursor426 executions/371 fetches and55 rollbacks
+support an outcome-counter gap; per-attempt exception codes were not recorded.
+PIT165/166 and six in-memory semantic Gatling scenarios passed. The separate1M
+Oracle fixture completed200 measured syncs/210 with warmup, not a million syncs.
+Owned container/volume removal was independently verified. [QM](../QM.md) and
+[raw evidence](../validation/qualification/2026-10-25-integrated-named-target-r2/README.md)
+retain exact source/tree, commands, original exits and partial measurements.
+
+Target `oracle26-nowait-ledger-first-v1` and all77 methods remain mandatory;
+no implementation/applicability/threshold/workload change or unchanged retry.
+Historical plain-UPDATE cancellation FAILED; current characterization NOT_RUN.
+**Production NO-GO**: configured full has not passed. Provider cooldown
+publication/recovery, security, operations and other release gates remain open.
+DEFAULT/older Oracle/arbitrary mappings have no named bounded-wait qualification.
+Earlier dated statements below are preserved as historical evidence.
+
 ## Fresh execution attempt - 2026-10-25
 
 Clean source09f371c/tree43135c7 passed a fresh default run4c0e79ad with156 JUnit/

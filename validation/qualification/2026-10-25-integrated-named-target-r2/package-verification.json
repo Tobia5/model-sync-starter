@@ -1,0 +1,11 @@
+{
+  "source_sha": "25297fd61724b22cc1c63f2ce098a410f584a1dc",
+  "source_tree": "56967533013048be55e65a8a8a901e61ab18b6fb",
+  "archive_sha256": "f1145759e81d880197ac9e7ff3e9023cef6dd9845564f1ae05f76e859d114fbd",
+  "bytes": 2520898,
+  "entries": 421,
+  "crc_verified": true,
+  "every_input_hash_verified": true,
+  "bounded_nonsecret_checks_passed": true,
+  "prior_archives_unchanged": 14
+}

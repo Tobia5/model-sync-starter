@@ -1,0 +1,791 @@
+{
+  "source_sha": "25297fd61724b22cc1c63f2ce098a410f584a1dc",
+  "source_tree": "56967533013048be55e65a8a8a901e61ab18b6fb",
+  "qualification_target": "oracle26-nowait-ledger-first-v1",
+  "claim_scope": "named-configuration-only",
+  "default": {
+    "run_id": "365e19af-dbc6-4387-a912-3a608aaefe6f",
+    "result": {
+      "source_sha": "25297fd61724b22cc1c63f2ce098a410f584a1dc",
+      "source_tree": "56967533013048be55e65a8a8a901e61ab18b6fb",
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "supervisor_launch_ns": 1792917169609089400,
+      "supervisor_launch_utc": "2026-10-25T08:32:49.609089+00:00",
+      "bound_seconds": 600,
+      "bound_basis": "scoped local diagnostic/default budget",
+      "command": [
+        "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+        "-B",
+        "-ntp",
+        "-s",
+        ".mvn/qualification-central.settings.xml",
+        "clean",
+        "verify"
+      ],
+      "maven_settings": ".mvn/qualification-central.settings.xml",
+      "external_oracle_variables_cleared": true,
+      "exit": 0,
+      "elapsed_seconds": 160.712,
+      "log_decode": "cp1252; normalized to UTF-8; original build.log retained",
+      "qualification_exit": 0,
+      "execution_audit_exit": 0,
+      "collector_exit": 0
+    },
+    "junit": {
+      "tests": 156,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files": 34
+    },
+    "python_tests": 84,
+    "python_seconds": 115.031,
+    "recorded_nonexpensive_goals": 102
+  },
+  "full": {
+    "run_id": "5fa399f7-2adb-44be-8e57-c89962f1b8b0",
+    "status": "FAILED",
+    "result": {
+      "source_sha": "25297fd61724b22cc1c63f2ce098a410f584a1dc",
+      "source_tree": "56967533013048be55e65a8a8a901e61ab18b6fb",
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "supervisor_launch_ns": 1792917433287268500,
+      "supervisor_launch_utc": "2026-10-25T08:37:13.287268+00:00",
+      "bound_seconds": 10800,
+      "bound_basis": "manual workflow 180 minutes",
+      "command": [
+        "C:\\Python312\\python.exe",
+        "-u",
+        "scripts/full-oracle-container.py"
+      ],
+      "maven_settings": ".mvn/qualification-central.settings.xml",
+      "external_oracle_variables_cleared": true,
+      "exit": 1,
+      "elapsed_seconds": 5757.381,
+      "log_decode": "utf-8",
+      "qualification_exit": 1,
+      "nested_maven_exit": 1,
+      "infrastructure_attempt_id": "8e8ddfa1-8b99-48ba-bd80-d851c2f369f0",
+      "owned_cleanup_verified": true,
+      "collector_exit": 0
+    },
+    "junit": {
+      "tests": 103,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files": 22
+    },
+    "oracle": {
+      "tests": 19,
+      "failures": 1,
+      "errors": 0,
+      "skipped": 0,
+      "files": 7,
+      "suites": [
+        {
+          "name": "io.modelsync.jdbc.OracleCapacityIT",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 4667.678
+        },
+        {
+          "name": "io.modelsync.jdbc.OracleConcurrencyIT",
+          "tests": 3,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 1.214
+        },
+        {
+          "name": "io.modelsync.jdbc.OracleMigrationIT",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 3.551
+        },
+        {
+          "name": "io.modelsync.jdbc.OracleOptimizationIT",
+          "tests": 1,
+          "failures": 1,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 311.028
+        },
+        {
+          "name": "io.modelsync.jdbc.OracleScaleIT",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 567.286
+        },
+        {
+          "name": "io.modelsync.jdbc.OracleSelectionIT",
+          "tests": 11,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 0.771
+        },
+        {
+          "name": "io.modelsync.jdbc.OracleSmokeIT",
+          "tests": 1,
+          "failures": 0,
+          "errors": 0,
+          "skipped": 0,
+          "seconds": 0.598
+        }
+      ]
+    },
+    "python_tests": 84,
+    "python_seconds": 97.059,
+    "required_oracle_methods": 77,
+    "required_oracle_suites": 16,
+    "oracle_methods_not_run": 58,
+    "oracle_suites_not_run": {
+      "OracleAtomicityIT": [
+        "changedLocalRevisionReschedulesWithoutOverwriting",
+        "failureAfterProjectionFlushRollsBackBoth",
+        "failureAtSpringCompletionRollsBackBoth",
+        "failureDuringJdbcLedgerWriteRollsBackJpaFlush",
+        "failureInActualOracleCommitRollsBackBoth",
+        "obsoleteLeaseCannotApplyProjectionOrLedger",
+        "successfulProjectionAndLedgerCommitTogether"
+      ],
+      "NowaitOracleAtomicityIT": [
+        "changedLocalRevisionReschedulesWithoutOverwriting",
+        "failureAfterProjectionFlushRollsBackBoth",
+        "failureAtSpringCompletionRollsBackBoth",
+        "failureDuringJdbcLedgerWriteRollsBackJpaFlush",
+        "failureInActualOracleCommitRollsBackBoth",
+        "obsoleteLeaseCannotApplyProjectionOrLedger",
+        "successfulProjectionAndLedgerCommitTogether"
+      ],
+      "OracleWorkerIT": [
+        "autoConfiguredWorkerPacesBacklogAndBoundsIdleRechecks"
+      ],
+      "OracleRecoveryIT": [
+        "crashAfterCommitBeforeObservedSuccess",
+        "crashAfterDurableClaim",
+        "crashAfterOwnerResponse",
+        "crashAfterRealProjectionFlush",
+        "localRevisionAndOwnedFieldsSurviveCrash",
+        "newerRequestSurvivesCrashAndOldToken"
+      ],
+      "OracleIoIT": [
+        "boundedStopDoesNotCallALockedJpaOperationDrained",
+        "connectionLossBeforeCommitIsUncertainUntilFreshInspection",
+        "databaseReadStallEndsPhysicalCallAndPoolRecovers",
+        "gracefulStopDrainsARealOwnerSocketAndAtomicCompletion",
+        "lateOwnerCannotBecomeASuccessOrAFalseDrain",
+        "lostCommitAcknowledgementDoesNotLoseCommittedCompletion",
+        "ownerSocketTimeoutEndsThePhysicalClientIndependentlyOfFetchTimeout",
+        "poolAcquisitionIsBoundedAndRecovers",
+        "stalledLoginCleansUpItsPhysicalConnectionAttempt",
+        "transactionDeadlineRollsBackEarlierWrites",
+        "unavailableDatabaseConnectionDoesNotWaitIndefinitely"
+      ],
+      "OracleLockPolicyIT": [
+        "actualWorkerBoundsContentionRetriesWithoutForgettingOwnerReads",
+        "disabledPolicyKeepsCompatibleSqlAndSuccess",
+        "enabledProducerRefusalIsNeverAccepted",
+        "enabledSuccessRetainsRefreshGenerationFencingAndLocalRevision",
+        "firstInsertsRemainOrdinaryAndUncontendedFunctionalityWorks",
+        "lockedRetryMetadataIsReportedOnceAndLeavesLeaseRecoverable",
+        "resultRefusalRollsBackBeforeDurableRetryAndRespectsCooldown"
+      ],
+      "OracleQuotaContentionIT": [
+        "compatibleDefaultStillCommitsSharedAdmissionAndCooldown",
+        "coordinatorNeverCallsOwnerWithoutCommittedAdmissionAndRecovers",
+        "existingRegistrationAcrossInstancesDoesNotChangeAdmissionOrSpacing",
+        "failedCooldownAfterOwnerReadPropagatesOnceAndKeepsRecoverableLease",
+        "heldAdmissionRefusesRepeatedlyWhileAnotherInstanceAndGroupContinue",
+        "heldCooldownIsNotReportedPersistedAndNeverShortensPriorCooldown"
+      ],
+      "OracleFirstCreationIT": [
+        "defaultQuotaCommit",
+        "defaultQuotaRollback",
+        "defaultWorkCommit",
+        "defaultWorkRollback",
+        "firstProjectionAndStateCommitAreFenced",
+        "firstProjectionAndStateRollbackAreFenced",
+        "nativePassiveCreationCommit",
+        "nativePassiveCreationRollback",
+        "nativeQuotaCommit",
+        "nativeQuotaRollback",
+        "nativeWorkCommit",
+        "nativeWorkRollback"
+      ],
+      "OracleQualificationTargetIT": [
+        "namedTargetConsumesEveryPolicyAndQualifiedMapping"
+      ]
+    },
+    "target_runtime_receipt_status": "NOT_RUN",
+    "target_runtime_receipt_count": 0
+  },
+  "admission": {
+    "source_sha": "25297fd61724b22cc1c63f2ce098a410f584a1dc",
+    "source_tree": "56967533013048be55e65a8a8a901e61ab18b6fb",
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attempt_id": "bf902018-5614-470c-9df4-a606a46f5081",
+    "observed_utc": "2026-10-25T08:36:50.687077+00:00",
+    "scope": "one integrated named-target full qualification",
+    "oracle_budget_gib": 6,
+    "maven_pit_gatling_runtime_budget_gib": 8,
+    "reserve_gib": 4,
+    "required_host_available_gib": 18,
+    "full_pipeline_required_host_available_gib": 18,
+    "full_pipeline_explicit": true,
+    "budget_unchanged": true,
+    "oracle_cpu_cap": 4,
+    "resource_change": "no cap increase, unrelated resource or global setting change",
+    "samples": [
+      {
+        "observed_utc": "2026-10-25T08:36:51.1061923Z",
+        "host_available_gib": 20.418
+      },
+      {
+        "observed_utc": "2026-10-25T08:36:54.5705567Z",
+        "host_available_gib": 20.419
+      },
+      {
+        "observed_utc": "2026-10-25T08:36:58.0308131Z",
+        "host_available_gib": 20.414
+      }
+    ],
+    "docker": {
+      "server": "29.8.2",
+      "cpu": 8,
+      "memory_bytes": 25201692672,
+      "running_containers": 4,
+      "observed_container_memory_gib": 3.55,
+      "unallocated_container_capacity_gib": 19.921
+    },
+    "disk_free_gib": [
+      {
+        "drive": "C",
+        "free_gib": 93.144
+      },
+      {
+        "drive": "D",
+        "free_gib": 1069.959
+      }
+    ],
+    "status": "PASS",
+    "exit": 0
+  },
+  "cleanup": {
+    "source_sha": "25297fd61724b22cc1c63f2ce098a410f584a1dc",
+    "source_tree": "56967533013048be55e65a8a8a901e61ab18b6fb",
+    "run_id": "5fa399f7-2adb-44be-8e57-c89962f1b8b0",
+    "infrastructure_attempt_id": "8e8ddfa1-8b99-48ba-bd80-d851c2f369f0",
+    "observed_utc": "2026-10-25T10:14:16.330049+00:00",
+    "scope": "read-only inspection of this run-owned container and data volume only",
+    "wrapper_cleanup_verified": true,
+    "resources": [
+      {
+        "kind": "container",
+        "name": "msq-a794a498c4fe",
+        "command": [
+          "docker",
+          "container",
+          "inspect",
+          "--format",
+          "{{.Name}}",
+          "msq-a794a498c4fe"
+        ],
+        "exit": 1,
+        "output": "Error response from daemon: No such container: msq-a794a498c4fe",
+        "verified_absent": true
+      },
+      {
+        "kind": "volume",
+        "name": "msq-a794a498c4fe-data",
+        "command": [
+          "docker",
+          "volume",
+          "inspect",
+          "--format",
+          "{{.Name}}",
+          "msq-a794a498c4fe-data"
+        ],
+        "exit": 1,
+        "output": "Error response from daemon: get msq-a794a498c4fe-data: no such volume",
+        "verified_absent": true
+      }
+    ],
+    "cleanup_verified": true
+  },
+  "mutation": {
+    "source_sha": "25297fd61724b22cc1c63f2ce098a410f584a1dc",
+    "source_tree": "56967533013048be55e65a8a8a901e61ab18b6fb",
+    "qualification_target": "oracle26-nowait-ledger-first-v1",
+    "claim_scope": "named-configuration-only",
+    "run_id": "5fa399f7-2adb-44be-8e57-c89962f1b8b0",
+    "pit_version": "1.25.9",
+    "junit_provider": "pitest-junit5-plugin 1.2.3",
+    "junit_platform": "6.0.3",
+    "threshold_percent": 85,
+    "score_definition": "100 * KILLED / all generated mutations",
+    "counts": {
+      "KILLED": 165,
+      "SURVIVED": 1,
+      "NO_COVERAGE": 0,
+      "TIMED_OUT": 0,
+      "RUN_ERROR": 0,
+      "UNKNOWN": 0
+    },
+    "generated": 166,
+    "score_percent": 99.39759036144578,
+    "exclusions": [],
+    "scope_manifest": "source-contracts/model-sync-testkit/pom.xml",
+    "reviews": [
+      {
+        "status": "SURVIVED",
+        "class": "io.modelsync.core.domain.FreshnessPolicy",
+        "method": "<init>",
+        "line": 19,
+        "mutator": "org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator",
+        "description": "removed call to io/modelsync/core/domain/FreshnessPolicy::positive",
+        "reason": "Rechecked current source line19: removing positive(maxAge) retains the positive(refreshAfter) and refreshAfter <= maxAge constraints. Nonpositive maxAge still fails that ordering; null still throws NullPointerException in compareTo. This is the previously reviewed equivalent constructor validation, not an exclusion. It remains in the denominator."
+      }
+    ],
+    "mutation_status": "PASS",
+    "full_qualification": "FAILED"
+  },
+  "gatling": {
+    "cooldown": {
+      "accepted_visits": 0,
+      "available_processors": 16,
+      "completed_rows": 0,
+      "harness_status": "PASS",
+      "http": {
+        "assertions": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "http_response_time_ms": {
+          "p50": 5,
+          "p95": 27,
+          "p99": 27
+        },
+        "raw_report": "model-sync-performance/target/gatling/cooldownrecoverysimulation-20261025101257001",
+        "requests": {
+          "ko": 0,
+          "ok": 3,
+          "total": 3
+        },
+        "status": "PASS"
+      },
+      "job_requests": 2,
+      "jvm_max_heap_bytes": 1073741824,
+      "ledger_rows": 1,
+      "measurement_and_drain_ms": 464,
+      "physical_owner_calls": 2,
+      "scenario": "cooldown",
+      "status": "PASS",
+      "synthetic_rows": 0,
+      "warmup_ms": 0
+    },
+    "event": {
+      "accepted_visits": 1,
+      "available_processors": 16,
+      "completed_rows": 0,
+      "harness_status": "PASS",
+      "http": {
+        "assertions": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "http_response_time_ms": {
+          "p50": 2,
+          "p95": 23,
+          "p99": 23
+        },
+        "raw_report": "model-sync-performance/target/gatling/eventjobvisitsimulation-20261025101254057",
+        "requests": {
+          "ko": 0,
+          "ok": 4,
+          "total": 4
+        },
+        "status": "PASS"
+      },
+      "job_requests": 0,
+      "jvm_max_heap_bytes": 1073741824,
+      "ledger_rows": 1,
+      "measurement_and_drain_ms": 751,
+      "physical_owner_calls": 2,
+      "scenario": "event",
+      "status": "PASS",
+      "synthetic_rows": 0,
+      "warmup_ms": 0
+    },
+    "fresh": {
+      "accepted_visits": 40,
+      "available_processors": 16,
+      "completed_rows": 0,
+      "harness_status": "PASS",
+      "http": {
+        "assertions": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "http_response_time_ms": {
+          "p50": 83,
+          "p95": 178,
+          "p99": 179
+        },
+        "raw_report": "model-sync-performance/target/gatling/freshvisitssimulation-20261025101245306",
+        "requests": {
+          "ko": 0,
+          "ok": 40,
+          "total": 40
+        },
+        "status": "PASS"
+      },
+      "job_requests": 0,
+      "jvm_max_heap_bytes": 1073741824,
+      "ledger_rows": 1,
+      "measurement_and_drain_ms": 716,
+      "physical_owner_calls": 1,
+      "scenario": "fresh",
+      "status": "PASS",
+      "synthetic_rows": 0,
+      "warmup_ms": 0
+    },
+    "hot": {
+      "accepted_visits": 100,
+      "available_processors": 16,
+      "completed_rows": 0,
+      "harness_status": "PASS",
+      "http": {
+        "assertions": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "http_response_time_ms": {
+          "p50": 203,
+          "p95": 209,
+          "p99": 211
+        },
+        "raw_report": "model-sync-performance/target/gatling/hotkeysimulation-20261025101248135",
+        "requests": {
+          "ko": 0,
+          "ok": 100,
+          "total": 100
+        },
+        "status": "PASS"
+      },
+      "job_requests": 0,
+      "jvm_max_heap_bytes": 1073741824,
+      "ledger_rows": 1,
+      "measurement_and_drain_ms": 939,
+      "physical_owner_calls": 1,
+      "scenario": "hot",
+      "status": "PASS",
+      "synthetic_rows": 0,
+      "warmup_ms": 0
+    },
+    "leases": {
+      "accepted_visits": 0,
+      "available_processors": 16,
+      "completed_rows": 93,
+      "harness_status": "PASS",
+      "http": {
+        "assertions": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "http_response_time_ms": {
+          "p50": 301,
+          "p95": 315,
+          "p99": 320
+        },
+        "raw_report": "model-sync-performance/target/gatling/leasesledgersimulation-20261025101259526",
+        "requests": {
+          "ko": 0,
+          "ok": 200,
+          "total": 200
+        },
+        "status": "PASS"
+      },
+      "job_requests": 200,
+      "jvm_max_heap_bytes": 1073741824,
+      "ledger_rows": 200,
+      "measurement_and_drain_ms": 1084,
+      "physical_owner_calls": 93,
+      "scenario": "leases",
+      "status": "PASS",
+      "synthetic_rows": 200,
+      "warmup_ms": 0
+    },
+    "unsafe": {
+      "accepted_visits": 20,
+      "available_processors": 16,
+      "completed_rows": 0,
+      "harness_status": "PASS",
+      "http": {
+        "assertions": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "http_response_time_ms": {
+          "p50": 60,
+          "p95": 62,
+          "p99": 62
+        },
+        "raw_report": "model-sync-performance/target/gatling/unsafevaluesimulation-20261025101251313",
+        "requests": {
+          "ko": 0,
+          "ok": 20,
+          "total": 20
+        },
+        "status": "PASS"
+      },
+      "job_requests": 0,
+      "jvm_max_heap_bytes": 1073741824,
+      "ledger_rows": 1,
+      "measurement_and_drain_ms": 610,
+      "physical_owner_calls": 0,
+      "scenario": "unsafe",
+      "status": "PASS",
+      "synthetic_rows": 0,
+      "warmup_ms": 0
+    }
+  },
+  "oracle_capacity": {
+    "scope": "oracle-backed-reconciliation",
+    "rows": 1000000,
+    "seeded_rows": 1000000,
+    "seed_ms": 4606905,
+    "due_rows": 100000,
+    "hot_requests": 100,
+    "workers": 4,
+    "owner_spacing_ms": 20,
+    "owner_latency_ms": {
+      "ordinary": 5,
+      "slow": 25
+    },
+    "warmup_owner_calls": 10,
+    "warmup_completed_syncs": 10,
+    "warmup_ms": 806,
+    "measured_owner_calls": 220,
+    "physical_owner_calls": 230,
+    "provider_429": 13,
+    "synthetic_timeouts": 7,
+    "ledger_attempts": 224,
+    "completed_syncs": 210,
+    "measured_completed_syncs": 200,
+    "owner_calls_per_second": 22.348638764729785,
+    "completed_syncs_per_second": 20.316944331572532,
+    "owner_failure_rate": 0.08695652173913043,
+    "projection_rows": 210,
+    "db_session_work": 71620,
+    "db_work_per_measured_owner_call": 325.54545454545456,
+    "run_one_latency_ms": {
+      "p50": 4,
+      "p95": 39,
+      "p99": 62
+    },
+    "reconciliation_lag_ms": {
+      "p50": 4643848,
+      "p95": 4648520,
+      "p99": 4648968
+    },
+    "measurement_ms": 9844,
+    "jvm_max_heap_bytes": 16944988160,
+    "jvm_used_heap_bytes": 288502480,
+    "available_processors": 16,
+    "pool_max_connections": 8,
+    "pool_max_lifetime_ms": 0,
+    "oracle_version": "Oracle AI Database 26ai Free Release 23.26.3.0.0 - Develop, Learn, and Run for Free\nVersion 23.26.3.0.0",
+    "selector_queries": 12482,
+    "polls": 3070,
+    "empty_polls": 2846,
+    "selection_attempts": 11988,
+    "empty_selections": 11764,
+    "claimed_run_one_latency_ms": {
+      "p50": 43,
+      "p95": 65,
+      "p99": 67
+    },
+    "empty_poll_latency_ms": {
+      "p50": 3,
+      "p95": 4,
+      "p99": 4
+    },
+    "measured_quota_grants": 220,
+    "measured_quota_denials": 4,
+    "db_work_per_ledger_attempt": 319.73214285714283,
+    "db_work_per_completed_sync": 358.1
+  },
+  "capacity_measurement_native_session_statistics": {
+    "consistent gets": 51723,
+    "CPU used by this session": 46,
+    "db block gets": 19706,
+    "execute count": 18653,
+    "parse count (total)": 19253,
+    "physical reads": 228,
+    "redo size": 2941916,
+    "sorts (disk)": 0,
+    "sorts (memory)": 9,
+    "sorts (rows)": 53,
+    "user commits": 3755,
+    "user rollbacks": 0
+  },
+  "capacity_measurement_cursor_attribution": {
+    "VALID": 14,
+    "UNATTRIBUTABLE": 3
+  },
+  "capacity_seed_waits": {
+    "buffer busy waits:waits": 36,
+    "buffer busy waits:microseconds": 25719745,
+    "control file parallel write:waits": 243,
+    "control file parallel write:microseconds": 1141296,
+    "Data file init write:waits": 972,
+    "Data file init write:microseconds": 1123219,
+    "db file parallel read:waits": 1,
+    "db file parallel read:microseconds": 341,
+    "db file scattered read:waits": 0,
+    "db file scattered read:microseconds": 0,
+    "db file sequential read:waits": 4241,
+    "db file sequential read:microseconds": 52786,
+    "db file single write:waits": 81,
+    "db file single write:microseconds": 166133,
+    "direct path sync:waits": 81,
+    "direct path sync:microseconds": 862321,
+    "Disk file operations I/O:waits": 249,
+    "Disk file operations I/O:microseconds": 316826,
+    "enq: RO - fast object reuse:waits": 0,
+    "enq: RO - fast object reuse:microseconds": 0,
+    "events in waitclass Other:waits": 2036,
+    "events in waitclass Other:microseconds": 39135077,
+    "latch: cache buffers chains:waits": 12,
+    "latch: cache buffers chains:microseconds": 692,
+    "latch: redo copy:waits": 1,
+    "latch: redo copy:microseconds": 94,
+    "latch: redo writing:waits": 2,
+    "latch: redo writing:microseconds": 7,
+    "latch: shared pool:waits": 6,
+    "latch: shared pool:microseconds": 1591,
+    "local write wait:waits": 0,
+    "local write wait:microseconds": 0,
+    "log buffer space:waits": 6,
+    "log buffer space:microseconds": 51766,
+    "log file switch (checkpoint incomplete):waits": 414,
+    "log file switch (checkpoint incomplete):microseconds": 4346311137,
+    "log file switch completion:waits": 412,
+    "log file switch completion:microseconds": 27293101,
+    "log file sync:waits": 322,
+    "log file sync:microseconds": 1185693,
+    "resmgr:cpu quantum:waits": 3,
+    "resmgr:cpu quantum:microseconds": 1434,
+    "SQL*Net break/reset to client:waits": 0,
+    "SQL*Net break/reset to client:microseconds": 0,
+    "SQL*Net message to client:waits": 1296,
+    "SQL*Net message to client:microseconds": 5313,
+    "SQL*Net more data from client:waits": 17900,
+    "SQL*Net more data from client:microseconds": 245858,
+    "undo segment extension:waits": 219,
+    "undo segment extension:microseconds": 131528413
+  },
+  "capacity_cleanup_ms": 14447,
+  "comparison_failure": {
+    "source_sha": "25297fd61724b22cc1c63f2ce098a410f584a1dc",
+    "source_tree": "56967533013048be55e65a8a8a901e61ab18b6fb",
+    "qualification_target": "oracle26-nowait-ledger-first-v1",
+    "claim_scope": "named-configuration-only",
+    "run_id": "5fa399f7-2adb-44be-8e57-c89962f1b8b0",
+    "status": "FAILED",
+    "test": "io.modelsync.jdbc.OracleOptimizationIT.comparesIndependentChangesOnTheSameOraclePopulation",
+    "source_line": 212,
+    "assertion": "ledger_attempts == quota_grants + quota_denials",
+    "ledger_attempts": 426,
+    "quota_grants": 220,
+    "quota_denials": 151,
+    "unaccounted_returned_decisions": 55,
+    "measured_owner_calls": 220,
+    "measured_completed_syncs": 200,
+    "session_rollbacks": 55,
+    "demonstrated": "The assertion omits executions that do not return a grant/deny decision. MeasuredQuotaGate increments only after delegate.acquire returns; SyncCoordinator.runOne returns true for a claimed attempt whose preparation later fails.",
+    "classification_limit": "426 continuous quota-lock SQL executions, 371 fetches and 55 transaction rollbacks are retained. Per-attempt exception codes were not captured, so the 55 are not all asserted to be ORA-00054 or assigned to a production safety regression.",
+    "comparison_scope": "Only baseline round0 reached measurement; the other seven variant/round measurements did not execute. No before/after comparison PASS or speedup is claimed.",
+    "next_focused_work": "Instrument returned decisions, acquisition exceptions and any pre-admission terminal outcomes separately, with deterministic counter regressions and a complete accounting identity. Keep committed-admission/physical-call controls and all existing thresholds.",
+    "unchanged_rerun": false,
+    "production_source_changed": false
+  },
+  "oracle_scale": {
+    "rows": 100000,
+    "ledger_claims": 1,
+    "distributions": [
+      {
+        "distribution": "all-due",
+        "samples": 3,
+        "legacy_samples": 3
+      },
+      {
+        "distribution": "due-future",
+        "samples": 3,
+        "legacy_samples": 3
+      },
+      {
+        "distribution": "expired-future",
+        "samples": 3,
+        "legacy_samples": 3
+      },
+      {
+        "distribution": "mixed",
+        "samples": 3,
+        "legacy_samples": 3
+      },
+      {
+        "distribution": "all-future",
+        "samples": 3,
+        "legacy_samples": 3
+      },
+      {
+        "distribution": "all-due-with-stats",
+        "samples": 3,
+        "legacy_samples": 3
+      },
+      {
+        "distribution": "mixed-with-stats",
+        "samples": 3,
+        "legacy_samples": 3
+      },
+      {
+        "distribution": "all-future-with-stats",
+        "samples": 3,
+        "legacy_samples": 3
+      }
+    ]
+  },
+  "standalone": {
+    "source_sha": "25297fd61724b22cc1c63f2ce098a410f584a1dc",
+    "source_tree": "56967533013048be55e65a8a8a901e61ab18b6fb",
+    "command": "\"C:\\Program Files\\Git\\bin\\bash.exe\" scripts/test-triggers.sh",
+    "exit": 0,
+    "elapsed_seconds": 4.234
+  },
+  "historical_cancellation": "FAILED",
+  "current_characterization": "NOT_RUN",
+  "production_readiness": "NO_GO",
+  "prior_archives_unchanged": 14,
+  "product_or_tooling_source_changed": false
+}

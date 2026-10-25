@@ -1,3 +1,206 @@
+# Integrated named-target qualification - 2026-10-25
+
+**Default PASS. Configured full FAILED. Production NO-GO.** Resource admission
+passed and the actual full container entry point ran once. Its required
+`OracleOptimizationIT` accounting assertion failed. No implementation, gate,
+applicability, threshold, deadline or workload was changed or rerun to obtain green.
+
+## Frozen source, identity and original exits
+
+Repository `Tobia5/model-sync-starter`, checkout
+`D:/04_PROJECTS/model-sync-spring-boot-starter-0.1.0/model-sync-starter`, branch
+`review/layered-refactor-qm-20261020`. Clean local and remote PR #1 HEAD matched:
+**`25297fd61724b22cc1c63f2ce098a410f584a1dc`**, tree
+**`56967533013048be55e65a8a8a901e61ab18b6fb`**, empty source-change digest
+`e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+No concurrent build or source edit occurred through execution and collection.
+This later documentation/evidence commit is not claimed as the full-tested source.
+Sourcef9f6551, report09f371c and all14 prior raw archives remain unchanged; the
+complete preceding root QM is preserved below.
+
+| Actual check / command | Result and original exits |
+|---|---|
+| `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify` | **PASS**, fresh default run `365e19af-dbc6-4387-a912-3a608aaefe6f`, attempt `f23fc5a8-a492-4c4a-88b0-68f1122b16ff`. Build0 / qualification0 / collection0 / recorded-execution audit0.160.712s;156 JUnit /34 XML suites and84 Python guards,0 failures/errors/skips. Python115.031s. |
+| Architecture, docs, source inventory and effective lifecycle | PASS in default and full static stages. Default recorded execution audit:102 plugin goals, none expensive. |
+| Git Bash `scripts/test-triggers.sh` | Exit0,4.234s;86 core /43 trigger standalone assertions, separately counted from JUnit. |
+| `python ../qualification-evidence/integrated-named-target-20261025-r2/full_capacity.py` | **PASS**, exit0; admission `bf902018-5614-470c-9df4-a606a46f5081`, three bounded post-build samples above18GiB. |
+| `python scripts/full-oracle-container.py` | **FAILED**, full run `5fa399f7-2adb-44be-8e57-c89962f1b8b0`, supervisor attempt `b1a94ab5-d089-4607-a6a7-03d7be0e31f3`, infrastructure `8e8ddfa1-8b99-48ba-bd80-d851c2f369f0`. Nested Maven1 / wrapper1 / supervisor1 / separate qualification1 / collection0. Command elapsed5757.381s; launched08:37:13.287 UTC. |
+| Actual nested Maven | `mvnw.cmd -B -ntp -s <absolute-approved-project-settings> -fae -Pfull clean verify`.103 passing Surefire tests /22 fresh XML suites;19 Oracle methods /7 suites,18 passed /1 failed /0 errors /0 skips.84 Python guards/97.059s. |
+| Evidence gates after the JDBC failure | Architecture `require-default-reports` and performance `reject-missing-full-evidence` also exited1. Old autoconfiguration/sample default XML was rejected as stale. Collection0 published diagnostics without masking the original build1. |
+
+The default and full have separate fresh markers, logs, manifests and raw reports.
+The generated full QM's separate default-command NOT_RUN does not erase the
+successful matching default above. Executed failing Oracle evidence is FAILED;
+unexecuted suites are NOT_RUN. No historical counts are attributed to this run.
+
+## Named target and required inventory
+
+**`oracle26-nowait-ledger-first-v1`**, named configuration only. The accepted
+[contract](docs/quality/QUALIFICATION-TARGET.md) and
+[77-method /16-suite inventory](docs/quality/qualification-target.json) are intact:
+Oracle26ai/23.26.3, JDBC23.26.3.0.0, JDBC point/quota ORACLE_NOWAIT,
+INSERT ORACLE_26_NOWAIT, qualified JPA ORACLE_NOWAIT mapping and correctly enlisted
+ledger-first local transactions. Deliberate DEFAULT/legacy compatibility controls
+remain in the inventory. No qualification of all configurations is claimed.
+
+| Oracle suite executed | Methods | Outcome | Suite seconds |
+|---|---:|---|---:|
+| OracleCapacityIT |1| PASS |4667.678|
+| OracleConcurrencyIT |3| PASS |1.214|
+| OracleMigrationIT |1| PASS |3.551|
+| OracleOptimizationIT |1| **FAILED** |311.028|
+| OracleScaleIT |1| PASS |567.286|
+| OracleSelectionIT |11| PASS |0.771|
+| OracleSmokeIT |1| PASS |0.598|
+
+Maven skipped the dependent sample after JDBC verify failed. Its remaining
+**58 methods /9 suites are NOT_RUN**: OracleAtomicityIT7,
+NowaitOracleAtomicityIT7, OracleWorkerIT1, OracleRecoveryIT6, OracleIoIT11,
+OracleLockPolicyIT7, OracleQuotaContentionIT6, OracleFirstCreationIT12 and
+OracleQualificationTargetIT1. Effective starter/JPA, atomicity, recovery and
+actual-worker policy/mapping/enlistment receipts are **NOT_RUN**, not substituted
+with earlier focused receipts. The declared target cannot pass without them.
+Earlier accepted scoped milestones are preserved; these omissions are not new
+failures of their previously tested behavior.
+
+Historical independent plain-UPDATE cancellation remains **FAILED** at
+source2c39b75/report43040e7. The exact source/assertions and applicability mapping
+are unchanged; separate current characterization is **NOT_RUN**. No A/B/C matrix,
+prototype or unchanged full repeat was executed.
+
+## Concrete failed assertion and attribution
+
+`OracleOptimizationIT.comparesIndependentChangesOnTheSameOraclePopulation`,
+[tested line212](https://github.com/Tobia5/model-sync-starter/blob/25297fd61724b22cc1c63f2ce098a410f584a1dc/model-sync-persistence-jdbc/src/test/java/io/modelsync/jdbc/OracleOptimizationIT.java#L212):
+`ledger_attempts == quota_grants + quota_denials` failed **426 !=220+151**.
+The round0 baseline retained220 measured physical owner calls and200 completed
+syncs in49.210s. Calls matched committed grants220; no unadmitted owner call is
+demonstrated by this failure. Only this first comparison measurement ran; the
+other seven variant/round measurements are NOT_RUN. No before/after PASS or
+speedup is claimed, and the accepted selector design is not reopened.
+
+The exact quota-lock cursor `ftw6vyf723296` has established continuity: same child
+address, last-load identity, loads1 and plan1455054116. It records426 executions,
+371 fetches/rows and1957 buffer gets /0 disk reads; native session rollbacks55.
+`MeasuredQuotaGate.acquire` increments only after `delegate.acquire()` returns;
+`runOne()` returns true for a durable claim even when preparation later fails.
+The assertion therefore lacks a category for unsuccessful acquisition or other
+pre-admission outcomes. Per-attempt exception codes were not captured, so all55
+are not independently asserted to be ORA-00054. The raw endpoints and delta are
+in [failure-analysis.json](validation/qualification/2026-10-25-integrated-named-target-r2/failure-analysis.json).
+
+**Next focused blocker:** instrument acquisition exceptions and pre-admission
+terminal outcomes explicitly, add deterministic counter regressions and retain
+a complete accounting identity plus committed-admission/physical-call controls.
+Do not assign the difference to an invented successful category or remove the
+assertion. No production adapter or test-tooling fix was made in this execution task.
+
+## Passing partial evidence: Oracle, mutation and semantic load
+
+The million-row **capacity test passed**, using four direct `runOne()` threads
+with5ms sleeps and pool8, not the actual continuous Reactor/JPA worker. Dataset:
+1,000,000 seeded /100,000 due /900,000 future,100 coalesced hot requests; synthetic
+owner spacing20ms, latency5/25ms,13 total429s and7 synthetic timeouts.
+
+| Capacity quantity | Actual measurement |
+|---|---|
+| Seed / warmup / measurement |4606.905s /0.806s /9.844s; cleanup separately recorded |
+| Physical owner calls / committed syncs |230 /210 total, including10 /10 warmup;220 /200 measured |
+| Measured call / completed-sync rate |22.3486 /20.3169 per second |
+| Ledger attempts / quota grants / denials |224 /220 /4; distinct from physical calls |
+| Polls / empty-deferred polls |3070 /2846;11988 selection attempts,12482 selector SQL executions |
+| `runOne` p50/p95/p99 |4 /39 /62ms; productive43 /65 /67ms, empty3 /4 /4ms |
+| Reconciliation lag p50/p95/p99 |4643848 /4648520 /4648968ms; includes the long pre-measurement seed-age origin |
+| Native measurement session counters |51723 consistent gets +19706 db-block gets =71429 logical gets;228 physical reads. Observation-query overhead included. |
+| Cursor attribution |14 VALID /3 UNATTRIBUTABLE measurement intervals; ambiguous deltas are not manufactured. Raw snapshots retained. |
+
+The separately sampled legacy combined counter71620 mixes gets/reads over its
+own interval; it is not relabelled native logical gets. Seed waits include
+4346311137 microseconds of `log file switch (checkpoint incomplete)`; seed,
+cleanup, session totals, cursor deltas and selector callbacks remain separate.
+No wait-counter sum is claimed as wall-clock share. A million-row seed is
+**not a million completed reconciliations** or a production capacity/SLO result.
+The100k scale case passed8 distributions with24 current and24 legacy claim
+samples and retained actual plans/statistics/waits. Its ledger claim is not a
+provider-admitted call. Actual continuous-worker/pacing/idle measurements are
+NOT_RUN in this attempt; earlier accepted evidence is unchanged.
+
+PIT1.25.9 /JUnit plugin1.2.3 executed with the resolved JUnit6.0.3 platform:
+**165 KILLED,1 SURVIVED,0 NO_COVERAGE,0 TIMED_OUT,0 RUN_ERROR,0 UNKNOWN**;
+166 generated, **99.3975903614% KILLED/all generated**, unchanged85% threshold.
+Raw XML and HTML are retained; PIT reported7s total /6s analysis. All eight
+declared behavioral classes and four test classes remain in scope. The sole
+survivor removes `positive(maxAge)` at FreshnessPolicy line19; current constructor
+constraints were rechecked against the existing equivalent-mutation review.
+It remains in the denominator, with no exclusion. [Current review](validation/qualification/2026-10-25-integrated-named-target-r2/mutation-review.json).
+
+All six Gatling3.13.1 /plugin4.11.0 **in-memory semantic** scenarios passed,
+367 HTTP requests /0 KO, plus separate harness owner/ledger assertions:
+
+| Scenario | Requests | HTTP p50/p95/p99 ms |
+|---|---:|---|
+| fresh |40|83 /178 /179|
+| hot |100|203 /209 /211|
+| unsafe |20|60 /62 /62|
+| event |4|2 /23 /23|
+| cooldown |3|5 /27 /27|
+| leases |200|301 /315 /320|
+
+These are HTTP request latencies, not reconciliation lag or completed throughput.
+The leases fixture recorded200 synthetic rows and93 completed rows /93 owner
+calls during1084ms measurement/drain. Other scenarios retain their own assertions;
+HTTP acceptance is never counted as completion. No Oracle-scale or real-provider
+qualification is inferred from these semantic scenarios. Warmup0 and per-mode
+measurement/drain durations and raw assertions are in the execution index.
+
+## Environment, admission, cleanup and remaining gates
+
+Actual environment: Windows/PowerShell, Temurin21.0.12.1+1-LTS, Maven3.9.9,
+Python3.12.10; resolved Boot4.1.1, JUnit6.0.3, Hibernate7.4.5.Final,
+Surefire/Failsafe3.5.3 unchanged. Full sample Hibernate/JPA runtime qualification
+did not execute. Oracle migration/capacity reported Oracle AI Database26ai Free
+23.26.3.0.0. Digest-pinned image:
+`ghcr.io/gvenzl/oracle-free:23.26.3-slim@sha256:6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd`.
+
+The approved project settings were forwarded through `MODELSYNC_MAVEN_SETTINGS`,
+SHA-256 `ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`.
+Both disposable acknowledgments were invocation-only; external Oracle variables
+were cleared. Generated credentials, synthetic data, separate runtime/migration
+schemas and loopback-only Oracle port were used. No global Maven, DNS/TLS,
+Docker resource setting or unrelated workload was changed.
+
+After default build, collection and standalone contracts, UTC admission samples
+08:36:51.106 /08:36:54.571 /08:36:58.031 showed20.418 /20.419 /20.414GiB available
+host memory. The18GiB plan remained Oracle6 +Maven/PIT/Gatling8 +reserve4;
+Oracle stayed6GiB /4CPU. Docker29.8.2 had19.921GiB unallocated capacity; free
+diskC93.144/D1069.959GiB passed20GiB minima. No admission retry loop.
+Capacity JVM reported16 processors,16944988160-byte heap ceiling and288502480-byte
+used heap at its final sample, not peak usage; Gatling JVM ceiling1GiB. The8GiB
+runtime planning allowance is not misrepresented as a configured heap cap.
+
+Only owned container `msq-a794a498c4fe` and volume `msq-a794a498c4fe-data` were
+created and removed. Wrapper cleanup was verified; independent read-only Docker
+inspections at10:14:16 UTC returned the exact no-such-container/no-such-volume
+responses, separately preserved. No residual session-owned Oracle resource.
+The concrete qualification blocker is the failed accounting gate and absent
+dependent results, not host-memory admission or external Oracle secrets.
+
+[Raw evidence/index](validation/qualification/2026-10-25-integrated-named-target-r2/README.md):
+ZIP SHA-256 `f1145759e81d880197ac9e7ff3e9023cef6dd9845564f1ae05f76e859d114fbd`,
+2520898 bytes /421 entries; CRC/every input hash checked and bounded nonsecret
+scan passed. It retains default/full run-scoped QM, fresh markers, original exits,
+failing/passing XML, PIT XML/HTML, Gatling logs/HTML, Oracle plans/counters and
+cleanup receipts. The preceding14 archives and reports are unchanged.
+
+**Production NO-GO.** Fresh integrated named-target qualification has not passed.
+Failed cooldown publication/recovery, security, operations, consumer/supply-chain,
+actual provider budgets and production capacity/SLO gates remain open. DEFAULT,
+older Oracle lines and arbitrary mappings/beans are not qualified for the named
+bounded-wait guarantees. Accepted scoped milestones remain separate from parent
+release gates. No merge, main change, workflow bootstrap or package publication.
+
+---
+
 # Current qualification evidence - fresh attempt, 2026-10-25
 
 **Default PASS. Integrated full BLOCKED by host-memory admission; full suites
