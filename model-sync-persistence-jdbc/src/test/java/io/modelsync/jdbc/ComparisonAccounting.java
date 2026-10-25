@@ -76,7 +76,7 @@ final class ComparisonAccounting {
     result.put("attempts", snapshots);
     var totals = new LinkedHashMap<String, Long>();
     for (String key : List.of("claims", "acquisitions", "grants", "denials", "acquisition_failures", "owner_calls",
-        "admission_uses", "completions", "reschedules", "cooldown_attempts", "cooldown_published", "cooldown_failures"))
+        "admission_uses", "completions", "reschedules", "cooldown_attempts", "cooldown_published", "cooldown_pending", "cooldown_durable", "cooldown_failures"))
       totals.put(key, snapshots.stream().mapToLong(v -> ((Number)v.get(key)).longValue()).sum());
     result.put("totals", totals);
     var terminal = new TreeMap<String, Long>(); attempts.forEach(a -> terminal.merge(a.terminal(), 1L, Long::sum));

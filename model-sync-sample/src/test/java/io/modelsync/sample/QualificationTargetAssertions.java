@@ -37,6 +37,8 @@ final class QualificationTargetAssertions {
     assertEquals(JdbcInsertPolicy.ORACLE_26_NOWAIT, ReflectionTestUtils.getField(work, "insertPolicy"));
     assertEquals(JdbcQuotaLockPolicy.ORACLE_NOWAIT, ReflectionTestUtils.getField(quota, "lockPolicy"));
     assertEquals(JdbcInsertPolicy.ORACLE_26_NOWAIT, ReflectionTestUtils.getField(quota, "insertPolicy"));
+    assertEquals(JdbcCooldownPolicy.DURABLE, ((JdbcQuotaGate)quota).cooldownPolicy());
+    assertTrue(((JdbcQuotaGate)quota).supportsDurableCooldowns());
     assertEquals(JpaLockPolicy.ORACLE_NOWAIT, ReflectionTestUtils.getField(projection, "lockPolicy"));
     Object mapping = ReflectionTestUtils.getField(projection, "mapping");
     assertTrue(mapping instanceof CustomerJpaMapping || mapping instanceof RecoveryJpaMapping,
@@ -56,6 +58,7 @@ final class QualificationTargetAssertions {
       receipt.put("qualification_target", TARGET); receipt.put("claim_scope", "named-configuration-only");
       receipt.put("role", role); receipt.put("pid", ProcessHandle.current().pid());
       receipt.put("point_lock_policy", "ORACLE_NOWAIT"); receipt.put("quota_lock_policy", "ORACLE_NOWAIT");
+      receipt.put("cooldown_policy", "DURABLE");
       receipt.put("insert_policy", "ORACLE_26_NOWAIT"); receipt.put("jpa_lock_policy", "ORACLE_NOWAIT");
       receipt.put("actual_adapter_settings_verified", true); receipt.put("qualified_mapping_consumed", true);
       receipt.put("datasource_enlisted", true); receipt.put("writer_protocol", "ledger-first");

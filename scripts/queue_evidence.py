@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 import math
 from run_evidence import fresh, current
-from comparison_accounting import validate as accounting, drain, probe
+from comparison_accounting import publication, validate as accounting, drain, probe
 
 DISTRIBUTIONS = {'all-due', 'due-future', 'expired-future', 'mixed', 'all-future',
                  'all-due-with-stats', 'mixed-with-stats', 'all-future-with-stats'}
@@ -123,6 +123,9 @@ def check(root: Path, scale: dict, workload: dict):
     accounting(workload.get('accounting'), workload.get('measured_owner_calls'), workload.get('measured_completed_syncs'))
     accounting(workload.get('warmup_accounting'), workload.get('warmup_owner_calls'), workload.get('warmup_completed_syncs'))
     drain(workload.get('physical_drain'))
+    publication(workload.get('cooldown_resolution'),workload.get('publication_transactions'))
+    if len(workload['cooldown_resolution']['receipts']) != workload['accounting']['totals']['cooldown_attempts']+workload['warmup_accounting']['totals']['cooldown_attempts']:
+        raise ValueError('Missing logical cooldown receipts')
     if (attempts != workload['accounting']['totals']['claims']
             or workload.get('measured_quota_failures') != workload['accounting']['quota_boundary']['acquisition_failures']
             or workload.get('measured_quota_refusals') != workload['accounting']['quota_boundary']['acquisition_refusals']):
@@ -148,7 +151,7 @@ def optimization(root: Path):
             or value.get('status') != 'PASS' or value.get('rows') != 100_000 or value.get('due_rows') != 100_000
             or value.get('workers') != 4 or value.get('pool') != 8 or value.get('owner_spacing_ms') != 20
             or value.get('owner_call_target') != 230 or value.get('cleanup_rows_remaining') != 0
-            or value.get('quota_policy') != 'ORACLE_NOWAIT' or value.get('insert_policy') != 'ORACLE_26_NOWAIT'):
+            or value.get('cooldown_policy') != 'DURABLE' or value.get('quota_policy') != 'ORACLE_NOWAIT' or value.get('insert_policy') != 'ORACLE_26_NOWAIT'):
         raise ValueError('Oracle controlled comparison incomplete/failed or workload changed')
     variants = {'baseline', 'selector-only', 'admission-only', 'combined'}
     empty = value.get('empty_queue_results')
@@ -177,15 +180,21 @@ def optimization(root: Path):
                 or result.get('polls') != result.get('ledger_attempts', 0) + result.get('empty_polls', 0)
                 or result.get('selection_attempts') != result.get('ledger_attempts', 0) + result.get('empty_selections', 0)):
             raise ValueError('Oracle comparison outcome/accounting mismatch')
+        if (result.get('lanes_finished_normally') != 4 or not isinstance(result.get('lane_polls'),list)
+                or len(result['lane_polls']) != 4 or any(type(v) is not int or v <= 0 for v in result['lane_polls'])):
+            raise ValueError('Comparison lost a lane or did not establish four active workers')
         accounting(result.get('accounting'), result['measured_owner_calls'], result['measured_completed_syncs'])
         accounting(result.get('warmup_accounting'), result['total_owner_calls']-result['measured_owner_calls'],
                    result['total_completed_syncs']-result['measured_completed_syncs'])
         drain(result.get('physical_drain'))
+        publication(result.get('cooldown_resolution'),result.get('publication_transactions'))
+        if len(result['cooldown_resolution']['receipts']) != result['accounting']['totals']['cooldown_attempts']+result['warmup_accounting']['totals']['cooldown_attempts']:
+            raise ValueError('Missing comparison cooldown receipts')
         if (result['ledger_attempts'] != result['accounting']['totals']['claims']
                 or result.get('quota_failures') != result['accounting']['quota_boundary']['acquisition_failures']
                 or result.get('quota_refusals') != result['accounting']['quota_boundary']['acquisition_refusals']
                 or any(result.get(k) != result['accounting']['quota_boundary'][k]
-                       for k in ('cooldown_attempts', 'cooldown_published', 'cooldown_failures'))):
+                       for k in ('cooldown_attempts', 'cooldown_published', 'cooldown_pending', 'cooldown_durable', 'cooldown_failures'))):
             raise ValueError('Oracle observed boundary/claimed attempt mismatch')
         counters(result.get('measurement_work', {}).get('session_statistics'))
         native = result['measurement_work']['session_statistics']

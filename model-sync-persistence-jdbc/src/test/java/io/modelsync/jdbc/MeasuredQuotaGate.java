@@ -1,7 +1,7 @@
 package io.modelsync.jdbc;
 
 import io.modelsync.core.QuotaAdmission;
-import io.modelsync.core.port.QuotaGate;
+import io.modelsync.core.port.*;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.*;
@@ -21,6 +21,8 @@ final class MeasuredQuotaGate implements QuotaGate {
   final AtomicLong published = new AtomicLong();
   final AtomicLong cooldownFailures = new AtomicLong();
   final AtomicLong cooldownActive = new AtomicLong();
+  final AtomicLong pending = new AtomicLong(), durable = new AtomicLong();
+  private final List<Map<String,Object>> publications = new ArrayList<>();
   final AtomicLong refusals = new AtomicLong(), knownFailures = new AtomicLong(), unknownFailures = new AtomicLong(), uncertainCommits = new AtomicLong();
   private final ComparisonAccounting accounting;
   private final Map<DetachedFailure, Long> failureFacts = new LinkedHashMap<>();
@@ -75,6 +77,36 @@ final class MeasuredQuotaGate implements QuotaGate {
     } finally { cooldownActive.decrementAndGet(); if (attempt != null) attempt.cooldownActive--; }
   }
 
+  @Override public boolean supportsDurableCooldowns() { return delegate.supportsDurableCooldowns(); }
+
+  @Override public CooldownReceipt publishCooldown(CooldownRequest request) {
+    synchronized(this){if(publications.size()>=4092)throw new IllegalStateException("Publication correlation bound exhausted");}
+    var attempt = accounting == null ? null : accounting.current();
+    cooldowns.incrementAndGet(); cooldownActive.incrementAndGet();
+    if (attempt != null) { attempt.cooldownAttempts++; attempt.cooldownActive++; }
+    var event = new LinkedHashMap<String,Object>();
+    event.put("operation_id",request.operationId()); event.put("requested_deadline_ms",request.until().toEpochMilli());
+    event.put("phase",attempt==null?"untracked":attempt.phase);
+    try {
+      var receipt=delegate.publishCooldown(request);
+      event.put("canonical_deadline_ms",receipt.request().until().toEpochMilli());
+      event.put("state",receipt.state().name()); event.put("durable",receipt.durable());
+      if(receipt.durable()){durable.incrementAndGet();if(attempt!=null)attempt.cooldownDurable++;}
+      if(receipt.state()==CooldownState.APPLIED){published.incrementAndGet();if(attempt!=null)attempt.cooldownPublished++;}
+      else {pending.incrementAndGet();if(attempt!=null)attempt.cooldownPending++;}
+      return receipt;
+    } catch(RuntimeException | Error failure) {
+      cooldownFailures.incrementAndGet(); var fact=DetachedFailure.capture(failure); record(fact);
+      event.put("state","FAILED");event.put("failure",fact.facts());
+      if(attempt!=null){attempt.cooldownFailures++;attempt.fault("COOLDOWN",fact);} throw failure;
+    } finally {
+      synchronized(this) { publications.add(event); }
+      cooldownActive.decrementAndGet();if(attempt!=null)attempt.cooldownActive--;
+    }
+  }
+
+  synchronized List<Map<String,Object>> publicationFacts() { return List.copyOf(publications); }
+
   private synchronized void record(DetachedFailure fact) {
     if (failureFacts.size() >= 32 && !failureFacts.containsKey(fact))
       fact = new DetachedFailure("UNKNOWN", "TYPE_LIMIT", null, null, true);
@@ -95,6 +127,7 @@ final class MeasuredQuotaGate implements QuotaGate {
     result.put("acquisition_unknown_failures", unknownFailures.get()); result.put("acquisition_uncertain_commits", uncertainCommits.get());
     result.put("cooldown_attempts", cooldowns.get()); result.put("cooldown_published", published.get());
     result.put("cooldown_failures", cooldownFailures.get()); result.put("cooldown_active", cooldownActive.get());
+    result.put("cooldown_pending",pending.get()); result.put("cooldown_durable",durable.get());
     return result;
   }
 }

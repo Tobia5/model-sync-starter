@@ -24,6 +24,15 @@ class QualificationTargetTests(unittest.TestCase):
                 'datasource_enlisted': True, 'writer_protocol': 'ledger-first',
                 **{k: v for k, v in value['platform'].items() if k != 'oracle_brand'}, 'oracle': 'Oracle AI Database 26ai 23.26.3.0.0'}
 
+    def test_preserves_all_previous_77_methods(self):
+        old=json.loads((ROOT/'scripts/tests/fixtures/oracle-required-77.json').read_text())
+        self.assertEqual(77,sum(len(methods) for suites in old.values() for methods in suites.values()))
+        current=manifest()['mandatory']
+        for module,suites in old.items():
+            for suite,methods in suites.items():
+                self.assertTrue(set(methods)<=set(current[module][suite]))
+        self.assertEqual('DURABLE',manifest()['policies']['cooldown_policy'])
+
     def test_default_fallback_each_policy_and_broad_qualification_are_rejected(self):
         validate_host(self.receipt())
         for key in manifest()['policies']:

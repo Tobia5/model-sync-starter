@@ -4,11 +4,11 @@ from collections import Counter
 
 FIELDS = ('claims', 'acquisitions', 'grants', 'denials', 'acquisition_failures',
           'owner_calls', 'admission_uses', 'completions', 'reschedules',
-          'cooldown_attempts', 'cooldown_published', 'cooldown_failures')
+          'cooldown_attempts', 'cooldown_published', 'cooldown_pending', 'cooldown_durable', 'cooldown_failures')
 BOUNDARY = ('acquisitions', 'grants', 'denials', 'acquisition_failures',
             'acquisition_refusals', 'acquisition_known_failures', 'acquisition_unknown_failures',
             'acquisition_uncertain_commits', 'acquisition_active',
-            'cooldown_attempts', 'cooldown_published', 'cooldown_failures', 'cooldown_active')
+            'cooldown_attempts', 'cooldown_published', 'cooldown_pending', 'cooldown_durable', 'cooldown_failures', 'cooldown_active')
 
 
 def require(condition, text):
@@ -60,8 +60,9 @@ def validate(value, physical_calls, committed_syncs):
         complete, retry = number(a, 'completions'), number(a, 'reschedules')
         require(c <= 1 and q <= c and q == g + d + f, 'acquisition cardinality/partition')
         require(number(a, 'owner_calls') == g == number(a, 'admission_uses'), 'owner/admission mismatch')
-        require(number(a, 'cooldown_attempts') == number(a, 'cooldown_published') + number(a, 'cooldown_failures')
+        require(number(a, 'cooldown_attempts') == number(a, 'cooldown_published') + number(a, 'cooldown_pending') + number(a, 'cooldown_failures')
                 and number(a, 'cooldown_failures') == 0, 'failed/missing cooldown publication')
+        require(number(a, 'cooldown_pending') <= number(a, 'cooldown_durable') <= number(a, 'cooldown_attempts'), 'invalid durable receipt count')
         faults = a.get('faults')
         require(isinstance(faults, dict), 'detached fault events absent')
         for site, evidence in faults.items():
@@ -159,3 +160,38 @@ def probe(value):
     require(value.get('failed_extension_was_not_published') is True, 'publication recovery absent')
     require(all(value.get('cooldown_recovery_counters', {}).get(k) == v for k, v in
                 {'cooldown_attempts': 3, 'cooldown_published': 2, 'cooldown_failures': 1}.items()), 'publication recovery counters')
+
+
+def publication(value, physical):
+    """Fresh aggregate only; immediate PENDING and eventual APPLIED remain separate counts."""
+    require(isinstance(value, dict) and value.get('status') == 'PASS' and value.get('unresolved') == 0, 'unresolved publication')
+    receipts, rows = value.get('receipts'), value.get('persisted_rows')
+    require(isinstance(receipts, list) and isinstance(rows, list) and len(receipts) <= 4096, 'publication facts absent/bound')
+    unique = {}
+    for event in receipts:
+        require(event.get('durable') is True and event.get('state') in {'APPLIED', 'DURABLE_PENDING'}, 'unaccepted publication')
+        operation = event.get('operation_id')
+        require(isinstance(operation, str) and re.fullmatch(r'[a-f0-9]{64}', operation), 'unsafe/missing operation identity')
+        deadline = number(event, 'canonical_deadline_ms')
+        require(number(event, 'requested_deadline_ms') == deadline, 'comparison deadline drift')
+        require(operation not in unique or unique[operation] == deadline, 'duplicate deadline drift')
+        unique[operation] = deadline
+    require(len(rows) == len(unique) and len({r.get('OPERATION_ID') for r in rows}) == len(rows), 'receipt/row partition')
+    for row in rows:
+        require(row.get('PUBLICATION_STATUS') == 'APPLIED' and row.get('DEADLINE_MS') == unique.get(row.get('OPERATION_ID')), 'receipt not applied at final boundary')
+    require(isinstance(physical, dict), 'physical publication accounting absent')
+    before, after, delta = (physical.get(k) for k in ('before','after','delta'))
+    require(all(isinstance(v, dict) for v in (before,after,delta)), 'physical publication snapshots absent')
+    for phase in ('accept','apply'):
+        for suffix in ('attempts','active','commits','rollbacks','completion_failures','refusals','other_sql_failures'):
+            key = phase + '_' + suffix
+            require(number(delta,key) == (number(after,key) if suffix == 'active' else number(after,key)-number(before,key)), 'physical publication interval')
+        require(all(number(delta,phase+'_'+s) == 0 for s in ('active','completion_failures','other_sql_failures')), 'unknown/active publication transaction')
+        require(number(delta,phase+'_attempts') == number(delta,phase+'_commits') + number(delta,phase+'_rollbacks'), 'publication transaction partition')
+        require(number(delta,phase+'_rollbacks') == number(delta,phase+'_refusals'), 'unattributed publication rollback')
+    failures = physical.get('detached_sql_failures')
+    require(isinstance(failures,list), 'physical SQL facts absent')
+    for failure in failures:
+        require(failure.get('vendor_code') == 54 and failure.get('sql_state') == '61000' and failure.get('truncated') is False, 'unexplained publication SQL failure')
+        require(set(failure) == {'category','exception_type','sql_state','vendor_code','truncated','count'} and number(failure,'count') > 0, 'unsafe SQL facts')
+    require(sum(number(f,'count') for f in failures) == sum(number(after,p+'_'+suffix) for p in ('accept','apply') for suffix in ('refusals','other_sql_failures')), 'missing/double raw SQL failure facts')

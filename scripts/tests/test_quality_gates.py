@@ -162,7 +162,7 @@ class QualityGateTests(unittest.TestCase):
             for name in gate.ORACLE:
                 report = root / 'model-sync-persistence-jdbc/target/failsafe-reports' / f'TEST-{name}.xml'
                 report.parent.mkdir(parents=True, exist_ok=True)
-                count = 11 if name == "OracleSelectionIT" else 3 if name == "OracleConcurrencyIT" else 1
+                count = len(gate.target_manifest()['mandatory']['model-sync-persistence-jdbc'][name])
                 methods = gate.target_manifest()['mandatory']['model-sync-persistence-jdbc'][name]
                 report.write_text(f'<testsuite name="{name}" tests="{count}" failures="0" errors="0" skipped="0">'
                     + ''.join(f'<testcase name="{method}"/>' for method in methods) + '</testsuite>')

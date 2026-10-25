@@ -70,11 +70,18 @@ class OracleMigrationIT {
       jdbc.execute(routeMigration.substring(routeStart,routeEnd));
       assertEquals(List.of("BINDING_ID","PRIORITY","WORK_STATUS","NEXT_AT_MS","WORK_ID"),jdbc.queryForList("select column_name from user_ind_columns where index_name='MS_WORK_BIND_READY_IX' order by column_position",String.class));
       new JdbcWorkStore(jdbc).verifySchema();
+      assertEquals(0,jdbc.queryForObject("select count(*) from user_tables where table_name='MS_COOLDOWN'",Integer.class));
+      jdbc.update("insert into MS_QUOTA(quota_group,spacing_ms,next_allowed_ms) values('migration-cooldown',20,123)");
+      created.add("MS_COOLDOWN");
+      new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(new ClassPathResource("model-sync/migration/oracle-cooldown-v1.sql")).execute(ds);
+      assertEquals("1",jdbc.queryForObject("select meta_value from MS_META where meta_name='cooldown_schema_version'",String.class));
+      var gate=new JdbcQuotaGate(jdbc,new org.springframework.jdbc.datasource.DataSourceTransactionManager(ds),java.time.Clock.systemUTC(),JdbcQuotaLockPolicy.ORACLE_NOWAIT,JdbcInsertPolicy.ORACLE_26_NOWAIT,JdbcCooldownPolicy.DURABLE);
+      assertTrue(gate.supportsDurableCooldowns());assertEquals(123L,jdbc.queryForObject("select next_allowed_ms from MS_QUOTA where quota_group='migration-cooldown'",Long.class));
       assertEquals(2, jdbc.queryForObject("select count(*) from MS_WORK", Integer.class));
       assertEquals("MISMATCH", jdbc.queryForObject("select outcome from MS_STATE where work_id='test-dead'", String.class));
     } finally {
       // Only the tables created after the empty-schema check may be removed.
-      for(String table:List.of("MS_STATE","MS_QUOTA","MS_WORK","MS_META"))
+      for(String table:List.of("MS_COOLDOWN","MS_STATE","MS_QUOTA","MS_WORK","MS_META"))
         if(created.contains(table)) jdbc.execute("drop table " + table + " cascade constraints");
     }
   }

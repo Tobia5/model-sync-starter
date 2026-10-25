@@ -93,6 +93,8 @@ class OracleCapacityIT {
         assertEquals(ROWS, jdbc.queryForObject("select count(*) from MS_WORK where binding_id=?", Integer.class, binding));
         assertEquals(DUE, jdbc.queryForObject("select count(*) from MS_WORK where binding_id=? and next_at_ms=0", Integer.class, binding));
         var manager = new DataSourceTransactionManager(source);
+        var publicationObserver=new CooldownObservation();manager.setTransactionExecutionListeners(List.of(publicationObserver));jdbc.cooldownObservation=publicationObserver;
+        var publicationBefore=publicationObserver.snapshot();
         var accounting = new ComparisonAccounting();
         var baseTx = new SpringLocalTransactions(manager);
         var tx = new ObservedLocalTransactions(baseTx, accounting);
@@ -181,6 +183,8 @@ class OracleCapacityIT {
           for (var future : futures) future.get(200, TimeUnit.SECONDS);
         } finally {phases.put("accounting",accounting.finish(measuredQuota));}
         long elapsedMs = (System.nanoTime() - started) / 1_000_000;
+        var publicationResolution=CooldownResolution.resolve(quota,jdbc,quotaGroup,measuredQuota);phases.put("cooldown_resolution",publicationResolution);
+        var physicalPublications=CooldownResolution.physical(publicationObserver,publicationBefore);phases.put("publication_transactions",physicalPublications);
         long dbWork = jdbc.queryForObject(SESSION_WORK, Long.class) - beforeWork;
         phases.put("measurement_work", OracleMeasurements.difference(measurementBefore, OracleMeasurements.snapshot(jdbc)));
         @SuppressWarnings("unchecked") var previousSql = (List<Map<String, Object>>) measurementBefore.get("sql_cursors");
@@ -200,7 +204,7 @@ class OracleCapacityIT {
         var boundary=(Map<String,Long>)((Map<String,Object>)phases.get("accounting")).get("quota_boundary");
         phases.put("measured_quota_failures",boundary.get("acquisition_failures"));
         phases.put("measured_quota_refusals",boundary.get("acquisition_refusals"));
-        for(String name:List.of("cooldown_attempts","cooldown_published","cooldown_failures"))phases.put(name,boundary.get(name));
+        for(String name:List.of("cooldown_attempts","cooldown_published","cooldown_pending","cooldown_durable","cooldown_failures"))phases.put(name,boundary.get(name));
         phases.put("physical_drain",OraclePhysicalDrain.observe(jdbc,workers.isTerminated(),ownerActive.get()));
         phases.put("measured_ledger_attempts", attempts.get());
         OracleMeasurements.write(phaseReport, phases);
@@ -249,10 +253,11 @@ class OracleCapacityIT {
         workload.put("db_work_per_completed_sync", measuredCompleted == 0 ? null : (double) dbWork / measuredCompleted);
         workload.put("warmup_accounting",phases.get("warmup_accounting"));
         workload.put("accounting",phases.get("accounting"));
+        workload.put("cooldown_resolution",publicationResolution);workload.put("publication_transactions",physicalPublications);
         workload.put("physical_drain",phases.get("physical_drain"));
         workload.put("measured_quota_failures",boundary.get("acquisition_failures"));
         workload.put("measured_quota_refusals",boundary.get("acquisition_refusals"));
-        for(String name:List.of("cooldown_attempts","cooldown_published","cooldown_failures"))workload.put(name,boundary.get(name));
+        for(String name:List.of("cooldown_attempts","cooldown_published","cooldown_pending","cooldown_durable","cooldown_failures"))workload.put(name,boundary.get(name));
         workload.put("phase_diagnostics", phases);
         OracleMeasurements.write(report, workload);
         assertTrue(ownerCalls.get() >= OWNER_CALL_TARGET, "Owner-call target not reached before bounded deadline");
@@ -263,6 +268,7 @@ class OracleCapacityIT {
         assertTrue(measuredCompleted > 0 && measuredOwnerCalls > 0);
         assertEquals(measuredOwnerCalls, measuredGrants, "Each admission must have exactly one controlled owner entry");
         ComparisonAccountingValidator.check((Map<String,Object>)phases.get("accounting"),measuredOwnerCalls,measuredCompleted);
+        CooldownResolution.check(publicationResolution,measuredQuota);CooldownResolution.physicalCheck(physicalPublications);
         var attributed=(Map<String,Long>)((Map<String,Object>)phases.get("accounting")).get("totals");
         assertEquals(attempts.get(),attributed.get("claims"));
         assertEquals(attempts.get(),measuredGrants+measuredDenials+boundary.get("acquisition_failures")+attributed.get("no_acquisition_claims"));
@@ -272,6 +278,7 @@ class OracleCapacityIT {
         var cleanupBefore = OracleMeasurements.snapshot(jdbc);
         long cleanupStarted = System.nanoTime();
         phases.put("cleanup_verification", OracleFixtureCleanup.clearLedger(jdbc, binding, ownedContainer));
+        jdbc.cooldownObservation=null;jdbc.update("delete from MS_COOLDOWN where quota_group=?",quotaGroup);
         jdbc.update("delete from MS_QUOTA where quota_group=?", quotaGroup);
         jdbc.execute("drop table MS_TEST_PROJECTION purge");
         phases.put("cleanup_ms", (System.nanoTime() - cleanupStarted) / 1_000_000);

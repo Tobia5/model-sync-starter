@@ -13,6 +13,6 @@ final class OracleQualificationStores {
   }
 
   static JdbcQuotaGate quota(JdbcTemplate jdbc, PlatformTransactionManager manager, Clock clock) {
-    return new JdbcQuotaGate(jdbc, manager, clock, JdbcQuotaLockPolicy.ORACLE_NOWAIT, JdbcInsertPolicy.ORACLE_26_NOWAIT);
+    return new JdbcQuotaGate(jdbc, manager, clock, JdbcQuotaLockPolicy.ORACLE_NOWAIT, JdbcInsertPolicy.ORACLE_26_NOWAIT, JdbcCooldownPolicy.DURABLE);
   }
 }

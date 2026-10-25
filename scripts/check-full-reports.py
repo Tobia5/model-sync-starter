@@ -12,11 +12,12 @@ from failure_evidence import qualify as check_failure_evidence
 from lock_policy_evidence import qualify as check_lock_policy
 from quota_evidence import qualify as check_quota
 from creation_evidence import qualify as check_creation
+from cooldown_evidence import qualify as check_cooldown
 from qualification_target import manifest as target_manifest, qualify as check_target
 
 ROOT=Path(__file__).resolve().parents[1]
 SIMULATIONS={'fresh','hot','unsafe','event','cooldown','leases'}
-ORACLE={'OracleSmokeIT','OracleConcurrencyIT','OracleMigrationIT','OracleScaleIT','OracleCapacityIT','OracleSelectionIT','OracleOptimizationIT'}
+ORACLE=set(target_manifest()['mandatory']['model-sync-persistence-jdbc'])
 ORACLE_MODULES={module:set(suites) for module,suites in target_manifest()['mandatory'].items()}
 
 def oracle_suites(root=ROOT):
@@ -74,6 +75,7 @@ def check(root=ROOT):
     check_lock_policy(root)
     check_quota(root)
     check_creation(root)
+    cooldown=check_cooldown(root)
     counts,score=pit_counts(root)
     load={}
     for mode in SIMULATIONS:
@@ -121,7 +123,7 @@ def check(root=ROOT):
     worker=check_worker(root)
     faults=check_failure_evidence(root)
     return {'qualification_target':target,'junit_tests':tests,'oracle_suites':sorted(found),'pit_counts':dict(counts),
-            'pit_score':score,'gatling':load,'oracle_scale':capacity,'oracle_workload':measured,'oracle_optimization':comparison,'oracle_worker':worker,'oracle_faults':faults}
+            'pit_score':score,'gatling':load,'oracle_scale':capacity,'oracle_workload':measured,'oracle_optimization':comparison,'oracle_worker':worker,'oracle_faults':faults,'oracle_cooldown':cooldown}
 
 if __name__=='__main__':
     try: result=check()

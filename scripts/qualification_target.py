@@ -40,7 +40,7 @@ def audit_source(root=ROOT):
         raise ValueError('Characterization exclusion must identify exactly one method')
     factory = (root / 'model-sync-persistence-jdbc/src/test/java/io/modelsync/jdbc/OracleQualificationStores.java').read_text(encoding='utf-8')
     if ('new JdbcWorkStore(jdbc, JdbcPointLockPolicy.ORACLE_NOWAIT, JdbcInsertPolicy.ORACLE_26_NOWAIT)' not in factory
-            or 'new JdbcQuotaGate(jdbc, manager, clock, JdbcQuotaLockPolicy.ORACLE_NOWAIT, JdbcInsertPolicy.ORACLE_26_NOWAIT)' not in factory):
+            or 'new JdbcQuotaGate(jdbc, manager, clock, JdbcQuotaLockPolicy.ORACLE_NOWAIT, JdbcInsertPolicy.ORACLE_26_NOWAIT, JdbcCooldownPolicy.DURABLE)' not in factory):
         raise ValueError('Full JDBC candidate factory fell back from the named policies')
     for name in ('OracleCapacityIT', 'OracleOptimizationIT', 'OracleScaleIT', 'OracleSmokeIT'):
         source = (root / f'model-sync-persistence-jdbc/src/test/java/io/modelsync/jdbc/{name}.java').read_text(encoding='utf-8')

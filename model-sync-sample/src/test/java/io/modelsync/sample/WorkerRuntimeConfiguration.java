@@ -12,6 +12,7 @@ import io.modelsync.jdbc.JdbcWorkStore;
 import io.modelsync.jdbc.JdbcPointLockPolicy;
 import io.modelsync.jdbc.JdbcQuotaLockPolicy;
 import io.modelsync.jdbc.JdbcInsertPolicy;
+import io.modelsync.jdbc.JdbcCooldownPolicy;
 import io.modelsync.jpa.JpaLockPolicy;
 import io.modelsync.jpa.JpaProjectionStore;
 import jakarta.persistence.EntityManagerFactory;
@@ -65,7 +66,7 @@ class WorkerRuntimeConfiguration {
   }
   @Bean WorkerQuota workerQuota(WorkerJdbcTemplate jdbc, PlatformTransactionManager manager,
       @Qualifier("modelSyncClock") Clock clock, ModelSyncProperties properties) {
-    var gate = new JdbcQuotaGate(jdbc, manager, clock, JdbcQuotaLockPolicy.ORACLE_NOWAIT, JdbcInsertPolicy.ORACLE_26_NOWAIT);
+    var gate = new JdbcQuotaGate(jdbc, manager, clock, JdbcQuotaLockPolicy.ORACLE_NOWAIT, JdbcInsertPolicy.ORACLE_26_NOWAIT, JdbcCooldownPolicy.DURABLE);
     properties.getQuotas().forEach(gate::register);
     return new WorkerQuota(gate);
   }

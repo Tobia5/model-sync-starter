@@ -74,7 +74,7 @@ class OracleWorkerIT {
         .run("--spring.jpa.hibernate.ddl-auto=validate", "--spring.jpa.open-in-view=false",
             "--model-sync.enabled=true", "--model-sync.worker-enabled=true", "--model-sync.aop.enabled=false",
             "--model-sync.jdbc.point-lock-policy=ORACLE_NOWAIT", "--model-sync.jdbc.quota-lock-policy=ORACLE_NOWAIT",
-            "--model-sync.jdbc.insert-policy=ORACLE_26_NOWAIT", "--model-sync.jpa.lock-policy=ORACLE_NOWAIT",
+            "--model-sync.jdbc.cooldown-policy=DURABLE", "--model-sync.jdbc.insert-policy=ORACLE_26_NOWAIT", "--model-sync.jpa.lock-policy=ORACLE_NOWAIT",
             "--model-sync.quotas.worker-main=20ms", "--model-sync.quotas.worker-other=1ms",
             "--model-sync.productive-interval=" + (adaptive ? "5ms" : "250ms"),
             "--model-sync.max-idle-interval=" + (adaptive ? "1s" : "250ms"));

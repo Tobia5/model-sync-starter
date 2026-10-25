@@ -1,7 +1,7 @@
 package io.modelsync.sample;
 
 import io.modelsync.core.QuotaAdmission;
-import io.modelsync.core.port.QuotaGate;
+import io.modelsync.core.port.*;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -16,5 +16,7 @@ final class WorkerQuota implements QuotaGate {
     return result;
   }
   public Optional<Instant> nextAdmission(String group) { return delegate.nextAdmission(group); }
+  public boolean supportsDurableCooldowns() { return delegate.supportsDurableCooldowns(); }
+  public CooldownReceipt publishCooldown(CooldownRequest request) { return delegate.publishCooldown(request); }
   public void cooldown(String group, Instant until) { delegate.cooldown(group, until); }
 }

@@ -27,14 +27,15 @@ final class ComparisonAccountingValidator {
       var a = (Map<?, ?>) item;
       require(ids.add(number(a,"id")) && Objects.equals(a.get("phase"), value.get("phase")), "duplicate/cross-phase attempt");
       for (String key : List.of("claims","acquisitions","grants","denials","acquisition_failures",
-          "owner_calls","admission_uses","completions","reschedules","cooldown_attempts","cooldown_published","cooldown_failures"))
+          "owner_calls","admission_uses","completions","reschedules","cooldown_attempts","cooldown_published","cooldown_pending","cooldown_durable","cooldown_failures"))
         totals.merge(key, number(a,key), Long::sum);
       require(number(a,"violations") == 0 && number(a,"acquisition_active") == 0
           && number(a,"owner_active") == 0 && number(a,"cooldown_active") == 0, "active operation/invalid admission use");
       long c=number(a,"claims"), q=number(a,"acquisitions"), g=number(a,"grants"), d=number(a,"denials"), f=number(a,"acquisition_failures");
       require(c <= 1 && q <= c && q == g+d+f, "acquisition cardinality/partition");
       require(number(a,"owner_calls") == g && number(a,"admission_uses") == g, "owner missing/duplicating committed admission");
-      require(number(a,"cooldown_attempts") == number(a,"cooldown_published")+number(a,"cooldown_failures"), "cooldown publication partition");
+      require(number(a,"cooldown_attempts") == number(a,"cooldown_published")+number(a,"cooldown_pending")+number(a,"cooldown_failures"), "cooldown publication partition");
+      require(number(a,"cooldown_durable") <= number(a,"cooldown_attempts") && number(a,"cooldown_pending") <= number(a,"cooldown_durable"), "invalid durable receipt count");
       require(number(a,"cooldown_failures") == 0, "failed cooldown publication");
       claimed += c; if (Boolean.TRUE.equals(a.get("returned"))) returns++;
       var faults = (Map<?, ?>)a.get("faults"); require(faults != null, "missing detached failure facts");
@@ -70,7 +71,7 @@ final class ComparisonAccountingValidator {
       if (terminal.equals("RECONCILED")) reconciled++;
     }
     require(claimed == returns, "committed claim/returned result mismatch");
-    for (String key : List.of("acquisitions","grants","denials","acquisition_failures","cooldown_attempts","cooldown_published","cooldown_failures"))
+    for (String key : List.of("acquisitions","grants","denials","acquisition_failures","cooldown_attempts","cooldown_published","cooldown_pending","cooldown_durable","cooldown_failures"))
       require(totals.getOrDefault(key,0L) == number(boundary,key), "boundary/detail mismatch: "+key);
     require(number(boundary,"acquisition_active") == 0 && number(boundary,"cooldown_active") == 0, "physical quota boundary active");
     require(number(boundary,"acquisition_failures") == number(boundary,"acquisition_refusals")

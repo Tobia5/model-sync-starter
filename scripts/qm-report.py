@@ -19,6 +19,7 @@ from failure_evidence import collect as collect_fault, SCOPES as FAULT_SCOPES
 from lock_policy_evidence import collect as collect_lock_policy
 from quota_evidence import collect as collect_quota
 from creation_evidence import collect as collect_creation
+from cooldown_evidence import collect as collect_cooldown
 from qualification_target import collect as collect_target, characterization
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -248,6 +249,12 @@ def collect(full: bool, root: Path = ROOT) -> dict:
             worker.update(status='FAILED', reason='Worker suite failed; fresh partial measurements retained')
     faults = {}
     if full:
+        try:
+            faults['oracle-cooldown-publication'] = collect_cooldown(root)
+        except (ValueError, OSError, json.JSONDecodeError) as error:
+            faults['oracle-cooldown-publication'] = {'status': 'REJECTED', 'reason': str(error)}
+        if faults['oracle-cooldown-publication'] is None and {'OracleCooldownIT','OracleCooldownWorkerIT'} & executed_oracle:
+            faults['oracle-cooldown-publication']={'status':'FAILED','reason':'Executed cooldown suite without fresh measurements'}
         try:
             faults['oracle-first-creation'] = collect_creation(root)
         except (ValueError, OSError, json.JSONDecodeError) as error:

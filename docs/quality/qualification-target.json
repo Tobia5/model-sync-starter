@@ -13,14 +13,16 @@
     "point_lock_policy": "ORACLE_NOWAIT",
     "quota_lock_policy": "ORACLE_NOWAIT",
     "insert_policy": "ORACLE_26_NOWAIT",
-    "jpa_lock_policy": "ORACLE_NOWAIT"
+    "jpa_lock_policy": "ORACLE_NOWAIT",
+    "cooldown_policy": "DURABLE"
   },
   "writer_protocol": "ledger-first",
   "required_host_roles": [
     "starter-target",
     "nowait-atomicity",
     "recovery-host",
-    "actual-worker"
+    "actual-worker",
+    "cooldown-worker"
   ],
   "characterization": {
     "class": "OracleIoIT",
@@ -67,6 +69,13 @@
       ],
       "OracleOptimizationIT": [
         "comparesIndependentChangesOnTheSameOraclePopulation"
+      ],
+      "OracleCooldownIT": [
+        "heldQuotaReleaseWithinBudgetReusesAbsoluteDeadline",
+        "budgetExhaustionRetainsSharedPendingAndOtherProviderProgress",
+        "duplicateInsertRefusalIsUnrecordedUntilCompetitorCommitOrRollback",
+        "durablePendingSurvivesForcedOwnedProcessTermination",
+        "committedCooldownPrecedesFailedMetadataAndRecoveryDoesNotRefetch"
       ]
     },
     "model-sync-sample": {
@@ -145,6 +154,9 @@
       ],
       "OracleQualificationTargetIT": [
         "namedTargetConsumesEveryPolicyAndQualifiedMapping"
+      ],
+      "OracleCooldownWorkerIT": [
+        "pendingPublicationDoesNotLoseLanesAndIndependentProviderCompletes"
       ]
     }
   },

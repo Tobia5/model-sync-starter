@@ -48,6 +48,7 @@ class OracleOptimizationIT {
       report.put("rows",ROWS);report.put("due_rows",ROWS);report.put("workers",4);report.put("pool",8);
       report.put("owner_spacing_ms",20);report.put("owner_latency_ms",List.of(5,25));
       report.put("provider_429_every",17);report.put("timeout_every",29);report.put("owner_call_target",230);
+      report.put("cooldown_policy","DURABLE");
       report.put("quota_policy","ORACLE_NOWAIT");report.put("insert_policy","ORACLE_26_NOWAIT");
       report.put("accounting_scope","bounded test-only observation of unchanged SyncCoordinator.runOne; same quota policy in every variant");
       report.put("statistics","ALL; gathered no-histogram table/index stats before each round");
@@ -152,7 +153,7 @@ class OracleOptimizationIT {
         result.put("work",OracleMeasurements.difference(before,OracleMeasurements.snapshot(jdbc)));results.add(result);
         assertEquals(0,quota.granted.get());assertEquals(0,quota.denied.get());assertEquals(0,quota.acquisitions.get());assertEquals(0,quota.failures.get());
         assertEquals(0L,jdbc.queryForObject("select next_allowed_ms from MS_QUOTA where quota_group=?",Long.class,group));
-      } finally {jdbc.update("delete from MS_QUOTA where quota_group=?",group);}
+      } finally {jdbc.cooldownObservation=null;jdbc.update("delete from MS_COOLDOWN where quota_group=?",group);jdbc.update("delete from MS_QUOTA where quota_group=?",group);}
     }
     return results;
   }
@@ -166,6 +167,8 @@ class OracleOptimizationIT {
     if(variant.equals("baseline")||variant.equals("admission-only"))selected=new LegacyOracleWorkStore(jdbc,selected);
     var store=new CountedWorkStore(new ObservedWorkStore(selected,tx));
     var gate=OracleQualificationStores.quota(jdbc,manager,Clock.systemUTC());gate.register(group,Duration.ofMillis(20));
+    var publicationObserver=new CooldownObservation();manager.setTransactionExecutionListeners(List.of(publicationObserver));jdbc.cooldownObservation=publicationObserver;
+    var publicationBefore=publicationObserver.snapshot();
     var quota=new MeasuredQuotaGate(gate,variant.equals("admission-only")||variant.equals("combined"),accounting);
     var calls=new AtomicInteger();var limited=new AtomicInteger();var timeouts=new AtomicInteger();var ownerActive=new AtomicInteger();
     try {
@@ -198,36 +201,43 @@ class OracleOptimizationIT {
       long started=System.nanoTime();long deadline=started+TimeUnit.MINUTES.toNanos(3);
       accounting.begin("measurement",quota);
       var workers=Executors.newFixedThreadPool(4);
+      var ready=new CountDownLatch(4);var startLanes=new CountDownLatch(1);var ended=new AtomicInteger();var lanePolls=new AtomicLongArray(4);
       try(workers) {
         List<Future<?>> futures=new ArrayList<>();
-        for(int i=0;i<4;i++)futures.add(workers.submit(()->{
+        for(int i=0;i<4;i++){int lane=i;futures.add(workers.submit(()->{
+          ready.countDown();if(!startLanes.await(5,TimeUnit.SECONDS))throw new IllegalStateException("Owned lane start bound");
           while(true) {
             long callStart=System.nanoTime();Optional<Boolean> observed;
             try {observed=accounting.runIf(c,()->calls.get()<230&&System.nanoTime()<deadline);}
             catch(RuntimeException | Error failure) {polls.incrementAndGet();escapedPolls.incrementAndGet();throw failure;}
             if(observed.isEmpty())break;
-            boolean claimed=observed.orElseThrow();polls.incrementAndGet();
+            boolean claimed=observed.orElseThrow();polls.incrementAndGet();lanePolls.incrementAndGet(lane);
             long latency=(System.nanoTime()-callStart)/1_000_000;
             if(claimed){attempts.incrementAndGet();claimedLatency.add(latency);}
             else {emptyPolls.incrementAndGet();emptyLatency.add(latency);}
             Thread.sleep(5);
           }
-          return null;
-        }));
+          ended.incrementAndGet();return null;
+        }));}
+        assertTrue(ready.await(5,TimeUnit.SECONDS));startLanes.countDown();
         for(var f:futures)try {f.get(200,TimeUnit.SECONDS);} catch(ExecutionException failure) {workerErrors.add(DetachedFailure.capture(failure).facts());}
       } finally {result.put("accounting",accounting.finish(quota));result.put("worker_threads_terminated",workers.isTerminated());}
       long elapsed=(System.nanoTime()-started)/1_000_000;
+      var publicationResolution=CooldownResolution.resolve(gate,jdbc,group,quota);
+      result.put("cooldown_resolution",publicationResolution);
+      var physicalPublications=CooldownResolution.physical(publicationObserver,publicationBefore);
+      result.put("publication_transactions",physicalPublications);
       var after=OracleMeasurements.snapshot(jdbc);
       var counters=OracleMeasurements.delta(OracleMeasurements.statisticsFrom(before),OracleMeasurements.statisticsFrom(after));
       long completed=completed(jdbc,binding), measuredCompleted=completed-warmCompleted;
       long measuredCalls=calls.get()-warmCalls,measuredGrants=quota.granted.get()-grants,measuredDenials=quota.denied.get()-denied;
       result.put("selector_queries",jdbc.selectorQueries.get()-queriesBefore);
       result.put("measurement_ms",elapsed);result.put("polls",polls.get());result.put("empty_polls",emptyPolls.get());
-      result.put("ledger_attempts",tx.committedClaims.get()-committedClaimsBefore);result.put("returned_claim_ticks",attempts.get());result.put("escaped_polls",escapedPolls.get());result.put("worker_failures",workerErrors);result.put("selection_attempts",store.selections.get()-selections);result.put("empty_selections",store.empty.get()-empty);
+      result.put("ledger_attempts",tx.committedClaims.get()-committedClaimsBefore);result.put("returned_claim_ticks",attempts.get());result.put("escaped_polls",escapedPolls.get());result.put("worker_failures",workerErrors);result.put("lanes_finished_normally",ended.get());result.put("lane_polls",java.util.stream.IntStream.range(0,4).mapToObj(lanePolls::get).toList());result.put("selection_attempts",store.selections.get()-selections);result.put("empty_selections",store.empty.get()-empty);
       result.put("quota_grants",measuredGrants);result.put("quota_denials",measuredDenials);
       result.put("quota_failures",quota.failures.get()-failures);result.put("quota_refusals",quota.refusals.get()-refusals);
       var boundary=(Map<String,Long>)((Map<String,Object>)result.get("accounting")).get("quota_boundary");
-      for(String name:List.of("cooldown_attempts","cooldown_published","cooldown_failures"))result.put(name,boundary.get(name));
+      for(String name:List.of("cooldown_attempts","cooldown_published","cooldown_pending","cooldown_durable","cooldown_failures"))result.put(name,boundary.get(name));
       result.put("measured_owner_calls",measuredCalls);result.put("total_owner_calls",calls.get());
       result.put("measured_completed_syncs",measuredCompleted);result.put("total_completed_syncs",completed);
       result.put("completed_syncs_per_second",1000.0*measuredCompleted/Math.max(1,elapsed));
@@ -242,8 +252,10 @@ class OracleOptimizationIT {
       assertTrue(calls.get()>=230);assertTrue(completed>=150);assertTrue(measuredCompleted>0);
       assertEquals(completed,jdbc.queryForObject("select count(*) from MS_TEST_PROJECTION",Long.class));
       assertEquals(measuredCalls,measuredGrants);
+      assertEquals(4,ended.get());for(int lane=0;lane<4;lane++)assertTrue(lanePolls.get(lane)>0);
       assertTrue(workerErrors.isEmpty(),"Worker exceptions remain failed; see detached worker_failures and attempt faults");
       ComparisonAccountingValidator.check((Map<String,Object>)result.get("accounting"),measuredCalls,measuredCompleted);
+      CooldownResolution.check(publicationResolution,quota);CooldownResolution.physicalCheck(physicalPublications);
       var attributed=(Map<String,Long>)((Map<String,Object>)result.get("accounting")).get("totals");
       assertEquals(tx.committedClaims.get()-committedClaimsBefore,attributed.get("claims"));
       assertEquals(tx.committedClaims.get()-committedClaimsBefore,measuredGrants+measuredDenials+(quota.failures.get()-failures)+attributed.get("no_acquisition_claims"));
@@ -251,7 +263,7 @@ class OracleOptimizationIT {
       assertEquals(polls.get(),attempts.get()+emptyPolls.get()+escapedPolls.get());
       assertTrue(limited.get()>0&&timeouts.get()>0);
       result.put("status","PASS");
-    } finally {jdbc.update("delete from MS_QUOTA where quota_group=?",group);}
+    } finally {jdbc.cooldownObservation=null;jdbc.update("delete from MS_COOLDOWN where quota_group=?",group);jdbc.update("delete from MS_QUOTA where quota_group=?",group);}
   }
 
   private static long completed(JdbcTemplate jdbc,String binding) {

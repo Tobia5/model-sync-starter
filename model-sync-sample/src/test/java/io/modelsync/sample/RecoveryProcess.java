@@ -20,6 +20,7 @@ public final class RecoveryProcess {
       values.put("model-sync.jdbc.point-lock-policy", "ORACLE_NOWAIT");
       values.put("model-sync.jdbc.quota-lock-policy", "ORACLE_NOWAIT");
       values.put("model-sync.jdbc.insert-policy", "ORACLE_26_NOWAIT");
+      values.put("model-sync.jdbc.cooldown-policy", "DURABLE");
       values.put("model-sync.jpa.lock-policy", "ORACLE_NOWAIT");
     }
     for (String argument : args) {

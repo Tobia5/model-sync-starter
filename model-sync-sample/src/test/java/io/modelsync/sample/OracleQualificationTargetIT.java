@@ -30,7 +30,7 @@ class OracleQualificationTargetIT {
               "--logging.level.root=WARN", "--model-sync.enabled=true", "--model-sync.worker-enabled=false",
               "--model-sync.aop.enabled=false", "--model-sync.quotas.policy-owner=1ms",
               "--model-sync.jdbc.point-lock-policy=ORACLE_NOWAIT", "--model-sync.jdbc.quota-lock-policy=ORACLE_NOWAIT",
-              "--model-sync.jdbc.insert-policy=ORACLE_26_NOWAIT", "--model-sync.jpa.lock-policy=ORACLE_NOWAIT")) {
+              "--model-sync.jdbc.cooldown-policy=DURABLE", "--model-sync.jdbc.insert-policy=ORACLE_26_NOWAIT", "--model-sync.jpa.lock-policy=ORACLE_NOWAIT")) {
         QualificationTargetAssertions.host(host, "starter-target");
         var gateway = host.getBean(SyncGateway.class); var coordinator = host.getBean(SyncCoordinator.class);
         gateway.request("customer", subject.tenant(), subject.id(), Priority.NORMAL, true);

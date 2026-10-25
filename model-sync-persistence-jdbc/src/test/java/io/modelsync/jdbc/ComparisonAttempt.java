@@ -8,7 +8,7 @@ final class ComparisonAttempt {
   final String phase;
   int claims, acquisitions, grants, denials, acquisitionFailures, acquisitionActive;
   int ownerCalls, ownerActive, admissionUses, completions, reschedules, fenceRejections, localConflicts;
-  int cooldownAttempts, cooldownPublished, cooldownFailures, cooldownActive, violations;
+  int cooldownAttempts, cooldownPublished, cooldownFailures, cooldownActive, cooldownPending, cooldownDurable, violations;
   Boolean returned;
   final Map<String, DetachedFailure> faults = new LinkedHashMap<>();
 
@@ -49,6 +49,7 @@ final class ComparisonAttempt {
     v.put("completions", completions); v.put("reschedules", reschedules); v.put("fence_rejections", fenceRejections);
     v.put("local_conflicts", localConflicts);
     v.put("cooldown_attempts", cooldownAttempts); v.put("cooldown_published", cooldownPublished);
+    v.put("cooldown_pending", cooldownPending); v.put("cooldown_durable", cooldownDurable);
     v.put("cooldown_failures", cooldownFailures); v.put("cooldown_active", cooldownActive);
     v.put("violations", violations); v.put("terminal", terminal());
     var detached = new LinkedHashMap<String, Object>(); faults.forEach((site, fact) -> detached.put(site, fact.facts()));

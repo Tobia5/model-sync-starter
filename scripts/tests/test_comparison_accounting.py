@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from comparison_accounting import validate, drain, fact, BOUNDARY, FIELDS
+from comparison_accounting import validate, drain, fact, publication, BOUNDARY, FIELDS
 
 
 def receipt():
@@ -26,6 +26,26 @@ def receipt():
 
 
 class ComparisonEvidenceTests(unittest.TestCase):
+    def test_publication_final_boundary_rejects_lost_pending_drift_and_missing_raw_attempts(self):
+        import copy
+        event=dict(operation_id='a'*64,requested_deadline_ms=100,canonical_deadline_ms=100,state='DURABLE_PENDING',durable=True)
+        value=dict(status='PASS',unresolved=0,receipts=[event],persisted_rows=[dict(OPERATION_ID='a'*64,DEADLINE_MS=100,PUBLICATION_STATUS='APPLIED')])
+        counts={p+'_'+s:0 for p in ('accept','apply') for s in ('attempts','active','commits','rollbacks','completion_failures','refusals','other_sql_failures')}
+        after=dict(counts,accept_attempts=1,accept_commits=1,apply_attempts=4,apply_rollbacks=4,apply_refusals=4)
+        physical=dict(before=counts,after=after,delta=after.copy(),detached_sql_failures=[dict(category='KNOWN',exception_type='org.springframework.dao.CannotAcquireLockException',sql_state='61000',vendor_code=54,truncated=False,count=4)])
+        publication(value,physical)
+        for mutation in ('pending','missing','drift','unrecorded','duplicate'):
+            bad=copy.deepcopy(value)
+            if mutation=='pending':bad['persisted_rows'][0]['PUBLICATION_STATUS']='PENDING'
+            if mutation=='missing':bad['persisted_rows']=[]
+            if mutation=='drift':bad['receipts'][0]['canonical_deadline_ms']=200
+            if mutation=='unrecorded':bad['receipts'][0]['durable']=False
+            if mutation=='duplicate':bad['persisted_rows']*=2
+            with self.assertRaises(ValueError):publication(bad,physical)
+        for field in ('apply_refusals','apply_commits','apply_completion_failures','apply_active'):
+            bad=copy.deepcopy(physical);bad['delta'][field]+=1
+            with self.assertRaises(ValueError):publication(value,bad)
+
     def test_complete_independent_events_qualify(self):
         validate(receipt(), 1, 1)
 

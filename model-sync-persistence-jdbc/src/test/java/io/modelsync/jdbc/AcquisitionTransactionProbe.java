@@ -13,32 +13,40 @@ final class AcquisitionTransactionProbe implements TransactionExecutionListener 
   private Map<String,Object> active;
   private int sid, serial;
   private long start;
+  private final String transactionName;
   AcquisitionTransactionProbe(JdbcTemplate runtime, JdbcTemplate observer, String guard) {
+    this(runtime,observer,guard,"modelSyncQuota");
+  }
+  AcquisitionTransactionProbe(JdbcTemplate runtime,JdbcTemplate observer,String guard,String transactionName) {
     this.runtime=runtime;this.observer=observer;this.guard=guard;
+    this.transactionName=transactionName;
   }
   @Override public void afterBegin(TransactionExecution tx, Throwable failure) {
-    if (!armed || !"modelSyncQuota".equals(tx.getTransactionName())) return;
+    if (!armed || !transactionName.equals(tx.getTransactionName())) return;
     active=new LinkedHashMap<>();transactions.add(active);start=System.nanoTime();
     var id=runtime.queryForMap("select sid,serial# from v$session where sid=to_number(sys_context('USERENV','SID'))");
     sid=((Number)id.get("SID")).intValue();serial=((Number)id.get("SERIAL#")).intValue();
     runtime.update("update MS_QUOTA set next_allowed_ms=123 where quota_group=?",guard);
   }
   @Override public void beforeRollback(TransactionExecution tx) {
-    if(active==null || !"modelSyncQuota".equals(tx.getTransactionName()))return;
-    var before=snapshot();active.put("server_before_rollback",before);
-    active.put("before_rollback_ms",(System.nanoTime()-start)/1_000_000);
-    String sql=observer.queryForObject("select sql_fulltext from v$sql where sql_id=? and rownum=1",String.class,before.get("PREV_SQL_ID"));
-    if(sql==null || sql.length()>2048 || !sql.toLowerCase(Locale.ROOT).endsWith("nowait"))
-      throw new IllegalStateException("Expected bounded quota SQL not observed");
-    active.put("actual_sql",sql);
+    if(active==null || !transactionName.equals(tx.getTransactionName()))return;
+    try {
+      var before=snapshot();active.put("server_before_rollback",before);
+      active.put("before_rollback_ms",(System.nanoTime()-start)/1_000_000);
+      String sql=observer.queryForObject("select sql_fulltext from v$sql where sql_id=? and rownum=1",String.class,before.get("PREV_SQL_ID"));
+      active.put("actual_sql",sql!=null && sql.length()<=2048?sql:"UNATTRIBUTABLE");
+    } catch(RuntimeException diagnosticFailure) {
+      active.put("observation_failure",DetachedFailure.capture(diagnosticFailure).facts());
+    } // Observation must never prevent the real rollback; validators reject missing proof afterward.
+
   }
   @Override public void afterRollback(TransactionExecution tx, Throwable failure) {
-    if(active==null || !"modelSyncQuota".equals(tx.getTransactionName()))return;
+    if(active==null || !transactionName.equals(tx.getTransactionName()))return;
     active.put("server_after_rollback",snapshot());active.put("after_rollback_ms",(System.nanoTime()-start)/1_000_000);
     active.put("completion",failure==null?"ROLLED_BACK":"ROLLBACK_FAILED");active=null;
   }
   @Override public void afterCommit(TransactionExecution tx, Throwable failure) {
-    if(active==null || !"modelSyncQuota".equals(tx.getTransactionName()))return;
+    if(active==null || !transactionName.equals(tx.getTransactionName()))return;
     active.put("completion",failure==null?"COMMITTED":"COMMIT_UNCERTAIN");active=null;
   }
   private Map<String,Object> snapshot() {

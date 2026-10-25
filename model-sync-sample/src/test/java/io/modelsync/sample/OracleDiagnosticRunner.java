@@ -30,6 +30,7 @@ public final class OracleDiagnosticRunner {
     boolean passed = true;
     List<String> suites = switch (System.getProperty("modelsync.oracle.diagnostic", "transactions-and-scale")) {
       case "transactions-and-scale" -> List.of("io.modelsync.sample.OracleAtomicityIT", "io.modelsync.jdbc.OracleSelectionIT", "io.modelsync.jdbc.OracleScaleIT");
+      case "cooldown-publication" -> List.of("io.modelsync.jdbc.OracleCooldownIT", "io.modelsync.jdbc.OracleMigrationIT", "io.modelsync.sample.OracleCooldownWorkerIT");
       case "comparison-accounting" -> List.of("io.modelsync.jdbc.OracleOptimizationIT");
       case "queue-comparison" -> List.of("io.modelsync.jdbc.OracleSelectionIT", "io.modelsync.jdbc.OracleOptimizationIT");
       case "worker-pacing" -> List.of("io.modelsync.sample.OracleWorkerIT");
@@ -52,7 +53,7 @@ public final class OracleDiagnosticRunner {
           ? org.junit.platform.engine.discovery.DiscoverySelectors.selectMethod(name, "realStatementLockWaitCancelsAndRollsBack")
           : selectClass(name)).build());
       var summary = listener.getSummary();
-      long expected = name.endsWith("OracleFirstCreationIT") ? 12 : name.endsWith("OracleQuotaContentionIT") ? 6 : name.endsWith("OracleLockPolicyIT") || name.endsWith("OracleNowaitDiagnostic") ? 7 : name.endsWith("OracleCancellationDiagnostic") ? 6 : name.endsWith("OracleRecoveryIT") ? 6 : name.endsWith("OracleIoIT") ? 12
+      long expected = name.endsWith("OracleCooldownIT") ? 5 : name.endsWith("OracleFirstCreationIT") ? 12 : name.endsWith("OracleQuotaContentionIT") ? 6 : name.endsWith("OracleLockPolicyIT") || name.endsWith("OracleNowaitDiagnostic") ? 7 : name.endsWith("OracleCancellationDiagnostic") ? 6 : name.endsWith("OracleRecoveryIT") ? 6 : name.endsWith("OracleIoIT") ? 12
           : name.endsWith("OracleAtomicityIT") ? 7 : name.endsWith("OracleSelectionIT") ? 11 : 1;
       if (characterization) expected = 1;
       boolean success = summary.getTestsFoundCount() == expected
