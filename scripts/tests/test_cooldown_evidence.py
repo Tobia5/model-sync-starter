@@ -51,3 +51,6 @@ class CooldownEvidenceTests(unittest.TestCase):
         self.assertEqual(['-Pfull','-N','initialize'],module.maven_command(True)[-3:])
         result=subprocess.run([sys.executable,str(root/'scripts/full-oracle-container.py'),'--cooldown-diagnostic','--comparison-accounting-diagnostic'],capture_output=True,text=True)
         self.assertEqual(2,result.returncode)
+        source=(root/'scripts/full-oracle-container.py').read_text()
+        self.assertIn("fresh(testkit / 'io/modelsync/testkit/MemoryProjectionStore.class', root)",source)
+        self.assertIn('classpath = str(testkit) + os.pathsep + classpath',source)

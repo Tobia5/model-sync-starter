@@ -74,8 +74,11 @@ class OracleCooldownWorkerIT {
         }
       }
     } finally {
-      outcome.countDown();latch.release.countDown();if(held!=null)held.get(5,TimeUnit.SECONDS);
-      executor.shutdownNow();report.put("owned_executor_terminated",executor.awaitTermination(5,TimeUnit.SECONDS));FaultEvidence.write("oracle-cooldown-worker.json",report);
+      outcome.countDown();latch.release.countDown();
+      try {if(held!=null)held.get(5,TimeUnit.SECONDS);}
+      finally {
+        executor.shutdownNow();report.put("owned_executor_terminated",executor.awaitTermination(5,TimeUnit.SECONDS));FaultEvidence.write("oracle-cooldown-worker.json",report);
+      }
     }
   }
   private static void await(BooleanSupplier condition,long ms)throws Exception {

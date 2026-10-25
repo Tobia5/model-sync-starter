@@ -105,6 +105,9 @@ def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker
     if cooldown:
         fresh(jdbc_tests / "io/modelsync/jdbc/OracleCooldownIT.class",root)
         fresh(root / "model-sync-sample/target/test-classes/io/modelsync/sample/OracleCooldownWorkerIT.class",root)
+        testkit = root / 'model-sync-testkit/target/classes'
+        fresh(testkit / 'io/modelsync/testkit/MemoryProjectionStore.class', root)
+        classpath = str(testkit) + os.pathsep + classpath
     if accounting:
         fresh(jdbc_tests / 'io/modelsync/jdbc/OracleAcquisitionProbe.class', root)
     java_home = os.environ.get('JAVA_HOME')
