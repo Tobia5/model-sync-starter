@@ -1,0 +1,19 @@
+{
+  "source_sha": "baa8d265f94bb38e7baee93c0dbb999d8e4afde6",
+  "source_tree": "3f27d8290820022c4a07514b14113defc9ce3667",
+  "raw_archive_sha256": "9f1546d1f22d576e808265ad468ef09e09be5518895ea22061aa1230e806a37e",
+  "raw_archive_bytes": 483820,
+  "raw_archive_entries": 241,
+  "entry_digests": "PASS",
+  "zip_crc": "PASS",
+  "prior_archives_unchanged": 18,
+  "historical_qm_suffix": "BYTE_IDENTICAL",
+  "post_report_checks": {
+    "python scripts/check-docs.py": 0,
+    "python scripts/check-architecture.py": 0,
+    "git diff --check": 0
+  },
+  "oracle_execution": "NOT_RUN",
+  "full_execution": "NOT_RUN",
+  "owned_resources_created": 0
+}

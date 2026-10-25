@@ -1,3 +1,15 @@
+## Latest target/worker work - 2026-10-26
+
+Sourcebaa8d26/tree3f27d829 passed matching default222 JUnit/102 Python, all exits0.
+The A/B target fixture, semantic lock matcher and bounded independent worker
+matrix are implemented; actual Oracle proof is NOT_RUN. Small admission BLOCKED
+at10.951-11.004GiB host available versus12GiB, with Docker/disk PASS. No wrapper,
+container or schema was created. Known-hint virtual controls measured80 fixed /
+160 adaptive completions at20s; the actual Oracle cause remains unqualified.
+The original20s gate is unchanged; a narrow criterion candidate is unadopted.
+[QM](../QM.md) / [raw attempts](../validation/qualification/2026-10-26-target-worker-deadline/README.md). Historical7c1abe5 full remains FAILED;
+current full NOT_RUN, production NO-GO. Earlier sections below are historical.
+
 ## Latest integrated execution - 2026-10-25
 
 Clean source7c1abe5/treec604e462 passed fresh default189 JUnit/98 Python.

@@ -1,3 +1,10 @@
+## Target fixture / worker follow-up - 2026-10-26
+
+- [x] Implement A/validatorA then changed-B/validatorB through actual gateway/coordinator, fresh committed pair/revision checks, bounded failure-safe SQL proof and semantic FOR UPDATE [OF columns] NOWAIT matcher. Sourcebaa8d26 default222 JUnit/102 Python PASS; actual Oracle proof remains open.
+- [x] Implement independent four-cell worker probe with bounded per-lane context across real scheduler hops, reservation/hint/claim/prepare clocks and reasons, committed/eligible work and owned-resource checks. Known-hint deterministic controls measure80 fixed/160 adaptive at20s. No production pacing correction or runtime cause is claimed.
+- [ ] Run target fixture and all four cells after matching default and the existing12GiB admission. Attemptcd0117b8 BLOCKED at10.951-11.004GiB; Docker/disk PASS, no wrapper/resource creation or retry. [QM](QM.md) / [raw attempts](validation/qualification/2026-10-26-target-worker-deadline/README.md).
+- [ ] Resolve the Oracle worker cause or explicitly review the narrow fixed-control criterion candidate after runtime evidence. Current160/20s requirements and all83 Oracle methods remain unchanged; current full NOT_RUN, historical full FAILED and production NO-GO. No parent gate is closed by this source/default milestone.
+
 ## Integrated execution follow-up - 2026-10-25
 
 - [x] Execute the complete named DURABLE target once on clean source7c1abe5/treec604e462, full run d7fd02b7-1d9d-430c-a8ef-dfa883e8add6:83 methods/18 suites,81 PASS/2 FAILED,0 skipped. Default189 JUnit/98 Python, PIT167/168, six Gatling scenarios and all eight comparison variants passed;104 cooldowns all APPLIED. [QM](QM.md) / [raw evidence](validation/qualification/2026-10-25-integrated-durable-target/README.md). This closes execution only, not qualification.

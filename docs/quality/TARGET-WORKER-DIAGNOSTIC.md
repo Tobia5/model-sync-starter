@@ -49,3 +49,18 @@ small diagnostic requires the existing 12 GiB admission, Oracle6 GiB/4CPU and
 bounded JVM settings; full retains18 GiB admission and all83 methods. No full run
 occurs until focused requirements pass, or an unsupported compatibility threshold
 has an explicitly reviewed replacement. Never raise the current bound silently.
+
+## 2026-10-26 recorded result and unadopted criterion candidate
+
+Sourcebaa8d26/tree3f27d829 passed default222 JUnit/102 Python. Known-hint virtual
+controls measured80 fixed versus160 adaptive completions in20s; this is a
+counterexample to a universal fixed-mode guarantee, not an actual Oracle cause.
+The Oracle matrix was NOT_RUN: resource admissioncd0117b8 measured10.951-11.004GiB
+versus unchanged12GiB. Docker/disk passed. No resource retry or wrapper launch.
+
+Candidate for explicit review after runtime measurement: fixed250ms remains a
+measured20s compatibility control; configured adaptive retains160/20s. All other
+requirements remain. This candidate is **not adopted**. OracleWorkerIT and the
+full report validator still enforce160/20s for both modes. No full execution may
+be substituted with these controls. Actual SQL, per-lane Oracle observations,
+predecessor state and cleanup are still NOT_RUN. [Current QM](../../QM.md).
