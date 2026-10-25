@@ -35,6 +35,10 @@ import org.springframework.transaction.PlatformTransactionManager;
 @EntityScan(basePackageClasses = CustomerEntity.class)
 @Profile("worker-oracle")
 class WorkerRuntimeConfiguration {
+  @Bean(destroyMethod = "close") static WorkerTrace workerTrace(org.springframework.core.env.Environment environment) {
+    return new WorkerTrace(environment.getProperty("modelsync.worker.trace", Boolean.class, false));
+  }
+  @Bean static WorkerTracePostProcessor workerTracePostProcessor(WorkerTrace trace) { return new WorkerTracePostProcessor(trace); }
   @Bean(destroyMethod = "close") HikariDataSource workerDataSource() throws Exception {
     String user = System.getenv("MODELSYNC_ORACLE_USER");
     if (!"DEDICATED_TEST_SCHEMA".equals(System.getenv("MODELSYNC_ORACLE_TEST_SCHEMA_ACK"))

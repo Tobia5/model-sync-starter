@@ -60,7 +60,7 @@ def maven_command(diagnostic: bool = False) -> list[str]:
             else [*command, '-fae', '-Pfull', 'clean', 'verify'])
 
 
-def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False, quota: bool = False, creation: bool = False, characterization: bool = False, accounting: bool = False, cooldown: bool = False) -> list[str]:
+def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False, quota: bool = False, creation: bool = False, characterization: bool = False, accounting: bool = False, cooldown: bool = False, target_worker: bool = False) -> list[str]:
     """Use only the current successful default build's compiled tests and resolved classpath."""
     current(root)
     for script in ('check-test-reports.py', 'check-default-log.py'):
@@ -84,6 +84,9 @@ def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker
         raise ValueError('Resolved JUnit launcher classpath absent from the current default report')
     compiled = root / 'model-sync-sample/target/test-classes/io/modelsync/sample/OracleDiagnosticRunner.class'
     fresh(compiled, root)
+    if target_worker:
+        for name in ('OracleQualificationTargetIT', 'OracleWorkerDiagnostic', 'WorkerTrace'):
+            fresh(root / f'model-sync-sample/target/test-classes/io/modelsync/sample/{name}.class', root)
     if worker:
         fresh(root / 'model-sync-sample/target/test-classes/io/modelsync/sample/OracleWorkerIT.class', root)
     if recovery:
@@ -114,8 +117,8 @@ def diagnostic_command(root: Path = ROOT, queue_comparison: bool = False, worker
     java = str(Path(java_home) / 'bin' / ('java.exe' if os.name == 'nt' else 'java')) if java_home else shutil.which('java')
     if not java or not Path(java).is_file():
         raise ValueError('The build JDK is unavailable for diagnostics')
-    return [java, *(['-Xmx512m', '-XX:MaxDirectMemorySize=128m'] if cancellation or nowait or lock_policy or quota or creation or characterization or cooldown else []), f'-Dmodelsync.repository.root={root}',
-            '-Dmodelsync.oracle.diagnostic=' + ('cooldown-publication' if cooldown else 'comparison-accounting' if accounting else 'statement-characterization' if characterization else 'first-creation' if creation else 'shared-quota' if quota else 'production-lock-policy' if lock_policy else 'database-nowait' if nowait else 'jdbc-cancellation' if cancellation else 'process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale'), '-cp',
+    return [java, *(['-Xmx512m', '-XX:MaxDirectMemorySize=128m'] if cancellation or nowait or lock_policy or quota or creation or characterization or cooldown or target_worker else []), f'-Dmodelsync.repository.root={root}', *(['-Dmodelsync.qualification.target=oracle26-nowait-ledger-first-v1', '-Dmodelsync.worker.trace=true'] if target_worker else []),
+            '-Dmodelsync.oracle.diagnostic=' + ('target-and-worker' if target_worker else 'cooldown-publication' if cooldown else 'comparison-accounting' if accounting else 'statement-characterization' if characterization else 'first-creation' if creation else 'shared-quota' if quota else 'production-lock-policy' if lock_policy else 'database-nowait' if nowait else 'jdbc-cancellation' if cancellation else 'process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale'), '-cp',
             str(jdbc_tests) + os.pathsep + classpath, 'io.modelsync.sample.OracleDiagnosticRunner']
 
 
@@ -182,12 +185,12 @@ def preflight() -> None:
     docker('info', '--format', '{{.ServerVersion}}')
 
 
-def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False, quota: bool = False, creation: bool = False, characterization: bool = False, accounting: bool = False, cooldown: bool = False) -> int:
-    diagnostic = diagnostic or queue_comparison or worker or recovery or cancellation or nowait or lock_policy or quota or creation or characterization or accounting or cooldown
+def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False, quota: bool = False, creation: bool = False, characterization: bool = False, accounting: bool = False, cooldown: bool = False, target_worker: bool = False) -> int:
+    diagnostic = diagnostic or queue_comparison or worker or recovery or cancellation or nowait or lock_policy or quota or creation or characterization or accounting or cooldown or target_worker
     attempt = {'attempt_id': str(uuid.uuid4()), **identity(ROOT), 'image': IMAGE,
                'runtime_schema': 'MS_TEST_RUNTIME', 'migration_schema': 'MS_TEST_MIGRATION',
                'mode': 'diagnostic' if diagnostic else 'full',
-               'diagnostic_scope': ('cooldown-publication' if cooldown else 'comparison-accounting' if accounting else 'statement-characterization' if characterization else 'first-creation' if creation else 'shared-quota' if quota else 'production-lock-policy' if lock_policy else 'database-nowait' if nowait else 'jdbc-cancellation' if cancellation else 'process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale') if diagnostic else None,
+               'diagnostic_scope': ('target-and-worker' if target_worker else 'cooldown-publication' if cooldown else 'comparison-accounting' if accounting else 'statement-characterization' if characterization else 'first-creation' if creation else 'shared-quota' if quota else 'production-lock-policy' if lock_policy else 'database-nowait' if nowait else 'jdbc-cancellation' if cancellation else 'process-recovery-and-io' if recovery else 'worker-pacing' if worker else 'queue-comparison' if queue_comparison else 'transactions-and-scale') if diagnostic else None,
                'full_qualification': 'NOT_RUN' if diagnostic else 'REQUIRES_FULL_EVIDENCE',
                'qualification_target': None if diagnostic else 'oracle26-nowait-ledger-first-v1'}
     selected = os.environ.get('MODELSYNC_MAVEN_SETTINGS')
@@ -195,7 +198,7 @@ def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool 
     if selected == PROJECT_SETTINGS and (ROOT / selected).is_file():
         attempt['maven_settings_sha256'] = hashlib.sha256((ROOT / selected).read_bytes()).hexdigest()
     try:
-        launcher = diagnostic_command(queue_comparison=queue_comparison, worker=worker, recovery=recovery, cancellation=cancellation, nowait=nowait, lock_policy=lock_policy, quota=quota, creation=creation, characterization=characterization, accounting=accounting, cooldown=cooldown) if diagnostic else None
+        launcher = diagnostic_command(queue_comparison=queue_comparison, worker=worker, recovery=recovery, cancellation=cancellation, nowait=nowait, lock_policy=lock_policy, quota=quota, creation=creation, characterization=characterization, accounting=accounting, cooldown=cooldown, target_worker=target_worker) if diagnostic else None
         invalidate(ROOT)
         preflight()
     except (ValueError, OSError, ET.ParseError, subprocess.CalledProcessError) as error:
@@ -341,6 +344,8 @@ if __name__ == '__main__':
                         help='Run the current default build\'s Oracle atomicity and 100k diagnostics; never qualifies full')
     selections.add_argument('--queue-diagnostic', action='store_true',
                             help='Run only queue locking and four-way comparison diagnostics; never qualifies full')
+    selections.add_argument('--target-worker-diagnostic', action='store_true',
+                            help='Run only changed-projection target proof and four independent small worker cells; never full')
     selections.add_argument('--worker-diagnostic', action='store_true',
                             help='Run only actual auto-configured worker pacing diagnostics; never qualifies full')
     selections.add_argument('--recovery-diagnostic', action='store_true',
@@ -362,4 +367,4 @@ if __name__ == '__main__':
     selections.add_argument('--cooldown-diagnostic', action='store_true',
                             help='Run only small durable cooldown/recovery and actual-worker integration; never qualifies full')
     args = parser.parse_args()
-    raise SystemExit(main(args.diagnostic, args.queue_diagnostic, args.worker_diagnostic, args.recovery_diagnostic, args.cancellation_diagnostic, args.nowait_diagnostic, args.lock_policy_diagnostic, args.quota_diagnostic, args.creation_diagnostic, args.statement_characterization, args.comparison_accounting_diagnostic, args.cooldown_diagnostic))
+    raise SystemExit(main(args.diagnostic, args.queue_diagnostic, args.worker_diagnostic, args.recovery_diagnostic, args.cancellation_diagnostic, args.nowait_diagnostic, args.lock_policy_diagnostic, args.quota_diagnostic, args.creation_diagnostic, args.statement_characterization, args.comparison_accounting_diagnostic, args.cooldown_diagnostic, args.target_worker_diagnostic))

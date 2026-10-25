@@ -241,7 +241,7 @@ public final class ReactorSyncWorker implements SmartLifecycle {
     subscription =
         Flux.range(0, concurrency)
             .flatMap(
-                lane -> lane(),
+                lane -> lane().contextWrite(context -> context.put("modelsync.worker.lane", lane)),
                 concurrency)
             .subscribe(
                 ignored -> {},

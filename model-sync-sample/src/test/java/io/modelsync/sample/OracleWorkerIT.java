@@ -68,7 +68,7 @@ class OracleWorkerIT {
     } finally { WorkerMeasurements.write(report); }
   }
 
-  private void open(boolean adaptive) {
+  void open(boolean adaptive) {
     context = new SpringApplicationBuilder(WorkerRuntimeConfiguration.class)
         .web(WebApplicationType.NONE).profiles("worker-oracle")
         .run("--spring.jpa.hibernate.ddl-auto=validate", "--spring.jpa.open-in-view=false",
@@ -77,7 +77,8 @@ class OracleWorkerIT {
             "--model-sync.jdbc.cooldown-policy=DURABLE", "--model-sync.jdbc.insert-policy=ORACLE_26_NOWAIT", "--model-sync.jpa.lock-policy=ORACLE_NOWAIT",
             "--model-sync.quotas.worker-main=20ms", "--model-sync.quotas.worker-other=1ms",
             "--model-sync.productive-interval=" + (adaptive ? "5ms" : "250ms"),
-            "--model-sync.max-idle-interval=" + (adaptive ? "1s" : "250ms"));
+            "--model-sync.max-idle-interval=" + (adaptive ? "1s" : "250ms"),
+            "--modelsync.worker.trace=" + Boolean.getBoolean("modelsync.worker.trace"));
     worker = context.getBean(ReactorSyncWorker.class); jdbc = context.getBean(WorkerJdbcTemplate.class);
     owner = context.getBean(WorkerOwner.class); quota = context.getBean(WorkerQuota.class);
     gateway = context.getBean(SyncGateway.class);
@@ -92,7 +93,7 @@ class OracleWorkerIT {
     stop();
   }
 
-  private void productive(String name) throws Exception {
+  void productive(String name) throws Exception {
     for (int i = 0; i < 10; i++) enqueue("warm-" + i);
     worker.start();
     await(() -> completed() == 10, 15000); stop();
@@ -300,10 +301,31 @@ class OracleWorkerIT {
     jdbc.update("delete from SAMPLE_CUSTOMER where tenant_id='synthetic-worker'");
     jdbc.update("update MS_QUOTA set next_allowed_ms=0 where quota_group in ('worker-main','worker-other')");
   }
-  private void close() {
+  void close() {
     if (context == null) return;
     try { if (jdbc != null) { clear(); jdbc.execute("drop table SAMPLE_CUSTOMER purge"); jdbc.update("delete from MS_QUOTA where quota_group in ('worker-main','worker-other')"); } }
     finally { context.close(); context = null; worker = null; jdbc = null; }
+  }
+  WorkerTrace trace() { return context.getBean(WorkerTrace.class); }
+  com.zaxxer.hikari.HikariDataSource source() { return context.getBean(com.zaxxer.hikari.HikariDataSource.class); }
+  ReactorSyncWorker worker() { return worker; }
+  List<Map<String, Object>> diagnosticPhases() { return List.copyOf(phases); }
+  void recordedStatistics() {
+    jdbc.execute("begin dbms_stats.set_table_stats(ownname=>user,tabname=>'MS_WORK',numrows=>100000,numblks=>2260,no_invalidate=>false); end;");
+  }
+  Map<String, Object> diagnosticSnapshot() {
+    var result = new LinkedHashMap<String, Object>();
+    result.put("clock_ms", System.currentTimeMillis());
+    result.put("work", jdbc.queryForList("select binding_id,work_status,count(*) rows_in_state from MS_WORK group by binding_id,work_status"));
+    result.put("eligible_remaining", jdbc.queryForObject("select count(*) from MS_WORK where binding_id='worker-main' and work_status='WAITING' and next_at_ms<=?", Long.class, System.currentTimeMillis()));
+    result.put("quota", jdbc.queryForList("select quota_group,spacing_ms,next_allowed_ms from MS_QUOTA"));
+    result.put("pending_cooldowns", jdbc.queryForObject("select count(*) from MS_COOLDOWN where publication_status='PENDING'", Long.class));
+    result.put("table_statistics", jdbc.queryForList("select table_name,num_rows,blocks,to_char(last_analyzed,'YYYY-MM-DD HH24:MI:SS') last_analyzed_db_local from user_tab_statistics where table_name in ('MS_WORK','MS_STATE','MS_QUOTA','MS_COOLDOWN')"));
+    result.put("index_statistics", jdbc.queryForList("select index_name,num_rows,distinct_keys,leaf_blocks,blevel from user_ind_statistics where table_name='MS_WORK'"));
+    result.put("sessions", WorkerMeasurements.sessions(jdbc)); result.put("counters", WorkerMeasurements.counters(jdbc));
+    result.put("scheduling", WorkerMeasurements.scheduling(worker,jdbc,owner,quota));
+    result.put("pool_active", source().getHikariPoolMXBean().getActiveConnections());
+    return result;
   }
   private static void await(BooleanSupplier condition, long timeout) {
     long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeout);

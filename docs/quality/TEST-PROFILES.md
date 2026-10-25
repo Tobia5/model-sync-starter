@@ -313,3 +313,12 @@ Physical owner activity, terminated worker threads, pool activity, server reques
 committed projection/state counts and selector/native cursor counters remain separate evidence.
 The historical unexplained 55 at source `25297fd` remains unclassified; new failure facts cannot
 retroactively supply its vendor codes. No production locking/scheduling behavior changes here.
+## Target fixture / worker deadline diagnostic
+
+`python scripts/full-oracle-container.py --target-worker-diagnostic` explicitly
+selects the changed-existing-projection target fixture and four independent small
+worker cells. [Declared matrix and trace limits](TARGET-WORKER-DIAGNOSTIC.md).
+Matching default and12 GiB admission are required; the same6 GiB/4CPU Oracle and
+512 MiB heap/128 MiB direct caps apply. No scale, comparison, mutation, Gatling or
+full execution is selected. Failures remain failures and do not suppress later
+matrix cells. The current83-method full inventory and20s worker gate are retained.

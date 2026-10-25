@@ -34,6 +34,7 @@ public final class OracleDiagnosticRunner {
       case "comparison-accounting" -> List.of("io.modelsync.jdbc.OracleOptimizationIT");
       case "queue-comparison" -> List.of("io.modelsync.jdbc.OracleSelectionIT", "io.modelsync.jdbc.OracleOptimizationIT");
       case "worker-pacing" -> List.of("io.modelsync.sample.OracleWorkerIT");
+      case "target-and-worker" -> List.of("io.modelsync.sample.OracleQualificationTargetIT", "io.modelsync.sample.OracleWorkerDiagnostic");
       case "process-recovery-and-io" -> List.of("io.modelsync.sample.OracleRecoveryIT", "io.modelsync.sample.OracleIoIT");
       case "jdbc-cancellation" -> List.of("io.modelsync.sample.OracleCancellationDiagnostic");
       case "database-nowait" -> List.of("io.modelsync.sample.OracleNowaitDiagnostic");
@@ -56,6 +57,7 @@ public final class OracleDiagnosticRunner {
       long expected = name.endsWith("OracleCooldownIT") ? 5 : name.endsWith("OracleFirstCreationIT") ? 12 : name.endsWith("OracleQuotaContentionIT") ? 6 : name.endsWith("OracleLockPolicyIT") || name.endsWith("OracleNowaitDiagnostic") ? 7 : name.endsWith("OracleCancellationDiagnostic") ? 6 : name.endsWith("OracleRecoveryIT") ? 6 : name.endsWith("OracleIoIT") ? 12
           : name.endsWith("OracleAtomicityIT") ? 7 : name.endsWith("OracleSelectionIT") ? 11 : 1;
       if (characterization) expected = 1;
+      if (name.endsWith("OracleWorkerDiagnostic")) expected = 4;
       boolean success = summary.getTestsFoundCount() == expected
           && summary.getTestsSucceededCount() == expected && summary.getTestsSkippedCount() == 0
           && summary.getTestsFailedCount() == 0 && summary.getContainersFailedCount() == 0;
@@ -77,7 +79,7 @@ public final class OracleDiagnosticRunner {
       passed &= success;
       report.put("status", passed ? "PASS" : "FAILED");
       Files.writeString(root.resolve("target/qm/oracle-diagnostic.json"), mapper.writeValueAsString(report) + "\n");
-      if (!success) break;
+      if (!success && !"target-and-worker".equals(System.getProperty("modelsync.oracle.diagnostic"))) break;
     }
     System.exit(passed ? 0 : 1);
   }

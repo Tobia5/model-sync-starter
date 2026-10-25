@@ -12,6 +12,7 @@
     <maven.deploy.skip>true</maven.deploy.skip>
   </properties>
   <dependencies>
+    <dependency><groupId>io.modelsync</groupId><artifactId>model-sync-testkit</artifactId><version>${project.version}</version><scope>test</scope></dependency>
     <dependency>
       <groupId>io.modelsync</groupId>
       <artifactId>model-sync-spring-boot-starter-oracle-jpa</artifactId>
