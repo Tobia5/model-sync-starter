@@ -192,6 +192,7 @@ def publication(value, physical):
     failures = physical.get('detached_sql_failures')
     require(isinstance(failures,list), 'physical SQL facts absent')
     for failure in failures:
+        fact({k:v for k,v in failure.items() if k != 'count'})
         require(failure.get('vendor_code') == 54 and failure.get('sql_state') == '61000' and failure.get('truncated') is False, 'unexplained publication SQL failure')
         require(set(failure) == {'category','exception_type','sql_state','vendor_code','truncated','count'} and number(failure,'count') > 0, 'unsafe SQL facts')
     require(sum(number(f,'count') for f in failures) == sum(number(after,p+'_'+suffix) for p in ('accept','apply') for suffix in ('refusals','other_sql_failures')), 'missing/double raw SQL failure facts')

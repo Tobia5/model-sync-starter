@@ -42,6 +42,9 @@ class ComparisonEvidenceTests(unittest.TestCase):
             if mutation=='unrecorded':bad['receipts'][0]['durable']=False
             if mutation=='duplicate':bad['persisted_rows']*=2
             with self.assertRaises(ValueError):publication(bad,physical)
+        for category in ('UNKNOWN','UNCERTAIN_COMMIT'):
+            bad=copy.deepcopy(physical);bad['detached_sql_failures'][0]['category']=category
+            with self.assertRaises(ValueError):publication(value,bad)
         for field in ('apply_refusals','apply_commits','apply_completion_failures','apply_active'):
             bad=copy.deepcopy(physical);bad['delta'][field]+=1
             with self.assertRaises(ValueError):publication(value,bad)
