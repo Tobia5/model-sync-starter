@@ -200,9 +200,12 @@ def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool 
     try:
         if consumers:
             from consumer_artifacts import launch_command, resource_admission
+            security = json.loads((consumers / 'artifact-manifest.json').read_text()).get('kind') == 'consumer-security-v1'
+            if security:
+                from consumer_security import launch_command
             launcher = launch_command(ROOT, consumers)
             attempt['mode'] = 'independent-consumers'
-            attempt['diagnostic_scope'] = 'mvc-webflux-staged-artifacts'
+            attempt['diagnostic_scope'] = 'mvc-webflux-consumer-security' if security else 'mvc-webflux-staged-artifacts'
             attempt['resource_admission'] = resource_admission(ROOT, consumers)
         else:
             launcher = diagnostic_command(queue_comparison=queue_comparison, worker=worker, recovery=recovery, cancellation=cancellation, nowait=nowait, lock_policy=lock_policy, quota=quota, creation=creation, characterization=characterization, accounting=accounting, cooldown=cooldown, target_worker=target_worker) if diagnostic else None
