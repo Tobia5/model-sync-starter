@@ -1,3 +1,41 @@
+## Consumer authorization qualification — 2026-10-26
+
+**Default and cheap security PASS; final Oracle admission BLOCKED; final Oracle
+journeys NOT_RUN; producer full NOT_RUN; production NO-GO.**
+
+Tested fixture `8df8c949b8ddd570cf723e7f7ab522c9aab2e3f2`, tree `6bf4d2531e1c42d067f4db99ad844f87f4a8430e`, clean before/after.
+Artifacts remain the unchanged 39-file set from 551427b. Accepted full
+a0f46d7/report 8d07aa7 and consumers 551427b/report 50c9370 remain unchanged.
+
+- Default `f87f69d3-16fa-466b-b2e9-25031ab0b0b7`: approved project settings/task-owned repository,
+  `clean verify`, build/qualification/collection exits **0/0/0**;
+  **222 JUnit / 41 XML / 116 Python**. Core/trigger and execution audits passed.
+- Standalone consumers: **5 MVC / 6 WebFlux cheap methods PASS**, both preparation
+  exits 0. Current wrapper attempt `47b66c3c-6d1e-425e-bedb-ebd7d1438ec2` exited **2**:
+  host samples **9.699, 9.458, 9.656 GiB**, below unchanged 12 GiB. Docker/disk
+  checks passed. No current Oracle Maven execution or runtime receipt exists.
+- Prior f206718/run `2b8e502f-31ca-4ded-bccb-93911f17bb11` and 8e36028/run
+  `143adeff-77ef-4864-ad9c-23ab46534c6c`: **overall FAILED**, original
+  wrapper/MVC/WebFlux exits **1/1/0**. Each WebFlux journey passed all 30 denial
+  cases with unchanged protected side effects, four calls/four committed outcomes
+  and 32 concurrent HTTP identities. MVC stopped after two initial outcomes on
+  live 401 versus expected 403 assertions; later phases NOT_RUN. Failed cheap
+  probes and partial evidence are retained. Current status-fixture correction
+  is cheap-test verified; its Oracle execution remains open.
+- No resources created by the blocked attempt; exact-label container/volume
+  checks confirm absence. Both earlier attempts' owned containers, volumes and
+  consumer JVMs were independently confirmed absent. No unrelated work stopped.
+
+[Detailed evidence and raw archive](validation/qualification/2026-10-26-consumer-security/README.md),
+[artifact hashes](validation/qualification/2026-10-26-consumer-security/artifact-manifest.json),
+[acceptance matrix](docs/quality/ACCEPTANCE-MATRIX.md), [secured boundary](docs/USER-HANDBOOK.md).
+Only demonstrated R06.1/R06.3 leaves close; final two-stack Oracle security remains
+blocked. Real identity-provider/policy/revocation, TLS/SSRF/secrets, retention,
+uncertainty, operations, capacity and distribution remain separate. Not a complete
+security audit. No packaging/full/PIT/Gatling repeat, merge or publication.
+
+---
+
 ## Independent artifact consumption â€” 2026-10-26
 
 **Default/package PASS; independent MVC and WebFlux Oracle consumers PASS;

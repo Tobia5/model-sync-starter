@@ -26,6 +26,15 @@ Inventory, brokers, vendor connectors and remote owner writes are outside this s
   `ca8ae33e-62af-4cc5-935d-cc691de61f60` PASS,3 committed reconciliations each.
   [Consumer report](validation/qualification/2026-10-26-independent-consumers/README.md).
 
+- [x] R06.1/R06.3 scoped security implementation and cheap checks: `8df8c94`,
+  MVC 5 / WebFlux 6 methods. Earlier 8e36028 WebFlux Oracle journey passed 30 denials,
+  four committed outcomes and 32 concurrent identities; its overall attempt remains FAILED.
+- [ ] Final-source MVC/WebFlux Oracle security journeys: attempt `47b66c3c-6d1e-425e-bedb-ebd7d1438ec2`
+  BLOCKED at 9.458–9.699 GiB host availability versus 12 GiB; both NOT_RUN. Prior MVC
+  response-status assertion failures are preserved; correction awaits Oracle execution.
+  [Scoped evidence](validation/qualification/2026-10-26-consumer-security/README.md).
+  Real identity-provider/production authorization and broader R06 gates remain open.
+
 ## Still-open production subcriteria
 
 - [ ] R01.3: required/protected checks, reviewed merge identity and eventual merge-source verification.

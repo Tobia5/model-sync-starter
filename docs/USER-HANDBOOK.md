@@ -1,3 +1,43 @@
+## Secured application boundary — consumer evidence, 2026-10-26
+
+Security fixture `8df8c94` uses unchanged staged 551427b JARs. Its default
+and cheap security tests passed (MVC 5 / WebFlux 6). Final Oracle execution was
+blocked by host-memory admission. Earlier source 8e36028's WebFlux journey passed
+30 denial cases, four committed reconciliations and 32 concurrent HTTP identities;
+MVC stopped on a response-status fixture assertion. [Exact results and limits](../validation/qualification/2026-10-26-consumer-security/README.md).
+
+Use application-owned Spring Security filter chains **and method authorization**
+before calling Model Sync. The executable
+[MVC configuration](../validation/consumer-security/mvc/src/main/java/example/consumer/SecurityConfiguration.java)
+and [reactive facade](../validation/consumer-security/webflux/src/main/java/example/consumer/ConsumerFacade.java)
+use BOM-pinned Spring Security 7.1.1. Exact read/refresh/event permissions include
+tenant, binding and subject. Unknown scope or missing authority has no default
+tenant fallback. Policy lookup does not read protected model payloads.
+
+Raw `SyncGateway`, internal model access and event publisher are trusted in-process
+capabilities. External HTTP/service/event ingress must use the proxied authorized
+facade. This is not a sandbox against application code holding raw references.
+No broker delivery or DEAD replay was implemented. Generated in-memory accounts
+and loopback HTTP Basic are test-only; production identity integration is open.
+CSRF remains enabled: real clients obtain the framework token/session at `/csrf`;
+cheap tests use Spring Security's test support.
+
+WebFlux authorizes with Reactor SecurityContext, then schedules blocking model
+access on `modelSyncPersistenceScheduler`, carrying a detached principal name.
+Durable background work uses an explicit known-ID service scope; it must not rely
+on the originating request SecurityContext. This fixture does not cancel accepted
+intent after later grant revocation. Existing mapping/enlistment, raw mixed-transaction
+rollback, auto-configuration, disabled mode and shutdown checks remain in the journeys.
+
+[Fixture commands and boundary](../validation/consumer-security/README.md) describe
+standalone staging/cheap tests and explicit small Oracle execution. Core/library
+dependencies are unchanged. The [acceptance matrix](quality/ACCEPTANCE-MATRIX.md)
+closes only demonstrated R06.1/R06.3 leaves. Final Oracle rerun requires resource
+admission and fresh matching default evidence. Production NO-GO; real identity,
+TLS/SSRF/secrets, retention, uncertainty, operations and distribution remain open.
+
+---
+
 ## Independent consumer setup actually verified — 2026-10-26
 
 Source `551427b`, consumer run `ca8ae33e-62af-4cc5-935d-cc691de61f60`: separate

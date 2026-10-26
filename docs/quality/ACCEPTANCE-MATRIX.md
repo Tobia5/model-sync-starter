@@ -26,6 +26,13 @@ open production subcriteria are not replaced by a configured integration PASS.
   3 physical owner calls/3 committed reconciliations. All exits0. Full NOT_RUN
   in this task; F retains its exact tested source. Runtime implementation is
   unchanged from F; the sole production-source edit corrects a Javadoc parameter.
+- **S** — consumer security fixture `8df8c949b8ddd570cf723e7f7ab522c9aab2e3f2`, tree `6bf4d2531e1c42d067f4db99ad844f87f4a8430e`:
+  default `f87f69d3-16fa-466b-b2e9-25031ab0b0b7` (222 JUnit / 116 Python) and 5 MVC / 6 WebFlux
+  cheap security methods PASS. Current Oracle attempt `47b66c3c-6d1e-425e-bedb-ebd7d1438ec2`
+  BLOCKED at host-memory admission, journeys NOT_RUN. Earlier source 8e36028/run
+  `143adeff-77ef-4864-ad9c-23ab46534c6c`: overall FAILED, WebFlux PASS
+  (30 denials/four outcomes/32 concurrent identities), MVC fixture assertion FAILED.
+  [Exact scope, earlier attempts and raw evidence](../../validation/qualification/2026-10-26-consumer-security/README.md).
 - **H** — historical results retain their original status and source; see
   [QM](../../QM.md) and the dated validation directories. They are not new execution.
 
@@ -74,9 +81,9 @@ test PASS. Evidence listed beside an open row supports only the completed portio
 
 | ID | Requirement / supported scope | Supporting source/run and demonstrated result | Current status / exact unmet subcriterion |
 |---|---|---|---|
-| R06.1 | Tenant/binding/subject authority | F tenant-scoped core/store contracts | OPEN: application authorization before requests/events/visits/replay, negative cross-tenant threat-model tests; qualifiers are not permissions |
+| R06.1 | Tenant/binding/subject authority | F library contracts; S actual filter-chain/method checks and earlier Oracle WebFlux scoped read/refresh/event journeys | DONE for S cheap checks and source-bound WebFlux scenarios. OPEN: final-source two-stack Oracle verification (memory BLOCKED), real identity-provider/policy/revocation/tenant lifecycle, other APIs/visits/replay and broader threat model. Raw gateway/event publisher are trusted in-process capabilities; qualifiers are not permissions |
 | R06.2 | Provider transport/security configuration | F synthetic loopback fixtures | OPEN: TLS/secret rotation, endpoint/redirect/SSRF controls, payload limits/redaction and supported provider-specific review |
-| R06.3 | Invalid identity/schema/authority fails closed | F default contracts and schema checks | DONE for tested library checks; OPEN: end-to-end host authorization/cache-isolation/security acceptance |
+| R06.3 | Invalid identity/schema/authority fails closed | F library/schema checks; S missing grants/unknown scope/fresh-cache denials; earlier WebFlux 30 negative cases with unchanged protected side effects | DONE for declared F and executed S checks. OPEN: final-source two-stack Oracle verification, production identity/host integration, arbitrary identifiers/mappings and complete security acceptance |
 | R06.4 | Fresh reads versus a newly received event | Documented eventual freshness; F event generation/coalescing tests | OPEN: application acceptance of consistency limits; strict read-after-change is not promised |
 | R10.1 | Parent/library artifacts with sources/Javadoc | C | DONE:12 POMs/11 main JARs/16 source and Javadoc attachments, recorded SHA-256; source-less starters have no Java attachments by profile design |
 | R10.2 | Independent MVC/JPA and WebFlux/JPA local consumers | C, separate outside-reactor Maven invocations and isolated repositories | DONE:actual auto-configuration, effective policies, mixed rollback, clock replacement, disabled mode, WebFlux execution boundary and three committed phases per host; registry authentication remains R10.3 |
