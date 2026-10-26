@@ -14,6 +14,11 @@ SPEC.loader.exec_module(MODULE)
 
 
 class IndependentConsumerGuards(unittest.TestCase):
+    def test_memory_json_is_locale_independent_and_rejects_ambiguous_text(self):
+        self.assertEqual(20.587, MODULE.memory_value('20.587\r\n'))
+        for value in ('20,587', '"20,587"', 'true', 'null', 'NaN', '-1'):
+            with self.assertRaises(ValueError): MODULE.memory_value(value)
+
     def test_resource_budget_is_not_lowered(self):
         value = {'samples': [{'host_available_gib': 12}] * 3,
                  'docker': {'available_gib': 6, 'cpu': 4}, 'disk_free_gib': [20, 20]}

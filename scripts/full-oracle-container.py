@@ -211,7 +211,8 @@ def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool 
     except (ValueError, OSError, ET.ParseError, subprocess.CalledProcessError) as error:
         invalidate(ROOT)
         detail = error_detail(error)
-        print(f'BLOCKED full preflight: disposable Docker lane unavailable: {detail}', file=sys.stderr)
+        scope = 'consumer' if consumers else 'full'
+        print(f'BLOCKED {scope} preflight: disposable Docker lane unavailable: {detail}', file=sys.stderr)
         if os.environ.get('MODELSYNC_ORACLE_CONTAINER') == 'EXPLICIT_DISPOSABLE':
             write_infrastructure({**attempt, 'status': 'BLOCKED', 'phase': 'Docker preflight',
                                   'error': detail, 'container_created': False,
@@ -309,7 +310,8 @@ def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool 
                 result_code = diagnostic_exit
         except (OSError, subprocess.CalledProcessError, RuntimeError) as error:
             detail = error_detail(error)
-            print(f'BLOCKED full preflight: {phase}: {detail}', file=sys.stderr)
+            scope = 'consumer' if consumers else 'full'
+            print(f'BLOCKED {scope} preflight: {phase}: {detail}', file=sys.stderr)
             blocker_detail = detail
             result_code = 2
         finally:

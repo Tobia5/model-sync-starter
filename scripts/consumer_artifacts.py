@@ -12,6 +12,7 @@ import sys
 import time
 import uuid
 import re
+import math
 import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -143,7 +144,9 @@ def prepare(root, workspace):
             'org.apache.maven.plugins:maven-dependency-plugin:3.8.1:tree', '-DoutputType=json',
             '-DoutputFile=target/dependency-tree.json',
             'org.apache.maven.plugins:maven-dependency-plugin:3.8.1:build-classpath', '-Dmdep.outputFile=target/classpath.txt',
-            'org.apache.maven.plugins:maven-dependency-plugin:3.8.1:go-offline']
+            'org.apache.maven.plugins:maven-dependency-plugin:3.8.1:go-offline',
+            'org.apache.maven.plugins:maven-dependency-plugin:3.8.1:get',
+            '-Dartifact=org.apache.maven.surefire:surefire-junit-platform:3.5.3']
         started = time.time_ns()
         with (workspace / (mode + '-prepare.log')).open('w', encoding='utf-8') as log:
             code = subprocess.run(command, cwd=project, stdout=log, stderr=subprocess.STDOUT).returncode
@@ -188,6 +191,12 @@ def admitted(observation):
             and observation['docker']['cpu'] >= 4
             and min(observation['disk_free_gib']) >= 20)
 
+def memory_value(text):
+    value = json.loads(text)
+    if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
+        raise ValueError('Invalid JSON memory observation')
+    return value
+
 def resource_admission(root, workspace):
     """One bounded observation, using the established small-diagnostic 12 GiB budget."""
     from run_evidence import identity
@@ -197,8 +206,8 @@ def resource_admission(root, workspace):
     if os.name != 'nt': raise ValueError('This approved admission implementation requires the Windows host')
     for index in range(3):
         memory = subprocess.check_output(['powershell.exe', '-NoProfile', '-Command',
-            '$m=Get-CimInstance Win32_OperatingSystem; [math]::Round($m.FreePhysicalMemory/1MB,3)'], text=True)
-        record['samples'].append({'observed_ns': time.time_ns(), 'host_available_gib': float(memory.strip())})
+            '$m=Get-CimInstance Win32_OperatingSystem; [math]::Round($m.FreePhysicalMemory/1MB,3) | ConvertTo-Json -Compress'], text=True)
+        record['samples'].append({'observed_ns': time.time_ns(), 'host_available_gib': memory_value(memory)})
         if index < 2: time.sleep(3)
     docker = json.loads(subprocess.check_output(['docker', 'info', '--format',
         '{"server":"{{.ServerVersion}}","cpu":{{.NCPU}},"memory_bytes":{{.MemTotal}},"running":{{.ContainersRunning}}}'], text=True))
