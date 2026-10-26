@@ -1,3 +1,11 @@
+## Current acceptance record — 2026-10-26
+
+The [acceptance matrix](quality/ACCEPTANCE-MATRIX.md) is the current requirement-level
+status. Accepted named-target full source `a0f46d7` remains unchanged. Independent
+local MVC/WebFlux consumption at source `551427b` is PASS. Completed execution
+leaves are closed; production remains NO-GO with specific open subcriteria in the
+matrix. Dated entries below retain their historical scope/status and are not new tasks.
+
 ## Integrated repaired-target full result - 2026-10-26
 
 Clean sourcea0f46d7/tree0382fbe passed matching default222 JUnit/102 Python,

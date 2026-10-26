@@ -1,3 +1,85 @@
+## Independent consumer setup actually verified — 2026-10-26
+
+Source `551427b`, consumer run `ca8ae33e-62af-4cc5-935d-cc691de61f60`: separate
+MVC and WebFlux Maven builds consumed only the staged0.2.0-SNAPSHOT artifacts.
+Each passed startup, three committed A/B/C reconciliations, mixed JDBC/JPA
+rollback, named clock replacement, disabled mode and owned-resource cleanup.
+[Evidence](../validation/qualification/2026-10-26-independent-consumers/README.md)
+and [current acceptance matrix](quality/ACCEPTANCE-MATRIX.md) define the limits.
+The original producer full PASS remains attributed to `a0f46d7` only.
+
+### Minimal tested host
+
+Use Java21 and Boot4.1.1. Depend on `io.modelsync:model-sync-spring-boot-starter-oracle-jpa:0.2.0-SNAPSHOT`
+and either Boot's `spring-boot-starter-webmvc` or `spring-boot-starter-webflux`.
+The [MVC POM](../validation/consumers/mvc/pom.xml) and
+[WebFlux POM](../validation/consumers/webflux/pom.xml) are independent Boot-parent projects,
+not children of the producer reactor. Their exact dependency trees are in the evidence.
+
+Supply a consumer-owned immutable DTO, JPA entity, `LockingJpaProjectionMapping`,
+`JpaProjectionStore` and `ModelBinding`. The tested
+[mapping](../validation/consumers/common/src/main/java/example/consumer/ItemMapping.java)
+consumes per-operation lock options. The tested
+[configuration](../validation/consumers/common/src/main/java/example/consumer/ConsumerConfiguration.java)
+uses a shared transactional EntityManager, explicit owner authority, ON_DEMAND
+recurrence, fingerprint/freshness and a configured quota group. Its named
+`modelSyncClock` replacement retains `DatabaseClock` for distributed admission.
+The SQL observer and loopback HTTP owner are test instrumentation, not required
+production services or an authorization example.
+
+For this named target, set:
+
+```properties
+model-sync.jdbc.point-lock-policy=ORACLE_NOWAIT
+model-sync.jdbc.quota-lock-policy=ORACLE_NOWAIT
+model-sync.jdbc.insert-policy=ORACLE_26_NOWAIT
+model-sync.jdbc.cooldown-policy=DURABLE
+model-sync.jpa.lock-policy=ORACLE_NOWAIT
+model-sync.triggers.events-enabled=true
+spring.jpa.open-in-view=false
+spring.jpa.hibernate.ddl-auto=validate
+```
+
+Provision the versioned ledger schema and cooldown extension1 before startup.
+Use the same local datasource for JPA, JDBC and `JpaTransactionManager`.
+Oracle26ai23.26.3/JDBC23.26.3.0.0/Hibernate7.4.5.Final were actually checked.
+DEFAULT, older Oracle and arbitrary replacement mappings do not inherit bounded
+contention qualification. This consumer journey exercises one single-table
+mapping; it does not repeat the producer's crash/contention proof for every custom mapping.
+
+MVC uses the blocking public `SyncGateway`; WebFlux uses `ReactiveSyncGateway`.
+The [WebFlux controller](../validation/consumers/webflux/ConsumerController.java)
+schedules synchronous Spring event publication on `modelSyncPersistenceScheduler`.
+Observed requests ran on `reactor-http-nio`, mapping work on `model-sync-jpa`,
+and blocking owner HTTP on `model-sync-owner`, with no owner transaction active.
+Both modes use `SyncRequested.changed` for the third reconciliation. A returned
+ticket inside an outer transaction remains provisional until commit; the consumer
+test rolls back a ticket and JPA flush together and verifies C/revision2/generation3
+from a fresh connection. HTTP acceptance alone is not completion.
+
+The test uses two worker lanes, two persistence/owner threads,16 queued tasks per
+thread, pool4,100ms idle poll/10ms productive/250ms max idle and5ms quota interval.
+These are small synthetic fixture settings, not production capacity recommendations.
+The [test](../validation/consumers/common/src/test/java/example/consumer/ConsumerJourneyTest.java)
+records acquisition/read/owner timeout settings, real SQL, policy fields and
+auto-configuration conditions. `model-sync.enabled=false` creates no gateway,
+work/quota store or worker; ordinary host JPA remains independently configured.
+
+### Reproduce local consumption explicitly
+
+Create task-owned directories outside the producer checkout for the staging
+workspace and Maven repository. Follow the [four-step consumer runner](../validation/consumers/README.md),
+using `library-artifacts clean install`, staging, then dependency preparation.
+Preparation runs each consumer as its own Maven invocation with a separate cache
+initially containing only the staged Model Sync artifacts. Runtime `verify` runs
+offline from those projects; no source/target/classes/systemPath/IDE resolution.
+Set the approved project Maven settings and disposable acknowledgments only for
+the explicit `--consumer-diagnostic` invocation. Its12GiB admission and6GiB/4CPU
+Oracle caps are separate from the unchanged18GiB full lane. No remote registry,
+real provider, million-row seed, PIT or Gatling is selected by this command.
+
+---
+
 ## Integrated repaired-target full result - 2026-10-26
 
 Clean sourcea0f46d7/tree0382fbe passed matching default222 JUnit/102 Python,

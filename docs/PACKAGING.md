@@ -1,6 +1,6 @@
 # Building and distributing the starter
 
-This change supplies **CI plus manual development SNAPSHOT publishing**, not an approved stable release. Neither workflow was run in the review environment. See [production gates](../TODO.md).
+This repository supplies **CI plus manual development SNAPSHOT publishing**, not an approved stable release. Default CI has passed; remote publication/authentication remains NOT_RUN. Local39-file packaging and independent MVC/WebFlux consumption passed at source `551427b`; see [source-bound evidence](../validation/qualification/2026-10-26-independent-consumers/README.md) and the [current acceptance matrix](quality/ACCEPTANCE-MATRIX.md).
 
 ## 1. Three different artifacts
 
@@ -25,7 +25,7 @@ python3 scripts/check-test-reports.py
 mvn -B -ntp -Plibrary-artifacts install
 ```
 
-Deploy the parent POM and **all referenced library modules**, including runtime/adapter/autoconfigure/starter modules and testkit where used. Only publishing `model-sync-spring-boot-starter-oracle-jpa.jar` would leave its transitive dependencies unresolved.
+Deploy the parent POM and **all referenced library modules**, including runtime/adapter/autoconfigure/starter modules. Testkit, architecture/performance modules and the sample are test/demo artifacts and must not be published as library dependencies. Only publishing `model-sync-spring-boot-starter-oracle-jpa.jar` would leave its transitive dependencies unresolved.
 
 `deployAtEnd` delays uploads until the reactor reaches deployment, but it does not provide transactional multi-package publication or rollback after a partial network failure.
 
@@ -42,7 +42,7 @@ This default lane deliberately does not claim Oracle integration coverage. The `
 3. Run `Publish Model Sync development snapshot` from main and enter `PUBLISH_SNAPSHOT`.
 4. The workflow checks the repository/ref/event/version/destination, validates all modules and keeps credentials absent from the initial verification process environment.
 5. It publishes using the repository's short-lived `GITHUB_TOKEN` with `packages:write`, only during the explicit deploy step. Maven tests remain enabled on deploy. No long-lived publishing token is embedded in source.
-6. Inspect uploaded modules and build a fresh external consumer; this final consumption test is an open qualification item, not currently automated proof.
+6. Inspect uploaded modules and build a fresh external consumer; registry-backed consumption is still open; the separate local staged-artifact consumer proof does not exercise registry credentials or publication.
 
 This is **not** automatic publication on every commit and **not** a stable-release/tag workflow. Main can advance after a manual run starts; the workflow publishes the SHA recorded for that reviewed run. Approval should refer to that SHA. Do not approve an unreviewed or superseded commit.
 

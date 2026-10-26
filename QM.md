@@ -1,3 +1,48 @@
+## Independent artifact consumption â€” 2026-10-26
+
+**Default/package PASS; independent MVC and WebFlux Oracle consumers PASS;
+current full NOT_RUN; production NO-GO.** Accepted full baseline
+`a0f46d7`/report`8d07aa7` remains unchanged. No full repeat, merge or remote publication.
+
+Tested clean source `551427bed4d021339fcc32fef8f633232ff8deb8`; tree `892daec99e12738607a9bfe736d8e98ee8218d0c`.
+Default run `b3db2e0f-e56a-420f-b379-0d1e73f15eb0`: `mvnw.cmd -B -ntp -s
+.mvn/qualification-central.settings.xml -Dmaven.repo.local=<task-owned-m2>
+-Plibrary-artifacts clean install`, build/qualification/collection exits0;
+222 JUnit/41 XML,112 Python, no failures/errors/skips. Core86/trigger43
+assertions and147-goal default execution audit passed separately.
+
+Consumer run `ca8ae33e-62af-4cc5-935d-cc691de61f60`: explicit
+`python scripts/full-oracle-container.py --consumer-diagnostic <external-workspace>`,
+wrapper/diagnostic/receipt-validation0; separate offline Maven verify exits0/0.
+39 staged files with exact hashes; independent caches, dependency trees and JAR
+CodeSource proof. Each host passed1 JUnit method and committed A/rev0/gen1,
+B/rev1/gen2, event-C/rev2/gen3, with3 physical owner calls/3 completed syncs.
+Actual NOWAIT lookup SQL, paired state, mixed rollback, effective policies,
+qualified-option consumption, datasource enlistment, auto-configuration discovery,
+clock replacement, disabled mode and WebFlux execution boundary all passed.
+
+Admission20.851â€“20.863GiB against12GiB; full18GiB unchanged.
+Pinned Oracle6GiB/4CPU, separate schemas, generated credentials and loopback binding.
+Owned container/volume `msq-bbf3eb9e58de[-data]` and both consumer JVMs independently
+absent; pools closed, no active owners or owned scheduler threads. No residual
+runtime resources. Staged local artifacts/caches/evidence intentionally retained.
+
+Earlier packaging FAILED1, fixture compilation FAILED1 and locale preflight
+BLOCKED2 are retained with their own sources/exits; no old report was borrowed.
+The only production-source correction is WorkLease Javadoc. No runtime logic changed,
+and the old full PASS is not attributed to this later source. Historical worker
+timeout remains unexplained; cancellation historical FAILED/current NOT_RUN.
+
+[Full consumer results and raw evidence](validation/qualification/2026-10-26-independent-consumers/README.md),
+[artifact hashes](validation/qualification/2026-10-26-independent-consumers/artifact-manifest.json),
+[current acceptance matrix](docs/quality/ACCEPTANCE-MATRIX.md),
+[tested setup](docs/USER-HANDBOOK.md).
+Production still requires unrecorded/uncertain-outcome recovery, receipt retention,
+security, operations, real provider/capacity, remote registry and supply-chain gates.
+Local consumption does not prove remote authentication/publication or arbitrary mapping qualification.
+
+---
+
 # Integrated repaired named-target qualification - 2026-10-26
 
 **Default PASS. Configured full PASS. Production NO-GO.**

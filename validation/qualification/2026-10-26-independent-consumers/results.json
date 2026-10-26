@@ -1,0 +1,517 @@
+{
+  "artifacts": {
+    "attachments": 16,
+    "count": 39,
+    "main_jars": 11,
+    "manifest_sha256": "247c546b54c49b029d77de0420b09aead4b20f2d9bcc8e56cb48c9d032c3c166",
+    "poms": 12
+  },
+  "collection_exit": 0,
+  "consumers": {
+    "exit": 0,
+    "full_status": "NOT_RUN",
+    "modes": {
+      "mvc": {
+        "command": [
+          "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+          "-B",
+          "-ntp",
+          "-s",
+          "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\.mvn\\qualification-central.settings.xml",
+          "-Dmaven.repo.local=D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-mvc",
+          "-o",
+          "verify"
+        ],
+        "cwd": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\mvc",
+        "ended_ns": 1793025518936241100,
+        "junit_counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "junit_status": "PASS",
+        "original_exit": 0,
+        "receipt": {
+          "artifact_locations": {
+            "io.modelsync.autoconfigure.ModelSyncAutoConfiguration": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-mvc\\io\\modelsync\\model-sync-autoconfigure\\0.2.0-SNAPSHOT\\model-sync-autoconfigure-0.2.0-SNAPSHOT.jar",
+            "io.modelsync.core.application.SyncGateway": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-mvc\\io\\modelsync\\model-sync-core\\0.2.0-SNAPSHOT\\model-sync-core-0.2.0-SNAPSHOT.jar",
+            "io.modelsync.jdbc.JdbcWorkStore": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-mvc\\io\\modelsync\\model-sync-persistence-jdbc\\0.2.0-SNAPSHOT\\model-sync-persistence-jdbc-0.2.0-SNAPSHOT.jar",
+            "io.modelsync.jpa.JpaProjectionStore": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-mvc\\io\\modelsync\\model-sync-persistence-jpa\\0.2.0-SNAPSHOT\\model-sync-persistence-jpa-0.2.0-SNAPSHOT.jar",
+            "io.modelsync.reactor.ReactorSyncWorker": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-mvc\\io\\modelsync\\model-sync-reactor\\0.2.0-SNAPSHOT\\model-sync-reactor-0.2.0-SNAPSHOT.jar"
+          },
+          "bounded_sql_at_exit": [
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key from consumer_item ie1_0 where ie1_0.storage_key=? and ie1_0.local_version=? for update of ie1_0.storage_key nowait",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "update consumer_item set expires_at=?,local_version=?,source_id=?,tenant_id=?,item_value=? where storage_key=? and local_version=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key from consumer_item ie1_0 where ie1_0.storage_key=? and ie1_0.local_version=? for update of ie1_0.storage_key nowait",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "update consumer_item set expires_at=?,local_version=?,source_id=?,tenant_id=?,item_value=? where storage_key=? and local_version=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "update consumer_item set expires_at=?,local_version=?,source_id=?,tenant_id=?,item_value=? where storage_key=? and local_version=?"
+          ],
+          "changed_phase_sql": [
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key from consumer_item ie1_0 where ie1_0.storage_key=? and ie1_0.local_version=? for update of ie1_0.storage_key nowait",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "update consumer_item set expires_at=?,local_version=?,source_id=?,tenant_id=?,item_value=? where storage_key=? and local_version=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?"
+          ],
+          "clock_replacement": "consumerClock/DatabaseClock",
+          "committed_phases": [
+            {
+              "GENERATION": 1,
+              "ITEM_VALUE": "A",
+              "LOCAL_VERSION": 0,
+              "OUTCOME": "APPLIED",
+              "OWNER_VALIDATOR": "A",
+              "WORK_STATUS": "IDLE"
+            },
+            {
+              "GENERATION": 2,
+              "ITEM_VALUE": "B",
+              "LOCAL_VERSION": 1,
+              "OUTCOME": "APPLIED",
+              "OWNER_VALIDATOR": "B",
+              "WORK_STATUS": "IDLE"
+            },
+            {
+              "GENERATION": 3,
+              "ITEM_VALUE": "C",
+              "LOCAL_VERSION": 2,
+              "OUTCOME": "APPLIED",
+              "OWNER_VALIDATOR": "C",
+              "WORK_STATUS": "IDLE"
+            }
+          ],
+          "committed_reconciliations": 3,
+          "consumer_manifest_sha256": "247c546b54c49b029d77de0420b09aead4b20f2d9bcc8e56cb48c9d032c3c166",
+          "context_class": "org.springframework.boot.web.server.servlet.context.AnnotationConfigServletWebServerApplicationContext",
+          "datasource_enlisted": true,
+          "disabled_mode": "PASS",
+          "disabled_pool_closed": true,
+          "discovered_auto_configurations": [
+            "io.modelsync.autoconfigure.ModelSyncAutoConfiguration",
+            "io.modelsync.autoconfigure.ModelSyncJdbcAutoConfiguration",
+            "io.modelsync.autoconfigure.ModelSyncJpaAutoConfiguration",
+            "io.modelsync.autoconfigure.ModelSyncReactorAutoConfiguration",
+            "io.modelsync.autoconfigure.ModelSyncTriggerAutoConfiguration"
+          ],
+          "effective_lookup_policies": [
+            "ORACLE_NOWAIT"
+          ],
+          "effective_policies": {
+            "cooldown": "DURABLE",
+            "extension": 1,
+            "insert": "ORACLE_26_NOWAIT",
+            "jpa": "ORACLE_NOWAIT",
+            "point": "ORACLE_NOWAIT",
+            "quota": "ORACLE_NOWAIT"
+          },
+          "fixture_rows_remaining": 0,
+          "framework_mode": "mvc",
+          "hibernate": "7.4.5.Final",
+          "jdbc": "23.26.3.0.0",
+          "mixed_rollback": {
+            "GENERATION": 3,
+            "ITEM_VALUE": "C",
+            "LOCAL_VERSION": 2,
+            "WORK_STATUS": "IDLE"
+          },
+          "oracle": "Oracle AI Database 26ai Free Release 23.26.3.0.0 - Develop, Learn, and Run for Free\nVersion 23.26.3.0.0",
+          "owned_scheduler_threads_after_close": 0,
+          "owner_active_after_close": 0,
+          "owner_calls": 3,
+          "owner_calls_at_exit": 3,
+          "owner_threads": [
+            "model-sync-owner-3"
+          ],
+          "owner_threads_at_exit": [
+            "model-sync-owner-3"
+          ],
+          "persistence_threads": [
+            "http-nio-127.0.0.1-auto-1-exec-2",
+            "http-nio-127.0.0.1-auto-1-exec-6",
+            "http-nio-127.0.0.1-auto-1-exec-4",
+            "model-sync-jpa-1",
+            "model-sync-jpa-2"
+          ],
+          "persistence_threads_at_exit": [
+            "http-nio-127.0.0.1-auto-1-exec-2",
+            "http-nio-127.0.0.1-auto-1-exec-6",
+            "http-nio-127.0.0.1-auto-1-exec-4",
+            "model-sync-jpa-1",
+            "model-sync-jpa-2"
+          ],
+          "pid": 5652,
+          "pool_closed": true,
+          "producer_source": "551427bed4d021339fcc32fef8f633232ff8deb8",
+          "producer_tree": "892daec99e12738607a9bfe736d8e98ee8218d0c",
+          "request_threads": [
+            "http-nio-127.0.0.1-auto-1-exec-3",
+            "http-nio-127.0.0.1-auto-1-exec-1"
+          ],
+          "run_id": "ca8ae33e-62af-4cc5-935d-cc691de61f60",
+          "shutdown": {
+            "elapsed_ms": 0,
+            "owner": 0,
+            "physical": 0,
+            "status": "DRAINED"
+          },
+          "sql_dropped": 0,
+          "status": "PASS",
+          "target": "oracle26-nowait-ledger-first-v1"
+        },
+        "started_ns": 1793025508023169400,
+        "status": "PASS"
+      },
+      "webflux": {
+        "command": [
+          "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+          "-B",
+          "-ntp",
+          "-s",
+          "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\.mvn\\qualification-central.settings.xml",
+          "-Dmaven.repo.local=D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-webflux",
+          "-o",
+          "verify"
+        ],
+        "cwd": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\webflux",
+        "ended_ns": 1793025533105866100,
+        "junit_counts": {
+          "errors": 0,
+          "failures": 0,
+          "skipped": 0,
+          "tests": 1
+        },
+        "junit_status": "PASS",
+        "original_exit": 0,
+        "receipt": {
+          "artifact_locations": {
+            "io.modelsync.autoconfigure.ModelSyncAutoConfiguration": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-webflux\\io\\modelsync\\model-sync-autoconfigure\\0.2.0-SNAPSHOT\\model-sync-autoconfigure-0.2.0-SNAPSHOT.jar",
+            "io.modelsync.core.application.SyncGateway": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-webflux\\io\\modelsync\\model-sync-core\\0.2.0-SNAPSHOT\\model-sync-core-0.2.0-SNAPSHOT.jar",
+            "io.modelsync.jdbc.JdbcWorkStore": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-webflux\\io\\modelsync\\model-sync-persistence-jdbc\\0.2.0-SNAPSHOT\\model-sync-persistence-jdbc-0.2.0-SNAPSHOT.jar",
+            "io.modelsync.jpa.JpaProjectionStore": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-webflux\\io\\modelsync\\model-sync-persistence-jpa\\0.2.0-SNAPSHOT\\model-sync-persistence-jpa-0.2.0-SNAPSHOT.jar",
+            "io.modelsync.reactor.ReactorSyncWorker": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-webflux\\io\\modelsync\\model-sync-reactor\\0.2.0-SNAPSHOT\\model-sync-reactor-0.2.0-SNAPSHOT.jar"
+          },
+          "bounded_sql_at_exit": [
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key from consumer_item ie1_0 where ie1_0.storage_key=? and ie1_0.local_version=? for update of ie1_0.storage_key nowait",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "update consumer_item set expires_at=?,local_version=?,source_id=?,tenant_id=?,item_value=? where storage_key=? and local_version=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key from consumer_item ie1_0 where ie1_0.storage_key=? and ie1_0.local_version=? for update of ie1_0.storage_key nowait",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "update consumer_item set expires_at=?,local_version=?,source_id=?,tenant_id=?,item_value=? where storage_key=? and local_version=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "update consumer_item set expires_at=?,local_version=?,source_id=?,tenant_id=?,item_value=? where storage_key=? and local_version=?"
+          ],
+          "changed_phase_sql": [
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "select ie1_0.storage_key from consumer_item ie1_0 where ie1_0.storage_key=? and ie1_0.local_version=? for update of ie1_0.storage_key nowait",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?",
+            "update consumer_item set expires_at=?,local_version=?,source_id=?,tenant_id=?,item_value=? where storage_key=? and local_version=?",
+            "select ie1_0.storage_key,ie1_0.expires_at,ie1_0.local_version,ie1_0.source_id,ie1_0.tenant_id,ie1_0.item_value from consumer_item ie1_0 where ie1_0.storage_key=?"
+          ],
+          "clock_replacement": "consumerClock/DatabaseClock",
+          "committed_phases": [
+            {
+              "GENERATION": 1,
+              "ITEM_VALUE": "A",
+              "LOCAL_VERSION": 0,
+              "OUTCOME": "APPLIED",
+              "OWNER_VALIDATOR": "A",
+              "WORK_STATUS": "IDLE"
+            },
+            {
+              "GENERATION": 2,
+              "ITEM_VALUE": "B",
+              "LOCAL_VERSION": 1,
+              "OUTCOME": "APPLIED",
+              "OWNER_VALIDATOR": "B",
+              "WORK_STATUS": "IDLE"
+            },
+            {
+              "GENERATION": 3,
+              "ITEM_VALUE": "C",
+              "LOCAL_VERSION": 2,
+              "OUTCOME": "APPLIED",
+              "OWNER_VALIDATOR": "C",
+              "WORK_STATUS": "IDLE"
+            }
+          ],
+          "committed_reconciliations": 3,
+          "consumer_manifest_sha256": "247c546b54c49b029d77de0420b09aead4b20f2d9bcc8e56cb48c9d032c3c166",
+          "context_class": "org.springframework.boot.web.server.reactive.context.AnnotationConfigReactiveWebServerApplicationContext",
+          "datasource_enlisted": true,
+          "disabled_mode": "PASS",
+          "disabled_pool_closed": true,
+          "discovered_auto_configurations": [
+            "io.modelsync.autoconfigure.ModelSyncAutoConfiguration",
+            "io.modelsync.autoconfigure.ModelSyncJdbcAutoConfiguration",
+            "io.modelsync.autoconfigure.ModelSyncJpaAutoConfiguration",
+            "io.modelsync.autoconfigure.ModelSyncReactorAutoConfiguration",
+            "io.modelsync.autoconfigure.ModelSyncTriggerAutoConfiguration"
+          ],
+          "effective_lookup_policies": [
+            "ORACLE_NOWAIT"
+          ],
+          "effective_policies": {
+            "cooldown": "DURABLE",
+            "extension": 1,
+            "insert": "ORACLE_26_NOWAIT",
+            "jpa": "ORACLE_NOWAIT",
+            "point": "ORACLE_NOWAIT",
+            "quota": "ORACLE_NOWAIT"
+          },
+          "fixture_rows_remaining": 0,
+          "framework_mode": "webflux",
+          "hibernate": "7.4.5.Final",
+          "jdbc": "23.26.3.0.0",
+          "mixed_rollback": {
+            "GENERATION": 3,
+            "ITEM_VALUE": "C",
+            "LOCAL_VERSION": 2,
+            "WORK_STATUS": "IDLE"
+          },
+          "oracle": "Oracle AI Database 26ai Free Release 23.26.3.0.0 - Develop, Learn, and Run for Free\nVersion 23.26.3.0.0",
+          "owned_scheduler_threads_after_close": 0,
+          "owner_active_after_close": 0,
+          "owner_calls": 3,
+          "owner_calls_at_exit": 3,
+          "owner_threads": [
+            "model-sync-owner-3"
+          ],
+          "owner_threads_at_exit": [
+            "model-sync-owner-3"
+          ],
+          "persistence_threads": [
+            "model-sync-jpa-1",
+            "model-sync-jpa-2"
+          ],
+          "persistence_threads_at_exit": [
+            "model-sync-jpa-1",
+            "model-sync-jpa-2"
+          ],
+          "pid": 59268,
+          "pool_closed": true,
+          "producer_source": "551427bed4d021339fcc32fef8f633232ff8deb8",
+          "producer_tree": "892daec99e12738607a9bfe736d8e98ee8218d0c",
+          "request_threads": [
+            "reactor-http-nio-2"
+          ],
+          "run_id": "ca8ae33e-62af-4cc5-935d-cc691de61f60",
+          "shutdown": {
+            "elapsed_ms": 0,
+            "owner": 0,
+            "physical": 0,
+            "status": "DRAINED"
+          },
+          "sql_dropped": 0,
+          "status": "PASS",
+          "target": "oracle26-nowait-ledger-first-v1"
+        },
+        "started_ns": 1793025518968743700,
+        "status": "PASS"
+      }
+    },
+    "run_id": "ca8ae33e-62af-4cc5-935d-cc691de61f60"
+  },
+  "current_full": "NOT_RUN",
+  "default_counts": {
+    "errors": 0,
+    "failures": 0,
+    "junit": 222,
+    "python": 112,
+    "skipped": 0,
+    "xml": 41
+  },
+  "default_packaging": {
+    "collection_exit": 0,
+    "command": [
+      "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+      "-B",
+      "-ntp",
+      "-s",
+      "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\.mvn\\qualification-central.settings.xml",
+      "-Dmaven.repo.local=D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\m2",
+      "-Plibrary-artifacts",
+      "clean",
+      "install"
+    ],
+    "cwd": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter",
+    "ended_ns": 1793025188570672400,
+    "exit": 0,
+    "nested_maven_repository": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\m2",
+    "nested_maven_settings": ".mvn/qualification-central.settings.xml",
+    "repository": "task-owned, initially empty at attempt 1; only this task populates it",
+    "run_id": "63d37632-2b64-49ca-9317-ed3488da3a03",
+    "source_after": {
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_sha": "551427bed4d021339fcc32fef8f633232ff8deb8",
+      "source_tree": "892daec99e12738607a9bfe736d8e98ee8218d0c"
+    },
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "551427bed4d021339fcc32fef8f633232ff8deb8",
+    "source_tree": "892daec99e12738607a9bfe736d8e98ee8218d0c",
+    "started_ns": 1793024909048376900
+  },
+  "default_qualification": {
+    "default": {
+      "command": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd -B -ntp -s D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\.mvn\\qualification-central.settings.xml -Dmaven.repo.local=D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\m2 -Plibrary-artifacts clean install",
+      "exit": 0,
+      "qualification_exit": 0,
+      "status": "PASS"
+    },
+    "full": {
+      "command": "NOT_RUN",
+      "exit": null,
+      "status": "NOT_RUN"
+    }
+  },
+  "evidence_validation_exit": 0,
+  "historical_archives_preserved": 21,
+  "historical_full": {
+    "report": "8d07aa785be71a39ac82731606d3de950a61dd2e",
+    "run": "751ea112-4068-48a0-97fc-c12605a59802",
+    "source": "a0f46d7a6f188263f8822e3ad728e1894076871a",
+    "status": "PASS"
+  },
+  "historical_qm_original_sha256": "49d7da8b9172d7eaa87c664dad04a87d6ef785b0b527f09ef3a48ae62edb2713",
+  "independent_supervision": {
+    "command": [
+      "C:\\Python312\\python.exe",
+      "scripts/full-oracle-container.py",
+      "--consumer-diagnostic",
+      "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3"
+    ],
+    "consumer_jvms": [
+      {
+        "absent": true,
+        "mode": "mvc",
+        "pid": 5652
+      },
+      {
+        "absent": true,
+        "mode": "webflux",
+        "pid": 59268
+      }
+    ],
+    "cwd": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter",
+    "ended_ns": 1793025539261585800,
+    "full_status": "NOT_RUN",
+    "independent_cleanup": {
+      "container": {
+        "absent": true,
+        "inspection_exit": 1,
+        "name": "msq-bbf3eb9e58de"
+      },
+      "volume": {
+        "absent": true,
+        "inspection_exit": 1,
+        "name": "msq-bbf3eb9e58de-data"
+      }
+    },
+    "maven_parent_direct_mib": 128,
+    "maven_parent_heap_mib": 512,
+    "original_wrapper_exit": 0,
+    "source_after": {
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_sha": "551427bed4d021339fcc32fef8f633232ff8deb8",
+      "source_tree": "892daec99e12738607a9bfe736d8e98ee8218d0c"
+    },
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "551427bed4d021339fcc32fef8f633232ff8deb8",
+    "source_tree": "892daec99e12738607a9bfe736d8e98ee8218d0c",
+    "started_ns": 1793025445960070800
+  },
+  "infrastructure": {
+    "attempt_id": "ca8ae33e-62af-4cc5-935d-cc691de61f60",
+    "cleanup_verified": true,
+    "container_cleanup_verified": true,
+    "container_created": true,
+    "container_name": "msq-bbf3eb9e58de",
+    "diagnostic_exit": 0,
+    "diagnostic_scope": "mvc-webflux-staged-artifacts",
+    "elapsed_seconds": 63.64,
+    "error": null,
+    "full_qualification": "NOT_RUN",
+    "image": "ghcr.io/gvenzl/oracle-free:23.26.3-slim@sha256:6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd",
+    "maven_exit": null,
+    "maven_settings": ".mvn/qualification-central.settings.xml",
+    "maven_settings_sha256": "ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940",
+    "migration_schema": "MS_TEST_MIGRATION",
+    "mode": "independent-consumers",
+    "phase": "independent artifact consumer verification (not full qualification)",
+    "qualification_target": null,
+    "resource_admission": {
+      "attempt_id": "0c23852e-4c72-4735-9ae2-2cbff379eba6",
+      "disk_free_gib": [
+        75.018,
+        1068.518
+      ],
+      "docker": {
+        "available_gib": 19.530717803955078,
+        "cpu": 8,
+        "memory_bytes": 25201692672,
+        "observed_usage_gib": 3.9401875,
+        "running": 15,
+        "server": "29.8.2"
+      },
+      "oracle_cpu_cap": 4,
+      "oracle_gib": 6,
+      "required_host_gib": 12,
+      "reserve_gib": 2,
+      "samples": [
+        {
+          "host_available_gib": 20.851,
+          "observed_ns": 1793025464274368500
+        },
+        {
+          "host_available_gib": 20.86,
+          "observed_ns": 1793025467712046700
+        },
+        {
+          "host_available_gib": 20.863,
+          "observed_ns": 1793025471143589800
+        }
+      ],
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_sha": "551427bed4d021339fcc32fef8f633232ff8deb8",
+      "source_tree": "892daec99e12738607a9bfe736d8e98ee8218d0c",
+      "status": "PASS",
+      "tools_gib": 4,
+      "unchanged_full_budget_gib": 18
+    },
+    "run_id": "ca8ae33e-62af-4cc5-935d-cc691de61f60",
+    "runtime_schema": "MS_TEST_RUNTIME",
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "551427bed4d021339fcc32fef8f633232ff8deb8",
+    "source_tree": "892daec99e12738607a9bfe736d8e98ee8218d0c",
+    "status": "PASS",
+    "volume_cleanup_verified": true,
+    "volume_created": true,
+    "volume_name": "msq-bbf3eb9e58de-data",
+    "wrapper_exit": 0
+  },
+  "production": "NO_GO",
+  "source": {
+    "run_id": "b3db2e0f-e56a-420f-b379-0d1e73f15eb0",
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "551427bed4d021339fcc32fef8f633232ff8deb8",
+    "source_tree": "892daec99e12738607a9bfe736d8e98ee8218d0c",
+    "started_ns": 1793025127581613600
+  }
+}

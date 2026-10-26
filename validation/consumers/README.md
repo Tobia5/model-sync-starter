@@ -11,6 +11,9 @@ The consumer owns its DTO, entity, mapping, binding, controller and loopback HTT
 owner. It uses Boot's discovery of the packaged `AutoConfiguration.imports`; it
 does not import the producer sample or testkit. Oracle execution is explicit:
 
+Create the task-owned external workspace directory first. Maven may create the
+dedicated task repository; do not point it at the user's ordinary cache.
+
 ```text
 mvnw -B -ntp -s .mvn/qualification-central.settings.xml -Dmaven.repo.local=<task-repo> -Plibrary-artifacts clean install
 python scripts/consumer_artifacts.py stage <external-workspace> --repository <task-repo>
