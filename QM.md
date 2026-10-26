@@ -1,3 +1,192 @@
+# Integrated repaired named-target qualification - 2026-10-26
+
+**Default PASS. Configured full PASS. Production NO-GO.**
+
+Tested clean source **`a0f46d7a6f188263f8822e3ad728e1894076871a`**, tree **`0382fbeb887e3b3c2a55533f8ebc65cf522acb51`**,
+`Tobia5/model-sync-starter`, branch `review/layered-refactor-qm-20261020`.
+The later report-only commit is not claimed as the tested source. No implementation,
+criterion, policy, deadline, platform, resource cap or test selection changed.
+Tested86488c4/reporta0f46d7, failed full reportb7f3cb5 and all20 earlier archives
+remain immutable. Earlier QM sections below retain their historical results.
+
+## Actual commands, identities and original exits
+
+| Execution | Measured result | Original exits |
+|---|---|---|
+| `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify` | PASS; run `c965b470-292f-4346-b739-00048a7163f5`; 222 JUnit /102 Python /41 XML; zero failures/errors/skips; 222.625s build supervision | build0, qualification0, execution audit0, collection0 |
+| Git Bash `scripts/test-triggers.sh` |86 core /43 trigger standalone assertions PASS, separately counted from JUnit |0|
+| Archived `python capacity.py full`, after default build/collection/contracts | PASS; attempt `ca712387-37bd-4267-aaf4-552f5a19de1d`; host21.316/21.266/21.334GiB >= unchanged18GiB; Docker19.487GiB available; C77.679/D1069.773GiB free |0|
+| `python scripts/full-oracle-container.py` | PASS; full run `751ea112-4068-48a0-97fc-c12605a59802`; 6569.171s wrapper supervision / 6568.02s infrastructure | wrapper0, nested Maven0, qualification0, collection0 |
+
+Exactly one full attempt; no unchanged retry. Invocation-only acknowledgments:
+`MODELSYNC_ORACLE_CONTAINER=EXPLICIT_DISPOSABLE`,
+`MODELSYNC_FULL_ENV_ACK=DISPOSABLE_NONPRODUCTION`, and
+`MODELSYNC_MAVEN_SETTINGS=.mvn/qualification-central.settings.xml`.
+The wrapper's Maven command retained `-B -ntp -s <approved-project-settings>
+-fae -Pfull clean verify`; no diagnostic selector, skip flag or extra suite filter.
+The profile retains the one reviewed characterization-tag exclusion.
+Settings SHA256 `ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`.
+Infrastructure attempt `db2cb07f-85c0-4fb1-af87-a8541223bf73`.
+
+The matching default run c965b470 has its own archived marker and reports before
+the full clean. The full run has a
+new marker and fresh224 Surefire tests/43 XML reports, including2 full-only tests,
+plus **83 Oracle methods across18 suites**, zero failures/errors/skips.
+All83 method names match the mandatory inventory. All default/full architecture,
+profile separation, runtime-policy, migration, atomicity, fencing, recovery,
+shutdown, transport, quota, creation, accounting, mutation and load gates passed.
+No rejected/stale evidence. The machine full report labels a separate default
+command NOT_RUN in its own marker; the independent matching default is the
+actual c965b470 run, not an attribution of old XML to the full marker.
+
+## Named target and actual target fixture
+
+Only **`oracle26-nowait-ledger-first-v1`** is qualified: Oracle26ai23.26.3 / JDBC23.26.3.0.0,
+point-lock-policy ORACLE_NOWAIT, quota-lock-policy ORACLE_NOWAIT,
+insert-policy ORACLE_26_NOWAIT, qualified JPA ORACLE_NOWAIT mapping,
+DURABLE cooldown/schema-extension version1, supported ledger-first writers and
+correctly enlisted local datasource/JpaTransactionManager.
+Twenty fresh validated receipts cover all five required roles: starter-target,
+nowait-atomicity, recovery-host, actual-worker and cooldown-worker. These verify
+actual adapter settings, consumed mapping and datasource enlistment, not only
+property values. Versioned migration and all current integration controls passed.
+Compatibility controls remain; DEFAULT, older Oracle and arbitrary replacement
+beans are not granted these bounded-wait guarantees by this result.
+
+The repaired fixture executed in this full run: committed A/validatorA/revision0/
+generation1, then changed-B/validatorB/revision1/generation2; both paired state
+outcomes APPLIED/IDLE. Two owner reads, changed digest, validatorA propagated to
+the second request; five changed-phase SQL statements and zero capture overflow.
+Actual existing-row SQL included:
+
+```sql
+select ce1_0.storage_key from sample_customer ce1_0
+where ce1_0.storage_key=? and ce1_0.local_version=?
+for update of ce1_0.storage_key nowait
+```
+
+No historical diagnostic report substitutes for this current source/run proof.
+
+## Original full worker method: all ten phases PASS
+
+Actual auto-configured ReactorSyncWorker: four lanes, pool8, persistence4/owner8
+threads, queue64 per thread, poll250ms, owner spacing20ms/latency5ms.
+Fixed productive/max-idle250ms; adaptive productive5ms/max-idle1s. Original
+**160 measured completions within20 seconds** retained for both productive phases,
+with10 warmup each. Full JVM trace property absent/default false; this is the
+original full method, not the traced four-cell diagnostic launcher.
+
+| Phase | Result | Measured ms | Committed / owner calls | Ticks / empty | Wakeup upper ms |
+|---|---|---:|---|---|---|
+| fixed-productive | PASS | 16381 | 160 / 160 | 223 / 63 | - |
+| fixed-empty | PASS | 4013 | 0 / 0 | 60 / 60 | - |
+| bounded-productive | PASS | 9904 | 160 / 160 | 206 / 46 | - |
+| bounded-empty | PASS | 4014 | 0 / 0 | 16 / 16 | - |
+| bounded-future | PASS | 4015 | 0 / 0 | 16 / 16 | - |
+| future-becomes-due | PASS | 895 | 1 / 1 | 4 / 3 | 395 |
+| local-urgent | PASS | 894 | 1 / 1 | 4 / 3 | 894 |
+| independent-process-urgent | PASS | 1918 | 1 / 1 | 8 / 7 | 809 |
+| cooldown-independent-owner-and-recovery | PASS | 5848 | 1 / 1 | 29 / 27 | other 39 / recovery 859 |
+| cooldown-expires | PASS | 2951 | 2 / 2 | 21 / 19 | 826 |
+
+All ten native counter intervals have VALID eight-session continuity. Empty/future
+phases consumed no owner calls, grants or denials. Urgent/due/cooldown/recovery
+wakeups remained within2500ms; unrelated-owner progress was observed.
+
+**The historical worker timeout remains FAILED and unexplained.** This current
+full regression PASS is not evidence of a repaired production cause. No pacing
+change, deadline increase or provisional fixed-control criterion adoption occurred.
+Prior virtual controls and the five focused diagnostic passes keep their original
+source/scope. This full used its own83 methods and all ten worker phases.
+
+## Mutation and load evidence
+
+PIT1.25.9/provider1.2.3 on resolved JUnit6.0.3 completed in7s: **167 KILLED,
+1 SURVIVED /168 generated =99.40% killed/generated**; NO_COVERAGE/TIMED_OUT/
+RUN_ERROR/UNKNOWN all0. Existing85% gate, eight behavioral classes and four target
+test classes unchanged. XML/HTML and scope/effective configuration retained.
+The survivor removes `FreshnessPolicy.positive(maxAge)` at line19; source bytes
+match b7f3cb5. Existing acceptance-equivalence review remains: positive refresh
+plus refresh<=max rejects nonpositive max; null comparison rejects null. Exception
+ordering/messages may differ. It stays SURVIVED and included, with no exclusion
+or score adjustment; this is not a universal semantic-equivalence claim.
+
+Six explicitly selected **in-memory semantic Gatling scenarios PASS**,367 HTTP
+requests/0 errors, with owner/ledger assertions and raw HTML/logs. HTTP acceptance
+is not synchronization completion. These short synthetic scenarios have0ms
+reported warmup and are not Oracle-scale or production SLO qualification.
+Per-scenario latency/dataset/counter tables are in the detailed report.
+
+Oracle capacity: **1,000,000 seeded rows /100k due**, seed4,439,182ms; four direct
+`runOne` workers with5ms loop sleep, pool8, controlled owner20ms spacing, ordinary5ms/
+slow25ms latency and injected failures. **200 measured committed reconciliations
+from220 physical owner calls in15,624ms** (210/230 with warmup);12.8008 syncs/s versus
+14.0809 owner calls/s, not HTTP accepted-request rate or actual Reactor-worker
+throughput. RunOne p50/p95/p99=5/62/78ms; claimed-only63/80/102ms. Lag p50/p95/p99=
+4,465,922/4,471,492/4,472,018ms includes seed time: the common requested epoch is
+recorded before seeding. It is not steady-state latency or a million completions.
+Native session/cursor work, waits, plans, seed/warmup/measurement/drain/cleanup,
+projection outcomes and bounded pool/queue observations remain raw artifacts.
+
+OracleScaleIT passed all eight distributions:100k fixture, one ledger claim37ms,
+persisted lease/token/generation/lockValid checks. This is not provider admission.
+The eight controlled comparison variants passed with the same ORACLE_NOWAIT quota,
+ORACLE_26_NOWAIT insert and DURABLE policies: **2916 observed acquisitions/claims =
+1766 grants +712 denials +438 confirmed refusals**;0 active/unknown/uncertain outcomes,
+1766 owner calls/1604 measured reconciliations. All32 lane runs ended normally.
+104 logical cooldown requests reached APPLIED,104 durable accept commits;
+115 physical materialization attempts =104 commits +11 refused rollbacks,0 unresolved
+or logical publication failures. Historical unclassified55 and five earlier
+publication failures remain unchanged; no arithmetic remainder relabelling.
+
+## Environment, resources and independently verified cleanup
+
+JDK21.0.12.1 / Maven3.9.9 / Wrapper3.3.4 / Python3.12.10 / Boot4.1.1 /
+JUnit6.0.3 / Hibernate7.4.5.Final / Surefire-Failsafe3.5.3 / ArchUnit1.5.0 /
+Gatling3.13.1/plugin4.11.0 / Docker29.8.2. Actual PIT execution verifies the pinned
+provider/platform combination; no platform change was used to obtain PASS.
+Pinned image `ghcr.io/gvenzl/oracle-free:23.26.3-slim@sha256:6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd`.
+Oracle6GiB/4CPU cap, generated per-run credentials, separate runtime/migration
+schemas, loopback-only publication and the18GiB admission were unchanged.
+
+Runner reported16 available processors. Oracle test JVM observed maximum heap
+16,944,988,160 bytes and used-heap snapshot289,356,592 bytes; that snapshot is not
+peak usage or an enforced8GiB heap cap. Gatling maximum heap1,073,741,824 bytes.
+The8GiB Maven/PIT/Gatling planning allowance in admission is not an assertion that
+every ergonomic JVM maximum is capped there. Production memory/resource bounds
+remain an operations gate; no global JVM/resource setting was changed here.
+
+Wrapper cleanup PASS; independent checks confirm owned container
+`msq-526fee3f3fe2`, volume `msq-526fee3f3fe2-data` and all12 JVM PIDs from20
+current-run receipts absent. Docker inspect exit1 meant explicit no-such-object/
+volume, not an ignored Docker-service error. All raw PIT13 files and Gatling192
+files, including HTML assets, are archived. No unrelated resource was altered.
+All20 earlier archives and the complete old QM suffix remain unchanged.
+
+## Remaining production requirements
+
+Configured full PASS is **not production acceptance**. Historical worker timeout
+cause remains unknown. Independent plain-UPDATE cancellation remains historically
+FAILED; its separate current characterization is NOT_RUN, with unchanged approved
+applicability/body. No unsupported path or all-configuration guarantee is added.
+Unrecorded-response/acceptance windows, uncertain outcomes, receipt retention and
+maintenance, security, operations, consumer/supply-chain/provider integration and
+real production capacity/SLO gates remain open under the known-ID owner-to-Oracle/
+JPA first-release scope. No parent release gate is closed merely by this run.
+No new features, merge, main change, workflow bootstrap or package publication.
+
+[Detailed method/phase tables and raw evidence](validation/qualification/2026-10-26-integrated-repaired-target/README.md).
+Historical root QM content follows unchanged.
+
+---
+
+Archive SHA256 `917cc99ba0f0f455f811b061e12801f3c4d3a261cc56de562ddb21b0972dd63c`; 5,036,287 bytes / 550 entries.
+
+[Integrity receipt](validation/qualification/2026-10-26-integrated-repaired-target/report-verification.json):
+CRC and every entry digest passed. All 20 prior archives, the historical QM suffix
+and the original generated full QM/evidence are unchanged. Post-report docs,
+architecture and diff checks passed.
+
 # Target/worker Oracle diagnostic - 2026-10-26
 
 **Default PASS. Focused diagnostic PASS (5/5). Full NOT_RUN. Production NO-GO.**

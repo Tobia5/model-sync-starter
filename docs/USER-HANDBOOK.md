@@ -1,3 +1,19 @@
+## Integrated repaired-target full result - 2026-10-26
+
+Clean sourcea0f46d7/tree0382fbe passed matching default222 JUnit/102 Python,
+then one unchanged18GiB admission and one complete configured full run751ea112.
+Full PASS:224 Surefire /83 Oracle methods across18 suites,0 failures/errors/skips;
+all ten original worker phases PASS, fixed160/16.381s and adaptive160/9.904s.
+PIT167/168 killed, six in-memory Gatling scenarios/367 requests/0 errors, runtime
+receipts, migrations, atomicity/recovery/I/O/quota/creation and all8 comparison
+variants passed. Original wrapper/Maven/qualification/collection exits0.
+Owned container/volume and12 recorded JVM PIDs independently absent.
+Historical worker timeout remains FAILED and unexplained; no pacing/criterion
+change. One million seeds produced200 measured completions, not a million syncs.
+Configured PASS is not production acceptance: uncertainty/unrecorded responses,
+receipt retention, security, operations and other parent gates remain open.
+[QM](../QM.md) / [raw report](../validation/qualification/2026-10-26-integrated-repaired-target/README.md). Earlier sections remain historical.
+
 ## Target/worker diagnostic execution - 2026-10-26
 
 Clean source86488c4/tree98f98b0 passed fresh default222 JUnit/102 Python, then the

@@ -1,3 +1,10 @@
+## Integrated repaired-target qualification - 2026-10-26
+
+- [x] Execute one matching clean-source default and configured full at sourcea0f46d7/tree0382fbe: defaultc965b470 PASS222 JUnit/102 Python; full751ea112 PASS224 Surefire/83 Oracle methods/18 suites, zero failures/errors/skips. All original worker productive/idle/wakeup/recovery phases passed with160/20s retained. [QM](QM.md) / [raw report](validation/qualification/2026-10-26-integrated-repaired-target/README.md).
+- [x] Retain current actual A/B SQL/state/revision proof, all five runtime roles, migration/atomicity/recovery/shutdown/transport/accounting, PIT167/168, six Gatling scenarios and all8 comparison variants; original exits0 and owned cleanup independently verified. No historical diagnostic substitution or source implementation change.
+- [ ] Explain historical worker timeout if required for release/reproducibility: it remains FAILED/unexplained; current regression PASS is not a causal repair. No provisional criterion change adopted.
+- [ ] Complete production acceptance: uncertain/unrecorded outcomes, receipt retention/maintenance, security/operations, consumer/supply-chain/provider and real capacity/SLO gates remain open. The synthetic million-row seed completed200 measured syncs; JVM used snapshot is not peak/bounded-memory qualification. All parent release gates remain open; production NO-GO.
+
 ## Target/worker measured execution - 2026-10-26
 
 - [x] Execute the repaired target fixture on clean source86488c4/tree98f98b0: Oracle run c8b6153a-94b6-4617-ba45-3b6015200de4, actual existing-row `FOR UPDATE OF ... NOWAIT`, committed A/rev0/gen1 then B/rev1/gen2 with matching state; effective policies/mapping/enlistment receipts passed.
