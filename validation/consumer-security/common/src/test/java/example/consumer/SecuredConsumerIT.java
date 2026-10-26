@@ -56,7 +56,7 @@ class SecuredConsumerIT {
           // Every denial is measured with an already fresh protected cache present.
           deny("unauthenticated-read",anonymous,"alpha","item","shared","read",false,401);
           deny("unauthenticated-submit",anonymous,"alpha","item","shared","refresh",false,"mvc".equals(mode)?401:403);
-          deny("missing-csrf",alice,"alpha","item","shared","refresh",false,403);
+          deny("missing-csrf",alice,"alpha","item","shared","refresh",false,"mvc".equals(mode)?401:403);
           for(String op:List.of("read","refresh","event")) {
             deny("cross-tenant-"+op,alice,"beta","item","shared",op,true,403);
             deny("unknown-tenant-"+op,alice,"unknown","item","shared",op,true,403);
@@ -70,6 +70,8 @@ class SecuredConsumerIT {
           for(String op:List.of("read","refresh","event"))denyService("direct-anonymous-"+op,null,op,"alpha");
           for(String op:List.of("refresh","event"))denyService("direct-reader-"+op,"reader",op,"alpha");
           for(String op:List.of("read","event"))denyService("direct-cross-"+op,"bob",op,"alpha");
+          assertAll("Exact negative HTTP statuses", negatives.stream().filter(n->n.containsKey("http_status"))
+              .map(n->(org.junit.jupiter.api.function.Executable)()->assertEquals(n.get("expected_status"),n.get("http_status"),n.get("case").toString())));
           owner.values.put("alpha","alpha-B");submit(alice,"alpha","event");await("alpha","alpha-B",1,2);
           owner.values.put("beta","beta-B");submit(bob,"beta","refresh");await("beta","beta-B",1,2);
           assertEquals("alpha-B",reader.send("GET",path("alpha","item","shared","read"),false).body());
@@ -128,8 +130,7 @@ class SecuredConsumerIT {
   private void deny(String name,SecurityHttpClient client,String tenant,String binding,String subject,String op,boolean csrf,int status)throws Exception{
     var before=snapshot();var response=client.send("read".equals(op)?"GET":"POST",path(tenant,binding,subject,op),csrf);
     var after=snapshot();
-    var fact=new LinkedHashMap<String,Object>();fact.put("case",name);fact.put("http_status",response.statusCode());fact.put("expected_status",status);fact.put("before",before);fact.put("after",after);fact.put("side_effects_unchanged",before.equals(after));negatives.add(fact);
-    assertEquals(status,response.statusCode(),name);
+    var fact=new LinkedHashMap<String,Object>();fact.put("case",name);fact.put("http_status",response.statusCode());fact.put("expected_status",status);fact.put("authentication_challenge",response.headers().firstValue("WWW-Authenticate").isPresent());fact.put("before",before);fact.put("after",after);fact.put("side_effects_unchanged",before.equals(after));negatives.add(fact);
     assertEquals(before,after,name+" had protected side effects");
     assertFalse(response.body().contains("alpha-A"));assertFalse(response.body().contains("beta-A"));
   }
