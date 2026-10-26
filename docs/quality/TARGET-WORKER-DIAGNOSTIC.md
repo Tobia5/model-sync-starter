@@ -64,3 +64,21 @@ requirements remain. This candidate is **not adopted**. OracleWorkerIT and the
 full report validator still enforce160/20s for both modes. No full execution may
 be substituted with these controls. Actual SQL, per-lane Oracle observations,
 predecessor state and cleanup are still NOT_RUN. [Current QM](../../QM.md).
+
+## 2026-10-26 execution result (no criterion change)
+
+Source86488c4/tree98f98b0, fresh default rune2031493, passed222 JUnit/102 Python.
+One12GiB admission passed at16.579-16.640GiB. Existing selected wrapper run
+c8b6153a-94b6-4617-ba45-3b6015200de4 passed5/5, exits0. Target A/B committed pairs
+and actual `FOR UPDATE OF ce1_0.storage_key NOWAIT` passed. Fresh fixed/adaptive
+and statistics-only fixed/adaptive cells passed160 in15005/9875/17288/9821ms.
+All four lane IDs remain observed; token releases and accounting reconcile.
+Statistics/adaptive lane0 has11 filtered attempts and0 completions, not lane loss.
+No trace overflow or unknown failure; pools/physical operations0/closed,
+owned container/volume/JVM independently absent. [Evidence](../../validation/qualification/2026-10-26-target-worker-execution/README.md).
+
+Historical full timeout remains FAILED/unexplained. No overhead control or full
+predecessor-state reproduction. Virtual counterexamples retain their scope.
+Both fixed cells passed; no criterion change justified/adopted by this run.
+The earlier candidate remains unapproved. Full/PIT/load NOT_RUN; all83 required
+methods and other gates remain unchanged.

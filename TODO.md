@@ -1,3 +1,10 @@
+## Target/worker measured execution - 2026-10-26
+
+- [x] Execute the repaired target fixture on clean source86488c4/tree98f98b0: Oracle run c8b6153a-94b6-4617-ba45-3b6015200de4, actual existing-row `FOR UPDATE OF ... NOWAIT`, committed A/rev0/gen1 then B/rev1/gen2 with matching state; effective policies/mapping/enlistment receipts passed.
+- [x] Execute all four independent worker cells once, retaining160/20s: fresh fixed15005ms/adaptive9875ms, statistics-only fixed17288ms/adaptive9821ms, each160 committed/calls/grants. Per-lane accounting, reservation release, stable eight-session intervals and owned cleanup passed. [QM](QM.md) / [raw report](validation/qualification/2026-10-26-target-worker-execution/README.md).
+- [ ] Resolve remaining historical full-timeout uncertainty through integrated evidence; small cells did not reproduce it. No production defect or criterion change established/adopted. Statistics/cache/observer limits remain; this is not83-method full qualification.
+- [ ] Obtain an explicitly requested final-source integrated result with all83 methods/18 suites and every retained gate. Full NOT_RUN for this task; historical full FAILED, production NO-GO and parent gates unchanged.
+
 ## Target fixture / worker follow-up - 2026-10-26
 
 - [x] Implement A/validatorA then changed-B/validatorB through actual gateway/coordinator, fresh committed pair/revision checks, bounded failure-safe SQL proof and semantic FOR UPDATE [OF columns] NOWAIT matcher. Sourcebaa8d26 default222 JUnit/102 Python PASS; actual Oracle proof remains open.

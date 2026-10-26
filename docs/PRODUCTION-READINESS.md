@@ -1,3 +1,15 @@
+## Target/worker diagnostic execution - 2026-10-26
+
+Clean source86488c4/tree98f98b0 passed fresh default222 JUnit/102 Python, then the
+unchanged12GiB admission. Selected Oracle diagnosticc8b6153a passed5/5: repaired
+A/B target SQL/state and four actual-worker cells,160 measured completions each
+in15.005/9.875/17.288/9.821s. Per-lane outcomes, reservations and native counter
+intervals reconcile; pools closed and owned container/volume/JVM absent.
+The historical full timeout is not reproduced and its cause remains unresolved.
+No implementation/assertion/criterion change; statistics/observer limits remain.
+Full NOT_RUN, historical full FAILED, production NO-GO.
+[QM](../QM.md) / [current evidence](../validation/qualification/2026-10-26-target-worker-execution/README.md). Earlier sections remain historical.
+
 ## Latest target/worker work - 2026-10-26
 
 Sourcebaa8d26/tree3f27d829 passed matching default222 JUnit/102 Python, all exits0.

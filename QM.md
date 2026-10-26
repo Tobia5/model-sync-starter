@@ -1,3 +1,171 @@
+# Target/worker Oracle diagnostic - 2026-10-26
+
+**Default PASS. Focused diagnostic PASS (5/5). Full NOT_RUN. Production NO-GO.**
+
+Tested clean source **`86488c43b5cfc3616180a50925695d5876bd9e90`**, tree **`98f98b018076cd7ab34dc252b150d7d9bc746832`**,
+`Tobia5/model-sync-starter`, branch `review/layered-refactor-qm-20261020`.
+The later report-only commit is not claimed as tested source. No implementation,
+policy, assertion, resource cap or qualification applicability changed in this task.
+Sources baa8d26/86488c4, historical full failure b7f3cb5 and all 19 prior evidence
+archives remain unchanged. Earlier QM sections retain their historical scope.
+
+## Commands, source-bound runs and original exits
+
+| Execution | Actual result | Original exits |
+|---|---|---|
+| `mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify` | PASS; default run `e2031493-cbad-4532-a910-e31452cf549a`; 222 JUnit / 102 Python / 41 XML; zero failures/errors/skips; 269.015s build supervision | build 0, qualification 0, execution audit 0, collection 0 |
+| Git Bash `scripts/test-triggers.sh` | 86 core / 43 trigger standalone assertions PASS, separately counted from JUnit | 0 |
+| Archived `python capacity.py diagnostic`, after build/collection/contracts | PASS; `55e58ae8-6d27-4ba3-b06f-c1806e7b468a`; host 16.579/16.640/16.629 GiB >= unchanged 12 GiB; Docker 19.493 GiB available; C 80.777 / D 1069.780 GiB free | 0 |
+| `python scripts/full-oracle-container.py --target-worker-diagnostic` | PASS; run `c8b6153a-94b6-4617-ba45-3b6015200de4`; 5 found/started/passed, zero failures/skips/container failures; 336.232s wrapper supervision / 314.55s infrastructure | preflight Maven 0, JUnit launcher 0, wrapper 0, diagnostic collection 0 |
+
+Infrastructure attempt `ee11204a-e707-4b61-99ce-5dd6fc8c50df` used invocation-only
+`MODELSYNC_ORACLE_CONTAINER=EXPLICIT_DISPOSABLE`,
+`MODELSYNC_FULL_ENV_ACK=DISPOSABLE_NONPRODUCTION`, and
+`MODELSYNC_MAVEN_SETTINGS=.mvn/qualification-central.settings.xml`.
+Settings SHA256: `ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940`.
+Nested Maven retained the same settings and `-B -ntp -Pfull -N initialize`
+(preflight), then only the two selected Java classes. This is not full verification.
+Preflight reran cheap guards; these are not additional Oracle or JUnit counts.
+No million-row seed, 100k comparison, PIT, Gatling, cancellation matrix or full run.
+The separate full admission remains 18 GiB and was not invoked.
+
+## Target fixture: creation then existing-row CAS
+
+OracleQualificationTargetIT passed in 4951 ms. Fresh observer connections read:
+
+| Phase | Projection | Validator | Local revision | Generation | Outcome / work |
+|---|---|---|---:|---:|---|
+| created-A | A | A | 0 | 1 | APPLIED / IDLE |
+| changed-existing-B | changed-B | B | 1 | 2 | APPLIED / IDLE |
+
+Digests changed; both projection/state pairs committed. The second owner request
+received validator A; exactly two synthetic owner calls occurred. Five SQL statements
+were captured only in the changed-existing-row phase, with zero overflow.
+Actual Hibernate SQL included:
+
+```sql
+select ce1_0.storage_key from sample_customer ce1_0
+where ce1_0.storage_key=? and ce1_0.local_version=?
+for update of ce1_0.storage_key nowait
+```
+
+The capture retains detached lookup/refresh SELECTs and the versioned UPDATE.
+The semantic matcher accepted the real `FOR UPDATE OF ... NOWAIT` clause.
+Five fresh receipts (one target/four worker hosts in one JVM) assert consumed
+point/quota/JPA ORACLE_NOWAIT, ORACLE_26_NOWAIT inserts, DURABLE cooldown,
+qualified mapping, ledger-first protocol and actual datasource/JpaTransactionManager
+enlistment. Oracle26ai 23.26.3 / JDBC 23.26.3.0.0 / Hibernate 7.4.5.Final were observed.
+These two receipt roles do not replace the other full-required roles. Historical
+fixture failure remains FAILED; the repaired current test is PASS. No production
+locking change was made.
+
+## Four independent actual-worker cells
+
+Actual auto-configured ReactorSyncWorker / SmartLifecycle: four lanes, pool8,
+persistence4 / owner8 threads, queue64 per thread, poll250ms, synthetic owner20ms
+spacing / 5ms latency. Fixed uses productive250ms / max-idle250ms; adaptive uses
+productive5ms / max-idle1s. Each cell has 10 warmup plus 160 measured completions;
+the original 20-second assertion was retained. Each executed once.
+
+| Cell | Result | Measured ms | Completed / calls / grants | Ticks / empty | Selector callbacks | Consistent / block gets | Physical reads |
+|---|---|---:|---|---|---:|---|---:|
+| fresh-fixed | PASS | 15005 | 160 / 160 / 160 | 202 / 42 | 930 | 190235 / 10816 | 0 |
+| fresh-adaptive | PASS | 9875 | 160 / 160 / 160 | 212 / 52 | 991 | 130182 / 11337 | 0 |
+| statistics-fixed | PASS | 17288 | 160 / 160 / 160 | 242 / 82 | 1258 | 312870 / 11294 | 0 |
+| statistics-adaptive | PASS | 9821 | 160 / 160 / 160 | 204 / 44 | 917 | 183233 / 11038 | 0 |
+
+All four eight-session intervals have VALID physical-session continuity. Native
+counters include observer SQL, exclude seed/warmup/cleanup, and remain distinct
+from selector callbacks and trace events. Sort-row deltas were zero. Worker totals:
+640 measured reconciliations/calls/grants; 680 including warmup. The target's two
+reads are separate. Nothing represents a million synchronizations.
+
+| Cell | Per-lane finish returns (0,1,2,3) | Empty: occupied / future hint / main eligible | Reservation upper p50 / p95 / p99 / max ms |
+|---|---|---|---|
+| fresh-fixed | 40 / 40 / 39 / 41 | 24 / 17 / 1 | 22.963 / 25.297 / 35.647 / 36.364 |
+| fresh-adaptive | 30 / 30 / 58 / 42 | 28 / 24 / 0 | 21.683 / 25.196 / 27.691 / 33.548 |
+| statistics-fixed | 37 / 38 / 38 / 47 | 48 / 33 / 1 | 21.091 / 23.775 / 25.091 / 25.268 |
+| statistics-adaptive | 0 / 55 / 37 / 68 | 27 / 17 / 0 | 20.902 / 23.537 / 24.912 / 24.964 |
+
+Per-lane successful finish returns reconcile to 160 independently committed
+outcomes per cell. No traced failures, missing lane IDs, dropped events or
+unattributed claims. Every empty claim has a scheduling reason. The two main-eligible
+selector misses do not alone prove globally absent work at their exact timestamps;
+other records may still be leased. Final snapshots: zero eligible work, 170 IDLE
+rows, zero pending cooldowns and pool-active0. No 429/cooldown was generated in this
+benign fixture; future hints reflect normal admission timing, not lost publication.
+
+Reservation lifetimes are paired observed bounds from schedule-token acquisition,
+through lease-token replacement, to release. All 170 per-cell productive tokens
+(including warmup) close; none remain unresolved. The upper bounds include observer
+call duration. Maxima are 36.364/33.548/25.268/24.964ms, not lease-lifetime retention.
+Statistics/adaptive lane0 completed no measured record but made 11 empty attempts
+(8 occupied, 3 future hint) with bounded rechecks. It was active, not a terminated
+lane. Other lanes completed160; this is not a per-lane fairness SLO.
+
+Per-lane claim/prepare percentiles, tick gaps, wakeup times, hint clocks, token
+bounds and raw timestamps are retained in `worker-analysis.json` and the original
+`oracle-worker-diagnostic.json`. Wakeup scheduled-to-invoked intervals include
+intentional timer delays; they are **not pure scheduler lateness**. Fixed wakeup
+p95 is263.318-264.786ms across cells/lanes; adaptive maxima reach1015.087ms with1s
+idle backoff. Post-productive residual includes Reactor, observer and dispatch costs,
+not an isolated OS metric. No overhead subtraction or clock-only cause inference.
+
+## Measured decision and limits
+
+- **Fixture defect corrected and Oracle-verified:** A/B committed state and actual
+  existing-row SQL now prove the intended path with unchanged adapters.
+- **No worker production defect demonstrated in these cells:** both modes passed,
+  all lanes continued attempts and reservations released. Initial tick spreads
+  were0.202/0.066/0.055/0.025ms; synchronized starts did not create a persistent
+  one-success-per250ms pattern here. Historical full timeout remains FAILED and
+  its exact cause unresolved. This does not requalify the earlier failed run.
+- **Virtual counterexamples retain their model scope:** fixed80 versus adaptive160
+  at20s used deterministic immediate local execution. Oracle has observed method,
+  dispatch and I/O costs and uneven lane progress. Similar or different throughput
+  does not establish the historical cause. Tracing/Mockito overhead was not
+  calibrated with an untraced paired control; observer-induced phase changes
+  cannot be excluded.
+- **Statistics only:** fresh cells had no optimizer estimates; history cells set
+  MS_WORK NUM_ROWS100000/BLOCKS2260 on small data. Physical segment/high-water,
+  index/cache state and prior full workload were not reproduced. Sequential order
+  and raw snapshots remain; no global flush or million-row seed occurred.
+- **No criterion change justified/adopted here:** both fixed cells meet the existing
+  threshold. The earlier proposal remains unapproved and unimplemented. Keep
+  160/20s, all83 full-required methods/18 suites, policies and resource limits.
+
+## Cleanup and remaining release gates
+
+Every cell reports DRAINED (0ms final close receipt), logical/physical/owner0,
+pool-active0 and pool closed. Independent checks confirm absence of this run's
+container `msq-8e9831284ef2`, volume `msq-8e9831284ef2-data` and JVM PID19596.
+Docker inspect exits1 were expected explicit "no such object/volume", not ignored
+errors. No unrelated workload, container or global setting was changed.
+
+JDK21.0.12.1 / Maven3.9.9 / Python3.12.10 / Docker29.8.2. Pinned image:
+`ghcr.io/gvenzl/oracle-free:23.26.3-slim@sha256:6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd`.
+Oracle6GiB/4CPU, launcher512MiB heap/128MiB direct, generated per-run credentials,
+separate runtime/migration schemas and loopback-only publication were retained.
+
+Current **full NOT_RUN**, by scope, not a five-method full PASS. All83 Oracle
+methods/18 suites, mutation/load, atomicity/recovery/shutdown/transport, provider
+and migration gates remain required for integrated qualification. Historical
+independent cancellation FAILED; current characterization NOT_RUN. Unrecorded
+responses, uncertain outcomes, receipt retention, security, operations and other
+parent gates remain open. Production NO-GO. No merge, main change, workflow
+bootstrap or package publication.
+
+[All attempts, per-lane detail and raw artifacts](validation/qualification/2026-10-26-target-worker-execution/README.md).
+Earlier root QM content follows unchanged.
+
+---
+
+Archive SHA256 `120af8d9b7ad450c775db36e2ae6a0809e70b1b7f027fe51a00057263cd47769`; 653,385 bytes / 141 entries.
+
+[Integrity receipt](validation/qualification/2026-10-26-target-worker-execution/report-verification.json):
+CRC and every entry digest passed; all 19 prior archives and the historical QM
+suffix are unchanged. Post-report docs, architecture and diff checks passed.
+
 # Target fixture repair and worker deadline diagnostic - 2026-10-26
 
 **Default PASS. Focused Oracle admission BLOCKED. Current full NOT_RUN. Production NO-GO.**
