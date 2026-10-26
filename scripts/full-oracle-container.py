@@ -185,8 +185,8 @@ def preflight() -> None:
     docker('info', '--format', '{{.ServerVersion}}')
 
 
-def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False, quota: bool = False, creation: bool = False, characterization: bool = False, accounting: bool = False, cooldown: bool = False, target_worker: bool = False) -> int:
-    diagnostic = diagnostic or queue_comparison or worker or recovery or cancellation or nowait or lock_policy or quota or creation or characterization or accounting or cooldown or target_worker
+def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool = False, recovery: bool = False, cancellation: bool = False, nowait: bool = False, lock_policy: bool = False, quota: bool = False, creation: bool = False, characterization: bool = False, accounting: bool = False, cooldown: bool = False, target_worker: bool = False, consumers: Path | None = None) -> int:
+    diagnostic = diagnostic or queue_comparison or worker or recovery or cancellation or nowait or lock_policy or quota or creation or characterization or accounting or cooldown or target_worker or bool(consumers)
     attempt = {'attempt_id': str(uuid.uuid4()), **identity(ROOT), 'image': IMAGE,
                'runtime_schema': 'MS_TEST_RUNTIME', 'migration_schema': 'MS_TEST_MIGRATION',
                'mode': 'diagnostic' if diagnostic else 'full',
@@ -198,7 +198,14 @@ def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool 
     if selected == PROJECT_SETTINGS and (ROOT / selected).is_file():
         attempt['maven_settings_sha256'] = hashlib.sha256((ROOT / selected).read_bytes()).hexdigest()
     try:
-        launcher = diagnostic_command(queue_comparison=queue_comparison, worker=worker, recovery=recovery, cancellation=cancellation, nowait=nowait, lock_policy=lock_policy, quota=quota, creation=creation, characterization=characterization, accounting=accounting, cooldown=cooldown, target_worker=target_worker) if diagnostic else None
+        if consumers:
+            from consumer_artifacts import launch_command, resource_admission
+            launcher = launch_command(ROOT, consumers)
+            attempt['mode'] = 'independent-consumers'
+            attempt['diagnostic_scope'] = 'mvc-webflux-staged-artifacts'
+            attempt['resource_admission'] = resource_admission(ROOT, consumers)
+        else:
+            launcher = diagnostic_command(queue_comparison=queue_comparison, worker=worker, recovery=recovery, cancellation=cancellation, nowait=nowait, lock_policy=lock_policy, quota=quota, creation=creation, characterization=characterization, accounting=accounting, cooldown=cooldown, target_worker=target_worker) if diagnostic else None
         invalidate(ROOT)
         preflight()
     except (ValueError, OSError, ET.ParseError, subprocess.CalledProcessError) as error:
@@ -282,12 +289,19 @@ def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool 
                 MODELSYNC_ORACLE_MIGRATION_PASSWORD=migration,
                 MODELSYNC_ORACLE_TEST_SCHEMA_ACK='DEDICATED_TEST_SCHEMA',
                 MODELSYNC_ORACLE_MIGRATION_SCHEMA_ACK='DEDICATED_MIGRATION_SCHEMA')
-            phase = 'full Maven verification'
-            result = subprocess.run(maven_command(diagnostic),
-                                    cwd=ROOT, env=build_env, check=False)
-            maven_exit = result.returncode
-            result_code = maven_exit
-            if diagnostic and maven_exit == 0:
+            if consumers:
+                phase = 'independent artifact consumer verification (not full qualification)'
+                build_env['CONSUMER_SESSION_ID'] = attempt['attempt_id']
+                result = subprocess.run(launcher, cwd=ROOT, env=build_env, check=False)
+                diagnostic_exit = result.returncode
+                result_code = diagnostic_exit
+            else:
+                phase = 'full Maven verification'
+                result = subprocess.run(maven_command(diagnostic),
+                                        cwd=ROOT, env=build_env, check=False)
+                maven_exit = result.returncode
+                result_code = maven_exit
+            if diagnostic and not consumers and maven_exit == 0:
                 phase = 'selected Oracle diagnostics (not full qualification)'
                 result = subprocess.run(launcher, cwd=ROOT / 'model-sync-persistence-jdbc',
                                         env=build_env, check=False)
@@ -323,6 +337,8 @@ def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool 
                 run_id = current(ROOT)['run_id']
             except ValueError:
                 run_id = None
+            if consumers:
+                run_id = attempt['attempt_id'] if diagnostic_exit is not None else None
             write_infrastructure({**attempt, 'run_id': run_id, 'container_name': name,
                                   'elapsed_seconds': round(time.monotonic() - started, 2),
                                   'container_created': container_created,
@@ -340,6 +356,8 @@ def main(diagnostic: bool = False, queue_comparison: bool = False, worker: bool 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     selections = parser.add_mutually_exclusive_group()
+    selections.add_argument('--consumer-diagnostic', type=Path,
+                            help='Verify staged MVC/WebFlux artifacts in an external workspace; no producer full run')
     selections.add_argument('--diagnostic', action='store_true',
                         help='Run the current default build\'s Oracle atomicity and 100k diagnostics; never qualifies full')
     selections.add_argument('--queue-diagnostic', action='store_true',
@@ -367,4 +385,4 @@ if __name__ == '__main__':
     selections.add_argument('--cooldown-diagnostic', action='store_true',
                             help='Run only small durable cooldown/recovery and actual-worker integration; never qualifies full')
     args = parser.parse_args()
-    raise SystemExit(main(args.diagnostic, args.queue_diagnostic, args.worker_diagnostic, args.recovery_diagnostic, args.cancellation_diagnostic, args.nowait_diagnostic, args.lock_policy_diagnostic, args.quota_diagnostic, args.creation_diagnostic, args.statement_characterization, args.comparison_accounting_diagnostic, args.cooldown_diagnostic, args.target_worker_diagnostic))
+    raise SystemExit(main(args.diagnostic, args.queue_diagnostic, args.worker_diagnostic, args.recovery_diagnostic, args.cancellation_diagnostic, args.nowait_diagnostic, args.lock_policy_diagnostic, args.quota_diagnostic, args.creation_diagnostic, args.statement_characterization, args.comparison_accounting_diagnostic, args.cooldown_diagnostic, args.target_worker_diagnostic, args.consumer_diagnostic))
