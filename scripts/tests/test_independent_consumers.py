@@ -5,6 +5,8 @@ from pathlib import Path
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
+from types import SimpleNamespace
 
 SPEC = importlib.util.spec_from_file_location('consumer_artifacts', Path(__file__).resolve().parents[1] / 'consumer_artifacts.py')
 MODULE = importlib.util.module_from_spec(SPEC)
@@ -41,6 +43,39 @@ class IndependentConsumerGuards(unittest.TestCase):
             root = Path(directory); (root / 'staged').mkdir(); (root / 'staged/library.jar').write_bytes(b'wrong')
             with self.assertRaisesRegex(ValueError, 'hash'):
                 MODULE.verify_hashes(root, {'artifacts': [{'path': 'library.jar', 'sha256': 'expected'}]})
+
+    def test_consumer_cache_tampering_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'artifact.jar'; path.write_bytes(b'changed')
+            with self.assertRaisesRegex(ValueError, 'cache artifact'):
+                MODULE.verify_consumer_artifacts({'consumers': {'mvc': {'repository': directory}},
+                    'artifacts': [{'path': 'artifact.jar', 'sha256': 'expected'}]})
+
+    def test_failing_executed_suite_keeps_fresh_partial_evidence(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            manifest = {'producer': {'source_sha': 'sha', 'source_tree': 'tree'},
+                        'consumers': {mode: {'repository': str(root / mode / 'repo')} for mode in MODULE.MODES}}
+            MODULE.write(root / 'artifact-manifest.json', manifest)
+            for mode in MODULE.MODES: (root / mode).mkdir()
+            def failed(command, cwd, env, **kwargs):
+                xml = cwd / 'target/surefire-reports/TEST-example.consumer.ConsumerJourneyTest.xml'
+                xml.parent.mkdir(parents=True)
+                xml.write_text('<testsuite tests="1" failures="1" errors="0" skipped="0"/>')
+                MODULE.write(cwd / 'target/consumer-evidence/receipt.json', {
+                    'status': 'FAILED', 'run_id': 'run', 'producer_source': 'sha', 'producer_tree': 'tree',
+                    'consumer_manifest_sha256': env['CONSUMER_MANIFEST_SHA256'], 'committed_phases': [{'value': 'A'}]})
+                return SimpleNamespace(returncode=1)
+            with patch.dict(os.environ, {'CONSUMER_SESSION_ID': 'run'}), patch.object(MODULE, 'maven', return_value=['synthetic']), \
+                    patch.object(MODULE, 'verify_consumer_artifacts'), patch.object(MODULE.subprocess, 'run', side_effect=failed):
+                self.assertEqual(1, MODULE.run(root, root))
+            evidence = json.loads((root / 'consumer-run-run.json').read_text())
+            for mode in MODULE.MODES:
+                observed = evidence['modes'][mode]
+                self.assertEqual(1, observed['original_exit'])
+                self.assertEqual('FAILED', observed['junit_status'])
+                self.assertEqual(1, observed['junit_counts']['failures'])
+                self.assertEqual([{'value': 'A'}], observed['receipt']['committed_phases'])
 
     def test_demo_or_absent_dependencies_rejected(self):
         with tempfile.TemporaryDirectory() as directory:

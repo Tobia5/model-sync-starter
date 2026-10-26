@@ -79,6 +79,22 @@ class ConsumerJourneyTest {
         owner.value.set("C"); assertEquals("ENQUEUED", post(http, endpoint + "/event"));
         awaitCommitted(observer, key.storageId(), "C", 2, 3, phases);
         assertEquals("C", get(http, endpoint + "/view"));
+        // Exercise this consumer's actual enlistment: provisional enqueue and JPA flush roll back together.
+        var model = host.getBean(SyncGateway.class).model("item", ItemValue.class);
+        var manager = host.getBean(PlatformTransactionManager.class);
+        var em = org.springframework.orm.jpa.SharedEntityManagerCreator.createSharedEntityManager(
+            host.getBean(jakarta.persistence.EntityManagerFactory.class));
+        new org.springframework.transaction.support.TransactionTemplate(manager).executeWithoutResult(tx -> {
+          assertFalse(model.request("synthetic", "known-id", io.modelsync.core.Priority.NORMAL, true).isBlank());
+          var entity = em.find(ItemEntity.class, key.storageId()); entity.value = "UNCOMMITTED"; em.flush();
+          tx.setRollbackOnly();
+        });
+        var rolledBack = observer.queryForMap("select p.item_value,p.local_version,w.generation,w.work_status "
+            + "from CONSUMER_ITEM p join MS_WORK w on w.work_id=p.storage_key where w.work_id=?", key.storageId());
+        assertEquals("C", rolledBack.get("ITEM_VALUE")); assertEquals("IDLE", rolledBack.get("WORK_STATUS"));
+        assertEquals(2, ((Number)rolledBack.get("LOCAL_VERSION")).longValue());
+        assertEquals(3, ((Number)rolledBack.get("GENERATION")).longValue());
+        receipt.put("mixed_rollback", rolledBack);
         assertEquals(3, owner.calls.get()); assertEquals(3, observation.ownerCalls.get());
         assertTrue(observation.ownerThreads.stream().allMatch(t -> t.startsWith("model-sync-owner")));
         assertTrue(observation.persistenceThreads.stream().noneMatch(t -> t.startsWith("reactor-http")));

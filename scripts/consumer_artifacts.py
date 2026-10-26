@@ -62,6 +62,14 @@ def verify_hashes(workspace, manifest):
         if not path.is_file() or digest(path) != item['sha256']: raise ValueError('Staged artifact hash mismatch')
     if len(manifest['artifacts']) != 39: raise ValueError('Incomplete parent/library/attachment set')
 
+def verify_consumer_artifacts(manifest):
+    for item in manifest['consumers'].values():
+        repository = Path(item['repository'])
+        for artifact in manifest['artifacts']:
+            path = repository / artifact['path']
+            if not path.is_file() or digest(path) != artifact['sha256']:
+                raise ValueError('Consumer cache artifact differs from the staged set')
+
 def source_manifest(project):
     return {p.relative_to(project).as_posix(): digest(p) for p in sorted(project.rglob('*'))
             if p.is_file() and 'target' not in p.relative_to(project).parts
@@ -128,6 +136,7 @@ def stage(root, workspace, repository):
 def prepare(root, workspace):
     manifest = json.loads((workspace / 'artifact-manifest.json').read_text(encoding='utf-8'))
     verify_hashes(workspace, manifest)
+    verify_consumer_artifacts(manifest)
     for mode in MODES:
         project = workspace / mode; item = manifest['consumers'][mode]
         command = [*maven(root, Path(item['repository'])), 'clean', 'test-compile',
@@ -164,6 +173,7 @@ def launch_command(root, workspace):
     for key, value in identity(root).items():
         if manifest['producer'].get(key) != value: raise ValueError('Staged source differs from frozen checkout')
     verify_hashes(workspace, manifest)
+    verify_consumer_artifacts(manifest)
     for mode in MODES:
         item = manifest['consumers'][mode]
         if item.get('prepare_exit') != 0: raise ValueError('Independent consumer preparation did not pass')
@@ -243,13 +253,30 @@ def run(root, workspace):
             code = subprocess.run(command, cwd=project, env=env, stdout=log, stderr=subprocess.STDOUT).returncode
         observed = {'command': command, 'cwd': str(project), 'original_exit': code, 'started_ns': started,
                     'ended_ns': time.time_ns(), 'status': 'FAILED' if code else 'PASS'}
+        # Collect fresh partial results independently of qualification, including an executed failure.
+        xml = project / 'target/surefire-reports/TEST-example.consumer.ConsumerJourneyTest.xml'
+        observed['junit_status'] = 'NOT_RUN'
+        if xml.is_file() and xml.stat().st_mtime_ns >= started:
+            try:
+                suite = ET.parse(xml).getroot()
+                counts = {k: int(suite.get(k, '0')) for k in ('tests', 'failures', 'errors', 'skipped')}
+                observed['junit_counts'] = counts
+                observed['junit_status'] = 'PASS' if list(counts.values()) == [1, 0, 0, 0] else 'FAILED'
+            except (ValueError, ET.ParseError): observed['junit_status'] = 'REJECTED'
+        receipt_path = project / 'target/consumer-evidence/receipt.json'
+        if receipt_path.is_file() and receipt_path.stat().st_mtime_ns >= started:
+            try:
+                partial = json.loads(receipt_path.read_text(encoding='utf-8'))
+                if (partial.get('run_id') == run_id and partial.get('producer_source') == manifest['producer']['source_sha']
+                        and partial.get('producer_tree') == manifest['producer']['source_tree']
+                        and partial.get('consumer_manifest_sha256') == digest(workspace / 'artifact-manifest.json')):
+                    observed['receipt'] = partial
+            except ValueError: observed['receipt_collection'] = 'REJECTED'
         try:
+            verify_consumer_artifacts(manifest)
             observed['receipt'] = check_receipt(project / 'target/consumer-evidence/receipt.json', run_id, manifest, mode, started,
                 digest(workspace / 'artifact-manifest.json'))
-            xml = project / 'target/surefire-reports/TEST-example.consumer.ConsumerJourneyTest.xml'
-            if not xml.is_file() or xml.stat().st_mtime_ns < started: raise ValueError('Missing fresh JUnit report')
-            suite = ET.parse(xml).getroot()
-            if [int(suite.get(k, '0')) for k in ('tests', 'failures', 'errors', 'skipped')] != [1, 0, 0, 0]:
+            if observed['junit_status'] != 'PASS':
                 raise ValueError('Required consumer JUnit test failed/missing/skipped')
         except (ValueError, OSError, ET.ParseError) as error:
             observed.update(status='FAILED', validation_error=str(error)); failure = failure or 1

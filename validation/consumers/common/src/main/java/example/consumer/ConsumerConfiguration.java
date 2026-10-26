@@ -1,7 +1,7 @@
 package example.consumer;
 
 import io.modelsync.core.FetchResult;
-import io.modelsync.core.FreshnessPolicy;
+import io.modelsync.core.domain.FreshnessPolicy;
 import io.modelsync.core.RefreshMode;
 import io.modelsync.core.application.ModelBinding;
 import io.modelsync.core.domain.Digests;
