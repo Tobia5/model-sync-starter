@@ -12,7 +12,7 @@ import java.time.Instant;
  * @param attempts failed attempts observed at claim time
  * @param force whether the claimed work should bypass normal freshness checks
  * @param priority priority bucket from which the work was claimed
- * @param until lease expiration instant
+ * @param expiresAt lease expiration instant
  */
 public record WorkLease(
     WorkKey key,
