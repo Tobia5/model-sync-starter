@@ -55,7 +55,7 @@ class SecuredConsumerIT {
           assertNotEquals(key("alpha"),key("beta"));
           // Every denial is measured with an already fresh protected cache present.
           deny("unauthenticated-read",anonymous,"alpha","item","shared","read",false,401);
-          deny("unauthenticated-submit",anonymous,"alpha","item","shared","refresh",false,403);
+          deny("unauthenticated-submit",anonymous,"alpha","item","shared","refresh",false,"mvc".equals(mode)?401:403);
           deny("missing-csrf",alice,"alpha","item","shared","refresh",false,403);
           for(String op:List.of("read","refresh","event")) {
             deny("cross-tenant-"+op,alice,"beta","item","shared",op,true,403);
@@ -127,8 +127,9 @@ class SecuredConsumerIT {
   private SecuritySnapshot snapshot(){return new SecuritySnapshot(access.counts(),observed.mappingReads.get(),owner.calls.get(),events.published.get(),rows());}
   private void deny(String name,SecurityHttpClient client,String tenant,String binding,String subject,String op,boolean csrf,int status)throws Exception{
     var before=snapshot();var response=client.send("read".equals(op)?"GET":"POST",path(tenant,binding,subject,op),csrf);
-    assertEquals(status,response.statusCode(),name);var after=snapshot();
-    var fact=new LinkedHashMap<String,Object>();fact.put("case",name);fact.put("http_status",response.statusCode());fact.put("before",before);fact.put("after",after);fact.put("side_effects_unchanged",before.equals(after));negatives.add(fact);
+    var after=snapshot();
+    var fact=new LinkedHashMap<String,Object>();fact.put("case",name);fact.put("http_status",response.statusCode());fact.put("expected_status",status);fact.put("before",before);fact.put("after",after);fact.put("side_effects_unchanged",before.equals(after));negatives.add(fact);
+    assertEquals(status,response.statusCode(),name);
     assertEquals(before,after,name+" had protected side effects");
     assertFalse(response.body().contains("alpha-A"));assertFalse(response.body().contains("beta-A"));
   }

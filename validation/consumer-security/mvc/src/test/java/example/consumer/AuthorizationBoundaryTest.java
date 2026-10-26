@@ -34,6 +34,8 @@ class AuthorizationBoundaryTest {
   }
   @Test void actualChainRequiresAuthenticationAndCsrf() throws Exception {
     assertEquals(401, request(null,"alpha","item","shared","read",false));
+    // MockMvc measured403; the live servlet journey separately requires its measured401.
+    assertEquals(403,request(null,"alpha","item","shared","refresh",false));
     assertEquals(403, request("alice","alpha","item","shared","refresh",false));
     assertEquals(new AccessCounts(0,0,0), observation.counts());
   }
