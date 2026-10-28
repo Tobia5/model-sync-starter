@@ -1,3 +1,39 @@
+## Secured-consumer execution — 2026-10-28
+
+**Default/cheap security PASS; Oracle admission BLOCKED; both Oracle journeys
+NOT_RUN; producer full NOT_RUN; production NO-GO.**
+
+Frozen source `5dd038138a9201f7f4423c5ebe8e1d604f4a4ae4`, tree `edcd6c30fc02fd1a2f1136fc9e4aec41889c2292`, clean before/after.
+Fixture unchanged from 8df8c94; original 551427b artifact set (39 files) and both
+new cache copies verified unchanged. No fixture/library/policy/assertion edits.
+
+- Matching default `6e85c4fe-3bc4-40b7-ae3e-db0893a8b9cc`: 222 JUnit / 41 XML / 116 Python,
+  build/qualification/collection **0/0/0**. Core 86 / trigger 43 assertions and
+  default execution audit passed. Approved settings and task-owned Maven cache.
+- Fresh external consumers: MVC **5** / WebFlux **6** cheap methods, preparation
+  and profile-resolution exits **0**. No stale copied source or runtime report.
+- `python scripts/full-oracle-container.py --consumer-diagnostic <workspace>`:
+  attempt `a85f571c-7cde-4b9e-979e-694155ce34b9`, original wrapper exit **2**.
+  Host availability **6.246 / 6.251 / 6.259 GiB** versus required **12 GiB**;
+  Docker/disk checks passed. Full budget remains 18 GiB. No admission retry.
+- Both Oracle journeys and their positive/negative/committed-outcome/identity/
+  shutdown phases **NOT_RUN**; no runtime Maven exits or receipts. Earlier
+  WebFlux successes and MVC failures are not substituted or relabelled.
+- No container, volume, schema or Oracle-journey JVM was created. Independent exact-label
+  container/volume checks confirm absence. Collection/validation exited 0,
+  preserving the original wrapper failure. Local evidence/caches remain retained.
+
+[Detailed report and raw evidence](validation/qualification/2026-10-28-consumer-security/README.md)
+and [current acceptance matrix](docs/quality/ACCEPTANCE-MATRIX.md). All 91 prior
+qualification files and the earlier QM content remain unchanged. Historical
+401/403 dispatch behavior is still unexplained. Final-source combined security
+requires both complete Oracle journeys after resource admission; no new R06 runtime
+leaf closes. Identity-provider/revocation, transport, retention, uncertainty,
+operations and distribution remain open. No full/PIT/Gatling/million-row repeat,
+merge, main/workflow change or package publication.
+
+---
+
 ## Consumer authorization qualification — 2026-10-26
 
 **Default and cheap security PASS; final Oracle admission BLOCKED; final Oracle

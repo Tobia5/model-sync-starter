@@ -1,0 +1,205 @@
+{
+  "admission": {
+    "attempt_id": "38e2f1ed-ccd9-4bc0-9de0-c8be034f1d9d",
+    "disk_free_gib": [
+      59.651,
+      1066.587
+    ],
+    "docker": {
+      "available_gib": 19.44105569458008,
+      "cpu": 8,
+      "memory_bytes": 25201692672,
+      "observed_usage_gib": 4.029849609375,
+      "running": 15,
+      "server": "29.8.2"
+    },
+    "oracle_cpu_cap": 4,
+    "oracle_gib": 6,
+    "required_host_gib": 12,
+    "reserve_gib": 2,
+    "samples": [
+      {
+        "host_available_gib": 6.246,
+        "observed_ns": 1793175613040204900
+      },
+      {
+        "host_available_gib": 6.251,
+        "observed_ns": 1793175616505753200
+      },
+      {
+        "host_available_gib": 6.259,
+        "observed_ns": 1793175619967530000
+      }
+    ],
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "5dd038138a9201f7f4423c5ebe8e1d604f4a4ae4",
+    "source_tree": "edcd6c30fc02fd1a2f1136fc9e4aec41889c2292",
+    "status": "BLOCKED",
+    "tools_gib": 4,
+    "unchanged_full_budget_gib": 18
+  },
+  "artifact_files": 39,
+  "artifact_source": {
+    "run_id": "b3db2e0f-e56a-420f-b379-0d1e73f15eb0",
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "551427bed4d021339fcc32fef8f633232ff8deb8",
+    "source_tree": "892daec99e12738607a9bfe736d8e98ee8218d0c",
+    "started_ns": 1793025127581613600
+  },
+  "artifacts_unchanged": true,
+  "baseline_manifest_sha256": "247c546b54c49b029d77de0420b09aead4b20f2d9bcc8e56cb48c9d032c3c166",
+  "cheap_security": {
+    "mvc": 5,
+    "webflux": 6
+  },
+  "collection_exit": 0,
+  "combined_security": "BLOCKED",
+  "current_oracle": {
+    "mvc": {
+      "maven_exit": null,
+      "negative_outcomes": null,
+      "phase_results": null,
+      "positive_outcomes": null,
+      "status": "NOT_RUN"
+    },
+    "webflux": {
+      "maven_exit": null,
+      "negative_outcomes": null,
+      "phase_results": null,
+      "positive_outcomes": null,
+      "status": "NOT_RUN"
+    }
+  },
+  "default": {
+    "command": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd -B -ntp -s D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\.mvn\\qualification-central.settings.xml -Dmaven.repo.local=D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\m2 clean verify",
+    "exit": 0,
+    "qualification_exit": 0,
+    "status": "PASS"
+  },
+  "default_counts": {
+    "junit": 222,
+    "python": 116,
+    "xml": 41
+  },
+  "default_execution": {
+    "collection_exit": 0,
+    "command": [
+      "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+      "-B",
+      "-ntp",
+      "-s",
+      "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\.mvn\\qualification-central.settings.xml",
+      "-Dmaven.repo.local=D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\m2",
+      "clean",
+      "verify"
+    ],
+    "cwd": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter",
+    "ended_ns": 1793175400883167300,
+    "exit": 0,
+    "nested_maven_repository": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\m2",
+    "nested_maven_settings": ".mvn/qualification-central.settings.xml",
+    "repository": "task-owned repository from the artifact session; user/global cache unused",
+    "run_id": "1f20e843-b830-43e1-b188-cf5c39eb31a3",
+    "source_after": {
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_sha": "5dd038138a9201f7f4423c5ebe8e1d604f4a4ae4",
+      "source_tree": "edcd6c30fc02fd1a2f1136fc9e4aec41889c2292"
+    },
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "5dd038138a9201f7f4423c5ebe8e1d604f4a4ae4",
+    "source_tree": "edcd6c30fc02fd1a2f1136fc9e4aec41889c2292",
+    "started_ns": 1793175108260698000
+  },
+  "default_run": "6e85c4fe-3bc4-40b7-ae3e-db0893a8b9cc",
+  "evidence_validation_exit": 0,
+  "fixture_source": {
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "5dd038138a9201f7f4423c5ebe8e1d604f4a4ae4",
+    "source_tree": "edcd6c30fc02fd1a2f1136fc9e4aec41889c2292"
+  },
+  "fixture_unchanged_since": "8df8c949b8ddd570cf723e7f7ab522c9aab2e3f2",
+  "full": "NOT_RUN",
+  "historical_files_unchanged": 91,
+  "independent_cleanup": {
+    "attempt_id": "a85f571c-7cde-4b9e-979e-694155ce34b9",
+    "checks": {
+      "containers": {
+        "command": [
+          "docker",
+          "ps",
+          "-a",
+          "--filter",
+          "label=io.modelsync.qualification.attempt=a85f571c-7cde-4b9e-979e-694155ce34b9",
+          "--format",
+          "{{.Names}}"
+        ],
+        "exit": 0,
+        "owned_resources": []
+      },
+      "volumes": {
+        "command": [
+          "docker",
+          "volume",
+          "ls",
+          "--filter",
+          "label=io.modelsync.qualification.attempt=a85f571c-7cde-4b9e-979e-694155ce34b9",
+          "--format",
+          "{{.Name}}"
+        ],
+        "exit": 0,
+        "owned_resources": []
+      }
+    },
+    "consumer_jvms_started": false,
+    "container_created": false
+  },
+  "infrastructure": {
+    "attempt_id": "a85f571c-7cde-4b9e-979e-694155ce34b9",
+    "cleanup_verified": true,
+    "container_created": false,
+    "diagnostic_scope": "mvc-webflux-consumer-security",
+    "error": "Consumer resource admission failed; see run-scoped admission receipt",
+    "full_qualification": "NOT_RUN",
+    "image": "ghcr.io/gvenzl/oracle-free:23.26.3-slim@sha256:6d61d267a3b978c24c5ac1790e62e927416a0aec446bd86e4b3a1527562757bd",
+    "maven_exit": null,
+    "maven_settings": ".mvn/qualification-central.settings.xml",
+    "maven_settings_sha256": "ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940",
+    "migration_schema": "MS_TEST_MIGRATION",
+    "mode": "independent-consumers",
+    "phase": "Docker preflight",
+    "qualification_target": null,
+    "run_id": null,
+    "runtime_schema": "MS_TEST_RUNTIME",
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "5dd038138a9201f7f4423c5ebe8e1d604f4a4ae4",
+    "source_tree": "edcd6c30fc02fd1a2f1136fc9e4aec41889c2292",
+    "status": "BLOCKED",
+    "wrapper_exit": 2
+  },
+  "production": "NO_GO",
+  "supervision": {
+    "command": [
+      "C:\\Python312\\python.exe",
+      "scripts/full-oracle-container.py",
+      "--consumer-diagnostic",
+      "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\security-consumers-20261028-r1\\consumers-r1"
+    ],
+    "consumer_jvms": [],
+    "cwd": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter",
+    "ended_ns": 1793175624794424700,
+    "full_status": "NOT_RUN",
+    "independent_cleanup": {},
+    "maven_parent_direct_mib": 128,
+    "maven_parent_heap_mib": 512,
+    "original_wrapper_exit": 2,
+    "source_after": {
+      "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_sha": "5dd038138a9201f7f4423c5ebe8e1d604f4a4ae4",
+      "source_tree": "edcd6c30fc02fd1a2f1136fc9e4aec41889c2292"
+    },
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "5dd038138a9201f7f4423c5ebe8e1d604f4a4ae4",
+    "source_tree": "edcd6c30fc02fd1a2f1136fc9e4aec41889c2292",
+    "started_ns": 1793175585774006400
+  }
+}

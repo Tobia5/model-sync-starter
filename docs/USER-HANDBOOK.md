@@ -1,3 +1,19 @@
+## Current secured-consumer execution — 2026-10-28
+
+Clean fixture `5dd0381` (unchanged from 8df8c94) passed fresh default and
+independent cheap MVC/WebFlux checks using the original 39-file 551427b artifact
+set. Oracle execution was **BLOCKED** at 6.246–6.259 GiB available host memory
+against the unchanged 12 GiB requirement; both live journeys are **NOT_RUN**.
+No assertion, CSRF/method-security configuration or integration boundary changed.
+Earlier WebFlux results and MVC failures remain source-bound history; the combined
+milestone is still open. [Exact commands, resources and evidence](../validation/qualification/2026-10-28-consumer-security/README.md).
+
+The next execution needs fresh source-matched preparation and successful existing
+resource admission. Historical 401/403 dispatch behavior is not diagnosed by this
+attempt. Production remains NO-GO; the tested boundary and wider limits below apply.
+
+---
+
 ## Secured application boundary — consumer evidence, 2026-10-26
 
 Security fixture `8df8c94` uses unchanged staged 551427b JARs. Its default

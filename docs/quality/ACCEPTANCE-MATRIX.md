@@ -28,11 +28,16 @@ open production subcriteria are not replaced by a configured integration PASS.
   unchanged from F; the sole production-source edit corrects a Javadoc parameter.
 - **S** — consumer security fixture `8df8c949b8ddd570cf723e7f7ab522c9aab2e3f2`, tree `6bf4d2531e1c42d067f4db99ad844f87f4a8430e`:
   default `f87f69d3-16fa-466b-b2e9-25031ab0b0b7` (222 JUnit / 116 Python) and 5 MVC / 6 WebFlux
-  cheap security methods PASS. Current Oracle attempt `47b66c3c-6d1e-425e-bedb-ebd7d1438ec2`
+  cheap security methods PASS. The 2026-10-26 Oracle attempt `47b66c3c-6d1e-425e-bedb-ebd7d1438ec2`
   BLOCKED at host-memory admission, journeys NOT_RUN. Earlier source 8e36028/run
   `143adeff-77ef-4864-ad9c-23ab46534c6c`: overall FAILED, WebFlux PASS
   (30 denials/four outcomes/32 concurrent identities), MVC fixture assertion FAILED.
   [Exact scope, earlier attempts and raw evidence](../../validation/qualification/2026-10-26-consumer-security/README.md).
+- **S2** — unchanged security fixture at clean `5dd038138a9201f7f4423c5ebe8e1d604f4a4ae4`, tree `edcd6c30fc02fd1a2f1136fc9e4aec41889c2292`,
+  default `6e85c4fe-3bc4-40b7-ae3e-db0893a8b9cc` PASS (222 JUnit / 116 Python), fresh external
+  MVC 5 / WebFlux 6 cheap methods PASS. Oracle attempt `a85f571c-7cde-4b9e-979e-694155ce34b9`
+  BLOCKED at 6.246–6.259 GiB host availability versus 12 GiB; both journeys NOT_RUN,
+  wrapper exit 2, no resources created. [2026-10-28 evidence](../../validation/qualification/2026-10-28-consumer-security/README.md).
 - **H** — historical results retain their original status and source; see
   [QM](../../QM.md) and the dated validation directories. They are not new execution.
 
@@ -81,9 +86,9 @@ test PASS. Evidence listed beside an open row supports only the completed portio
 
 | ID | Requirement / supported scope | Supporting source/run and demonstrated result | Current status / exact unmet subcriterion |
 |---|---|---|---|
-| R06.1 | Tenant/binding/subject authority | F library contracts; S actual filter-chain/method checks and earlier Oracle WebFlux scoped read/refresh/event journeys | DONE for S cheap checks and source-bound WebFlux scenarios. OPEN: final-source two-stack Oracle verification (memory BLOCKED), real identity-provider/policy/revocation/tenant lifecycle, other APIs/visits/replay and broader threat model. Raw gateway/event publisher are trusted in-process capabilities; qualifiers are not permissions |
+| R06.1 | Tenant/binding/subject authority | F library contracts; S/S2 actual filter-chain/method checks and earlier Oracle WebFlux scoped read/refresh/event journeys | DONE for S/S2 cheap checks and S source-bound WebFlux scenarios. OPEN: final-source two-stack Oracle verification (S2 memory BLOCKED; both NOT_RUN), real identity-provider/policy/revocation/tenant lifecycle, other APIs/visits/replay and broader threat model. Raw gateway/event publisher are trusted in-process capabilities; qualifiers are not permissions |
 | R06.2 | Provider transport/security configuration | F synthetic loopback fixtures | OPEN: TLS/secret rotation, endpoint/redirect/SSRF controls, payload limits/redaction and supported provider-specific review |
-| R06.3 | Invalid identity/schema/authority fails closed | F library/schema checks; S missing grants/unknown scope/fresh-cache denials; earlier WebFlux 30 negative cases with unchanged protected side effects | DONE for declared F and executed S checks. OPEN: final-source two-stack Oracle verification, production identity/host integration, arbitrary identifiers/mappings and complete security acceptance |
+| R06.3 | Invalid identity/schema/authority fails closed | F library/schema checks; S/S2 cheap grant/scope checks; earlier S WebFlux 30 fresh-cache negative cases with unchanged protected side effects | DONE for declared F and executed S/S2 checks. OPEN: final-source two-stack Oracle verification (S2 NOT_RUN), production identity/host integration, arbitrary identifiers/mappings and complete security acceptance |
 | R06.4 | Fresh reads versus a newly received event | Documented eventual freshness; F event generation/coalescing tests | OPEN: application acceptance of consistency limits; strict read-after-change is not promised |
 | R10.1 | Parent/library artifacts with sources/Javadoc | C | DONE:12 POMs/11 main JARs/16 source and Javadoc attachments, recorded SHA-256; source-less starters have no Java attachments by profile design |
 | R10.2 | Independent MVC/JPA and WebFlux/JPA local consumers | C, separate outside-reactor Maven invocations and isolated repositories | DONE:actual auto-configuration, effective policies, mixed rollback, clock replacement, disabled mode, WebFlux execution boundary and three committed phases per host; registry authentication remains R10.3 |

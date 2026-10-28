@@ -29,10 +29,14 @@ Inventory, brokers, vendor connectors and remote owner writes are outside this s
 - [x] R06.1/R06.3 scoped security implementation and cheap checks: `8df8c94`,
   MVC 5 / WebFlux 6 methods. Earlier 8e36028 WebFlux Oracle journey passed 30 denials,
   four committed outcomes and 32 concurrent identities; its overall attempt remains FAILED.
-- [ ] Final-source MVC/WebFlux Oracle security journeys: attempt `47b66c3c-6d1e-425e-bedb-ebd7d1438ec2`
-  BLOCKED at 9.458–9.699 GiB host availability versus 12 GiB; both NOT_RUN. Prior MVC
-  response-status assertion failures are preserved; correction awaits Oracle execution.
-  [Scoped evidence](validation/qualification/2026-10-26-consumer-security/README.md).
+- [ ] Final-source MVC/WebFlux Oracle security journeys: source `5dd0381` passed
+  matching default (222 JUnit / 116 Python) and fresh cheap consumers (5 / 6).
+  Attempt `a85f571c-7cde-4b9e-979e-694155ce34b9` on 2026-10-28 BLOCKED at 6.246–6.259 GiB
+  host availability versus 12 GiB; both journeys NOT_RUN, wrapper exit 2, no resources created.
+  [Current evidence](validation/qualification/2026-10-28-consumer-security/README.md).
+  The 2026-10-26 blocked attempt and earlier MVC assertion failures remain
+  [unchanged history](validation/qualification/2026-10-26-consumer-security/README.md).
+  No status/CSRF/authorization assertion changed; historical dispatcher cause is unresolved.
   Real identity-provider/production authorization and broader R06 gates remain open.
 
 ## Still-open production subcriteria
