@@ -1,0 +1,59 @@
+{
+  "date": "2026-10-20",
+  "repository": "Tobia5/model-sync-starter",
+  "baseline_commit": "a555ffaf8681b6dcc2597f16a84bf5b2a45c11d6",
+  "scope": "Patch-base existing files verified against GitHub blob hashes; untouched offline dependencies from supplied original archive, not a complete clone of current HEAD.",
+  "java_version": "openjdk version \"21.0.12.1\" 2026-08-18\nOpenJDK Runtime Environment (build 21.0.12.1+1-1-deb13u1-Debian)\nOpenJDK 64-Bit Server VM (build 21.0.12.1+1-1-deb13u1-Debian, mixed mode, sharing)",
+  "executed": {
+    "core_contracts": {
+      "passed": 77,
+      "failed": 0
+    },
+    "trigger_contracts": {
+      "passed": 41,
+      "failed": 0
+    },
+    "java_syntax": {
+      "files": 100,
+      "errors": 0,
+      "framework_linking": false
+    },
+    "architecture": {
+      "modules": 13,
+      "passed": true
+    },
+    "documentation": {
+      "markdown_files": 12,
+      "passed": true
+    }
+  },
+  "not_executed": [
+    "Maven reactor / Spring integration / H2 tests",
+    "Oracle v2 install and migration",
+    "Oracle concurrency and JPA/JDBC production transaction tests",
+    "Live REST or broker integration",
+    "Million-row load test",
+    "Dependency/security audit",
+    "GitHub Actions workflow"
+  ],
+  "maven": {
+    "available": false,
+    "invocation_exit": 127
+  },
+  "automated_gate_script_exit": 2,
+  "remote_write": {
+    "attempt": "create branch feat/arc42-handbook-sync-triggers",
+    "result": "403 Resource not accessible by integration",
+    "branch_created": false,
+    "pr_created": false
+  },
+  "patch_preflight": {
+    "status": "passed",
+    "base_content_checks": true,
+    "apply_and_contract_retest": true,
+    "reject_modified_inputs": true,
+    "reject_new_path_collisions": true,
+    "preserve_unrelated_files": true
+  },
+  "production_qualified": false
+}

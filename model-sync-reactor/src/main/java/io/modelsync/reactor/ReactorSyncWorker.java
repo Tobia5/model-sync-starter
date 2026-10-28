@@ -1,7 +1,17 @@
 package io.modelsync.reactor;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
 import java.time.Duration;
+import java.time.Clock;
+import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.SmartLifecycle;
@@ -15,9 +25,19 @@ public final class ReactorSyncWorker implements SmartLifecycle {
   private final SyncCoordinator coordinator;
   private final Scheduler persistence, blockingOwner;
   private final int concurrency;
-  private final Duration poll;
+  private final Duration poll, productiveDelay, maximumIdle, shutdownTimeout;
+  private final Object operations = new Object();
+  private final AtomicInteger physical = new AtomicInteger();
+  private final Semaphore ownerCapacity;
+  private final Clock clock;
+  private volatile boolean stopping;
+  private volatile WorkerShutdown shutdown = new WorkerShutdown(WorkerShutdownStatus.NOT_STOPPED, 0, 0, 0, 0);
   private volatile boolean running;
   private Disposable subscription;
+  private final AtomicLong ticks = new AtomicLong(), empty = new AtomicLong(),
+      deferred = new AtomicLong(), failed = new AtomicLong(), fetched = new AtomicLong(),
+      cancelled = new AtomicLong();
+  private final AtomicInteger inFlight = new AtomicInteger(), maximumInFlight = new AtomicInteger();
 
   public ReactorSyncWorker(
       SyncCoordinator coordinator,
@@ -25,75 +45,203 @@ public final class ReactorSyncWorker implements SmartLifecycle {
       Scheduler blockingOwner,
       int concurrency,
       Duration poll) {
-    if (concurrency < 1 || concurrency > 128 || poll.isZero() || poll.isNegative())
+    this(coordinator, persistence, blockingOwner, concurrency, poll, poll, poll);
+  }
+
+  /** Explicit pacing. The five-argument constructor retains its fixed-delay behavior. */
+  public ReactorSyncWorker(
+      SyncCoordinator coordinator, Scheduler persistence, Scheduler blockingOwner,
+      int concurrency, Duration poll, Duration productiveDelay, Duration maximumIdle) {
+    this(coordinator, persistence, blockingOwner, concurrency, poll, productiveDelay,
+        maximumIdle, Duration.ofSeconds(5));
+  }
+
+  /** Drain bound is independent of fetch, transport, database and transaction deadlines. */
+  public ReactorSyncWorker(
+      SyncCoordinator coordinator, Scheduler persistence, Scheduler blockingOwner,
+      int concurrency, Duration poll, Duration productiveDelay, Duration maximumIdle,
+      Duration shutdownTimeout) {
+    this(coordinator, persistence, blockingOwner, concurrency, poll, productiveDelay, maximumIdle,
+        shutdownTimeout, Clock.systemUTC());
+  }
+
+  /** Use the coordinator's clock when constructing a worker with a custom time source. */
+  public ReactorSyncWorker(
+      SyncCoordinator coordinator, Scheduler persistence, Scheduler blockingOwner,
+      int concurrency, Duration poll, Duration productiveDelay, Duration maximumIdle,
+      Duration shutdownTimeout, Clock clock) {
+    if (concurrency < 1 || concurrency > 128)
       throw new IllegalArgumentException("Invalid worker bounds");
+    new WorkerPacing(productiveDelay, poll, maximumIdle);
+    if (shutdownTimeout == null || shutdownTimeout.isNegative() || shutdownTimeout.isZero()
+        || shutdownTimeout.compareTo(Duration.ofMinutes(5)) > 0)
+      throw new IllegalArgumentException("shutdownTimeout must be positive and at most five minutes");
     this.coordinator = coordinator;
     this.persistence = persistence;
     this.blockingOwner = blockingOwner;
     this.concurrency = concurrency;
     this.poll = poll;
+    this.productiveDelay = productiveDelay;
+    this.maximumIdle = maximumIdle;
+    this.shutdownTimeout = shutdownTimeout;
+    this.ownerCapacity = new Semaphore(concurrency);
+    this.clock = java.util.Objects.requireNonNull(clock);
   }
 
   public Mono<Boolean> tick() {
-    return Mono.fromCallable(coordinator::claim)
+    return trackedAttempt().map(result -> result != WorkerTickResult.EMPTY);
+  }
+
+  private Mono<WorkerTickResult> attempt(WorkerExecution execution) {
+    return Mono.fromCallable(() -> claim(execution))
         .subscribeOn(persistence)
         .flatMap(
             claim -> {
-              if (claim.isEmpty()) return Mono.just(false);
+              if (claim.isEmpty()) return Mono.just(WorkerTickResult.EMPTY);
               WorkLease lease = claim.get();
-              return Mono.fromCallable(() -> coordinator.prepare(lease))
+              return Mono.fromCallable(() -> physical(execution, () -> coordinator.prepare(lease), false))
                   .subscribeOn(persistence)
                   .flatMap(
                       plan -> {
-                        if (plan.isEmpty()) return Mono.just(true);
+                        if (plan.isEmpty()) return Mono.just(WorkerTickResult.DEFERRED);
                         PreparedSync<?> p = plan.get();
-                        return fetch(p)
-                            .switchIfEmpty(Mono.error(new SyncExceptions.Permanent("NULL_FETCH")))
+                        return fetch(p, execution)
+                            .switchIfEmpty(Mono.error(new Permanent("NULL_FETCH")))
                             .timeout(coordinator.options().fetchTimeout())
                             .flatMap(
                                 result ->
-                                    Mono.fromRunnable(() -> coordinator.finish(p, result))
+                                    Mono.fromCallable(() -> physical(execution, () -> { coordinator.finish(p, result); return true; }, false))
                                         .subscribeOn(persistence)
-                                        .thenReturn(true));
+                                        .thenReturn(WorkerTickResult.FETCHED));
                       })
                   .onErrorResume(
                       error ->
-                          Mono.fromRunnable(() -> coordinator.failed(lease, error))
+                          Mono.fromCallable(() -> physical(execution, () -> { coordinator.failed(lease, error); return true; }, false))
                               .subscribeOn(persistence)
-                              .thenReturn(true));
+                              .thenReturn(error instanceof RetryLater ? WorkerTickResult.DEFERRED : WorkerTickResult.FAILED));
             });
   }
 
-  private Mono<FetchResult<?>> fetch(PreparedSync<?> prepared) {
+  private Mono<WorkerTickResult> trackedAttempt() {
+    return Mono.defer(() -> {
+          WorkerExecution execution = new WorkerExecution();
+          synchronized (operations) {
+            if (stopping) return Mono.just(WorkerTickResult.EMPTY);
+          ticks.incrementAndGet();
+          maximumInFlight.accumulateAndGet(inFlight.incrementAndGet(), Math::max);
+          }
+          return attempt(execution)
+        .onErrorResume(error -> {
+          log.warn("Model Sync infrastructure error: {}", error.getClass().getSimpleName());
+          return Mono.just(WorkerTickResult.FAILED);
+        })
+        .doOnNext(result -> {
+          if (result == WorkerTickResult.EMPTY) empty.incrementAndGet();
+          else if (result == WorkerTickResult.DEFERRED) deferred.incrementAndGet();
+          else if (result == WorkerTickResult.FAILED) failed.incrementAndGet();
+          else fetched.incrementAndGet();
+        })
+        .doFinally(signal -> {
+          synchronized (operations) {
+            execution.closed = true;
+            inFlight.decrementAndGet();
+            if (signal == SignalType.CANCEL) cancelled.incrementAndGet();
+            operations.notifyAll();
+          }
+        });
+        });
+  }
+
+  Flux<WorkerTickResult> lane() {
+    WorkerPacing pacing = new WorkerPacing(productiveDelay, poll, maximumIdle);
+    return Mono.defer(this::trackedAttempt)
+        .flatMap(result -> Mono.delay(pacing.after(result)).thenReturn(result))
+        .repeat(() -> !stopping);
+  }
+
+  /** A live snapshot; take interval endpoints after drain for exact scheduling accounting. */
+  public WorkerActivity activity() {
+    return new WorkerActivity(ticks.get(), empty.get(), deferred.get(), failed.get(), fetched.get(),
+        cancelled.get(), inFlight.get(), maximumInFlight.get());
+  }
+
+  private Mono<FetchResult<?>> fetch(PreparedSync<?> prepared, WorkerExecution execution) {
     if (prepared.binding().owner() instanceof BlockingOwner<?> owner) {
-      return Mono.<FetchResult<?>>fromCallable(() -> owner.fetch(prepared.request()))
+      return Mono.<FetchResult<?>>fromCallable(() -> physical(execution, () -> owner.fetch(prepared.request()), true))
           .subscribeOn(blockingOwner);
     }
     AsyncOwner<?> owner = (AsyncOwner<?>) prepared.binding().owner();
-    return Mono.defer(
-        () ->
-            Mono.fromFuture(owner.fetchAsync(prepared.request()).toCompletableFuture())
-                .map(result -> (FetchResult<?>) result));
+    return Mono.defer(() -> {
+      synchronized (operations) {
+        if (execution.closed) return Mono.empty();
+      physical.incrementAndGet();
+      }
+      if (!ownerCapacity.tryAcquire()) {
+        try { return Mono.error(new RetryLater(clock.instant().plus(poll))); }
+        finally { physicalDone(); }
+      }
+      try {
+        var future = owner.fetchAsync(prepared.request()).toCompletableFuture();
+        future.whenComplete((value, error) -> { ownerCapacity.release(); physicalDone(); });
+        // Cancelling a future can mark it complete while its transport is still active.
+        // Observe the owner's actual stage completion; never apply a cancelled late result.
+        return Mono.fromFuture(future, true).map(result -> (FetchResult<?>) result);
+      } catch (Throwable error) {
+        ownerCapacity.release(); physicalDone(); return Mono.error(error);
+      }
+    });
   }
+
+  private Optional<WorkLease> claim(WorkerExecution execution) throws Exception {
+    synchronized (operations) {
+      if (stopping || execution.closed) return Optional.empty();
+      physical.incrementAndGet();
+    }
+    try { return coordinator.claim(); }
+    finally { physicalDone(); }
+  }
+
+  private <T> T physical(WorkerExecution execution, Callable<T> operation, boolean owner) throws Exception {
+    synchronized (operations) {
+      if (execution.closed) throw new java.util.concurrent.CancellationException("Worker subscription already closed");
+    physical.incrementAndGet();
+    }
+    boolean permit = false;
+    try {
+      if (owner) {
+        permit = ownerCapacity.tryAcquire();
+        if (!permit) throw new RetryLater(clock.instant().plus(poll));
+      }
+      return operation.call();
+    }
+    finally {
+      if (permit) ownerCapacity.release();
+      physicalDone();
+    }
+  }
+
+  private void physicalDone() {
+    physical.decrementAndGet();
+    synchronized (operations) { operations.notifyAll(); }
+  }
+
+  /** Live tracked callables/stages; an arbitrary owner must also define transport release. */
+  public int physicalOperations() { return physical.get(); }
+
+  /** Immutable snapshot taken at the last bounded stop decision. */
+  public WorkerShutdown shutdown() { return shutdown; }
 
   @Override
   public synchronized void start() {
     if (running) return;
+    if (inFlight.get() != 0 || physical.get() != 0)
+      throw new IllegalStateException("Previous Model Sync operations have not drained");
+    stopping = false;
     running = true;
     subscription =
         Flux.range(0, concurrency)
             .flatMap(
-                lane ->
-                    Mono.defer(this::tick)
-                        .onErrorResume(
-                            error -> {
-                              log.warn(
-                                  "Model Sync infrastructure error: {}",
-                                  error.getClass().getSimpleName());
-                              return Mono.just(false);
-                            })
-                        .delayElement(poll)
-                        .repeat(),
+                lane -> lane().contextWrite(context -> context.put("modelsync.worker.lane", lane)),
                 concurrency)
             .subscribe(
                 ignored -> {},
@@ -105,8 +253,25 @@ public final class ReactorSyncWorker implements SmartLifecycle {
 
   @Override
   public synchronized void stop() {
-    running = false;
+    long began = System.nanoTime();
+    long remaining = shutdownTimeout.toNanos();
+    synchronized (operations) {
+      stopping = true;
+      running = false;
+      while ((inFlight.get() != 0 || physical.get() != 0) && remaining > 0) {
+        try { TimeUnit.NANOSECONDS.timedWait(operations, remaining); }
+        catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); break; }
+        remaining = shutdownTimeout.toNanos() - (System.nanoTime() - began);
+      }
+      shutdown = new WorkerShutdown(inFlight.get() == 0 && physical.get() == 0
+          ? WorkerShutdownStatus.DRAINED : WorkerShutdownStatus.TIMED_OUT,
+          TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - began), inFlight.get(), physical.get(),
+          concurrency - ownerCapacity.availablePermits());
+    }
     if (subscription != null) subscription.dispose();
+    if (shutdown.status() == WorkerShutdownStatus.TIMED_OUT)
+      log.warn("Model Sync stop timed out: logical={}, physical={}, owners={}",
+          shutdown.logicalInFlight(), shutdown.physicalOperations(), shutdown.ownerOperations());
   }
 
   @Override

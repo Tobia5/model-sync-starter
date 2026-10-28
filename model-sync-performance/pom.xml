@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/xsd/maven-4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent><groupId>io.modelsync</groupId><artifactId>model-sync-parent</artifactId><version>0.2.0-SNAPSHOT</version></parent>
+  <artifactId>model-sync-performance</artifactId>
+  <properties><maven.deploy.skip>true</maven.deploy.skip><maven.install.skip>true</maven.install.skip></properties>
+  <dependencies>
+    <dependency><groupId>io.modelsync</groupId><artifactId>model-sync-core</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>io.modelsync</groupId><artifactId>model-sync-testkit</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>io.gatling.highcharts</groupId><artifactId>gatling-charts-highcharts</artifactId><version>3.13.1</version><scope>test</scope></dependency>
+    <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit</artifactId><version>1.5.0</version><scope>test</scope></dependency>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
+  </dependencies>
+  <profiles><profile><id>full</id><build><plugins>
+    <plugin><groupId>org.codehaus.mojo</groupId><artifactId>exec-maven-plugin</artifactId><version>3.5.0</version>
+      <executions><execution><id>reject-missing-full-evidence</id><phase>verify</phase><goals><goal>exec</goal></goals>
+        <configuration><executable>python</executable><workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+          <arguments><argument>scripts/check-full-reports.py</argument></arguments>
+        </configuration>
+      </execution></executions>
+    </plugin>
+    <plugin><groupId>io.gatling</groupId><artifactId>gatling-maven-plugin</artifactId><version>4.11.0</version>
+      <configuration><workingDirectory>${project.basedir}</workingDirectory></configuration>
+      <executions>
+        <execution><id>fresh-visits</id><phase>integration-test</phase><goals><goal>test</goal></goals><configuration><simulationClass>io.modelsync.performance.FreshVisitsSimulation</simulationClass></configuration></execution>
+        <execution><id>hot-key</id><phase>integration-test</phase><goals><goal>test</goal></goals><configuration><simulationClass>io.modelsync.performance.HotKeySimulation</simulationClass></configuration></execution>
+        <execution><id>unsafe-values</id><phase>integration-test</phase><goals><goal>test</goal></goals><configuration><simulationClass>io.modelsync.performance.UnsafeValueSimulation</simulationClass></configuration></execution>
+        <execution><id>event-job-visit</id><phase>integration-test</phase><goals><goal>test</goal></goals><configuration><simulationClass>io.modelsync.performance.EventJobVisitSimulation</simulationClass></configuration></execution>
+        <execution><id>cooldown-recovery</id><phase>integration-test</phase><goals><goal>test</goal></goals><configuration><simulationClass>io.modelsync.performance.CooldownRecoverySimulation</simulationClass></configuration></execution>
+        <execution><id>leases-ledger</id><phase>integration-test</phase><goals><goal>test</goal></goals><configuration><simulationClass>io.modelsync.performance.LeasesLedgerSimulation</simulationClass></configuration></execution>
+      </executions>
+    </plugin>
+  </plugins></build></profile></profiles>
+</project>

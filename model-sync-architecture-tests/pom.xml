@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent><groupId>io.modelsync</groupId><artifactId>model-sync-parent</artifactId><version>0.2.0-SNAPSHOT</version></parent>
+  <artifactId>model-sync-architecture-tests</artifactId>
+  <properties><maven.deploy.skip>true</maven.deploy.skip><maven.install.skip>true</maven.install.skip></properties>
+  <dependencies>
+    <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit</artifactId><version>1.5.0</version><scope>test</scope></dependency>
+    <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.springframework</groupId><artifactId>spring-beans</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>jakarta.persistence</groupId><artifactId>jakarta.persistence-api</artifactId><scope>test</scope></dependency>
+  </dependencies>
+  <build><plugins><plugin><groupId>org.codehaus.mojo</groupId><artifactId>exec-maven-plugin</artifactId><version>3.5.0</version>
+    <executions><execution><id>require-default-reports</id><phase>verify</phase><goals><goal>exec</goal></goals>
+      <configuration><executable>python</executable><workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+        <arguments><argument>scripts/check-test-reports.py</argument></arguments>
+      </configuration>
+    </execution></executions>
+  </plugin></plugins></build>
+</project>

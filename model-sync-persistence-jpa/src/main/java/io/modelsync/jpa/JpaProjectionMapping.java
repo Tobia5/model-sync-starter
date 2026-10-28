@@ -1,4 +1,6 @@
 package io.modelsync.jpa;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
 import jakarta.persistence.*;

@@ -1,4 +1,6 @@
 package io.modelsync.jdbc;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import java.time.*;
 import org.springframework.jdbc.core.JdbcTemplate;

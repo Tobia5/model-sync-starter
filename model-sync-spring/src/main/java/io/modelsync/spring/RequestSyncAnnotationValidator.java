@@ -1,4 +1,6 @@
 package io.modelsync.spring;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.config.BeanPostProcessor;

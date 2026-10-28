@@ -1,4 +1,6 @@
 package io.modelsync.reactor;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -1,0 +1,405 @@
+{
+  "run_id": "751ea112-4068-48a0-97fc-c12605a59802",
+  "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "source_sha": "a0f46d7a6f188263f8822e3ad728e1894076871a",
+  "source_tree": "0382fbeb887e3b3c2a55533f8ebc65cf522acb51",
+  "started_ns": 1793010772664313200,
+  "scope": "named-configuration-only",
+  "qualification_target": "oracle26-nowait-ledger-first-v1",
+  "default_run_id": "c965b470-292f-4346-b739-00048a7163f5",
+  "default_status": "PASS",
+  "default_junit": 222,
+  "default_python": 102,
+  "default_xml": 41,
+  "full_status": "PASS",
+  "original_exits": {
+    "default_build": 0,
+    "default_qualification": 0,
+    "default_audit": 0,
+    "default_collection": 0,
+    "full_wrapper": 0,
+    "full_maven": 0,
+    "full_qualification": 0,
+    "full_collection": 0
+  },
+  "full_surefire_tests": 224,
+  "full_surefire_xml": 43,
+  "oracle_methods": 83,
+  "oracle_suites": 18,
+  "worker_phases": [
+    {
+      "name": "fixed-productive",
+      "status": "PASS",
+      "elapsed_ms": 16381,
+      "completed_syncs": 160,
+      "owner_calls": 160,
+      "ticks": 223,
+      "empty": 63,
+      "session_attribution": "VALID"
+    },
+    {
+      "name": "fixed-empty",
+      "status": "PASS",
+      "elapsed_ms": 4013,
+      "completed_syncs": 0,
+      "owner_calls": 0,
+      "ticks": 60,
+      "empty": 60,
+      "session_attribution": "VALID"
+    },
+    {
+      "name": "bounded-productive",
+      "status": "PASS",
+      "elapsed_ms": 9904,
+      "completed_syncs": 160,
+      "owner_calls": 160,
+      "ticks": 206,
+      "empty": 46,
+      "session_attribution": "VALID"
+    },
+    {
+      "name": "bounded-empty",
+      "status": "PASS",
+      "elapsed_ms": 4014,
+      "completed_syncs": 0,
+      "owner_calls": 0,
+      "ticks": 16,
+      "empty": 16,
+      "session_attribution": "VALID"
+    },
+    {
+      "name": "bounded-future",
+      "status": "PASS",
+      "elapsed_ms": 4015,
+      "completed_syncs": 0,
+      "owner_calls": 0,
+      "ticks": 16,
+      "empty": 16,
+      "session_attribution": "VALID"
+    },
+    {
+      "name": "future-becomes-due",
+      "status": "PASS",
+      "elapsed_ms": 895,
+      "completed_syncs": 1,
+      "owner_calls": 1,
+      "ticks": 4,
+      "empty": 3,
+      "session_attribution": "VALID",
+      "wakeup_latency_upper_ms": 395
+    },
+    {
+      "name": "local-urgent",
+      "status": "PASS",
+      "elapsed_ms": 894,
+      "completed_syncs": 1,
+      "owner_calls": 1,
+      "ticks": 4,
+      "empty": 3,
+      "session_attribution": "VALID",
+      "wakeup_latency_upper_ms": 894
+    },
+    {
+      "name": "independent-process-urgent",
+      "status": "PASS",
+      "elapsed_ms": 1918,
+      "completed_syncs": 1,
+      "owner_calls": 1,
+      "ticks": 8,
+      "empty": 7,
+      "session_attribution": "VALID",
+      "wakeup_latency_upper_ms": 809
+    },
+    {
+      "name": "cooldown-independent-owner-and-recovery",
+      "status": "PASS",
+      "elapsed_ms": 5848,
+      "completed_syncs": 1,
+      "owner_calls": 1,
+      "ticks": 29,
+      "empty": 27,
+      "session_attribution": "VALID",
+      "other_owner_wakeup_ms": 39,
+      "recovery_wakeup_upper_ms": 859
+    },
+    {
+      "name": "cooldown-expires",
+      "status": "PASS",
+      "elapsed_ms": 2951,
+      "completed_syncs": 2,
+      "owner_calls": 2,
+      "ticks": 21,
+      "empty": 19,
+      "session_attribution": "VALID",
+      "wakeup_latency_upper_ms": 826
+    }
+  ],
+  "worker_trace_property": "ABSENT_DEFAULT_FALSE",
+  "historical_worker_timeout": "FAILED_UNEXPLAINED",
+  "pacing_or_criterion_change": false,
+  "pit": {
+    "counts": {
+      "KILLED": 167,
+      "SURVIVED": 1
+    },
+    "generated": 168,
+    "html": true,
+    "killed_over_generated_percent": 99.4,
+    "status": "PASS"
+  },
+  "gatling_requests": 367,
+  "gatling_errors": 0,
+  "gatling_scenarios": 6,
+  "cleanup": "INDEPENDENTLY_VERIFIED",
+  "production": "NO_GO",
+  "prior_archives_unchanged": 20,
+  "oracle_inventory": [
+    {
+      "module": "model-sync-persistence-jdbc",
+      "class": "OracleSmokeIT",
+      "tests": 1,
+      "status": "PASS",
+      "methods": [
+        "claimAndFencingOnOracle"
+      ],
+      "time_seconds": "0.737"
+    },
+    {
+      "module": "model-sync-persistence-jdbc",
+      "class": "OracleConcurrencyIT",
+      "tests": 3,
+      "status": "PASS",
+      "methods": [
+        "reclaimedLeaseRejectsOldToken",
+        "competingConnectionsCoalesceOneLogicalWorkItem",
+        "hintsNeverSpendPermitsAndIndependentGatesStillSerialize"
+      ],
+      "time_seconds": "1.462"
+    },
+    {
+      "module": "model-sync-persistence-jdbc",
+      "class": "OracleMigrationIT",
+      "tests": 1,
+      "status": "PASS",
+      "methods": [
+        "v1ToV2PreservesWaitingAndDeadEvidence"
+      ],
+      "time_seconds": "4.693"
+    },
+    {
+      "module": "model-sync-persistence-jdbc",
+      "class": "OracleScaleIT",
+      "tests": 1,
+      "status": "PASS",
+      "methods": [
+        "dueLedgerClaimHasMeasuredDatabaseWork"
+      ],
+      "time_seconds": "720.878"
+    },
+    {
+      "module": "model-sync-persistence-jdbc",
+      "class": "OracleCapacityIT",
+      "tests": 1,
+      "status": "PASS",
+      "methods": [
+        "millionRecordReconciliationMeasuresCompletedWork"
+      ],
+      "time_seconds": "4492.105"
+    },
+    {
+      "module": "model-sync-persistence-jdbc",
+      "class": "OracleSelectionIT",
+      "tests": 11,
+      "status": "PASS",
+      "methods": [
+        "availableBindingProgressesPastDelayedEarlierWork",
+        "lockedPrefixDoesNotHideWorkBeyondDriverFetch",
+        "emptyAndFutureQueuesDoNotLease",
+        "recoveryAndWaitingBothProgressUnderRepeatedExpiry",
+        "waitingOrderAndFutureBoundaryArePreserved",
+        "lockedEarliestDoesNotHideLaterUnlockedWaiting",
+        "availableBindingsAlternateWithinOnePriority",
+        "simultaneousWorkersNeverClaimTheSameLease",
+        "filteringWaitingWorkNeverSuppressesRecovery",
+        "lockedEarliestRecoverySkipsToLaterExpiredLease",
+        "activeLeasesAndOtherPrioritiesAreNotClaimed"
+      ],
+      "time_seconds": "0.958"
+    },
+    {
+      "module": "model-sync-persistence-jdbc",
+      "class": "OracleOptimizationIT",
+      "tests": 1,
+      "status": "PASS",
+      "methods": [
+        "comparesIndependentChangesOnTheSameOraclePopulation"
+      ],
+      "time_seconds": "673.4"
+    },
+    {
+      "module": "model-sync-persistence-jdbc",
+      "class": "OracleCooldownIT",
+      "tests": 5,
+      "status": "PASS",
+      "methods": [
+        "durablePendingSurvivesForcedOwnedProcessTermination",
+        "heldQuotaReleaseWithinBudgetReusesAbsoluteDeadline",
+        "committedCooldownPrecedesFailedMetadataAndRecoveryDoesNotRefetch",
+        "duplicateInsertRefusalIsUnrecordedUntilCompetitorCommitOrRollback",
+        "budgetExhaustionRetainsSharedPendingAndOtherProviderProgress"
+      ],
+      "time_seconds": "2.716"
+    },
+    {
+      "module": "model-sync-sample",
+      "class": "OracleAtomicityIT",
+      "tests": 7,
+      "status": "PASS",
+      "methods": [
+        "successfulProjectionAndLedgerCommitTogether",
+        "failureAfterProjectionFlushRollsBackBoth",
+        "obsoleteLeaseCannotApplyProjectionOrLedger",
+        "failureDuringJdbcLedgerWriteRollsBackJpaFlush",
+        "changedLocalRevisionReschedulesWithoutOverwriting",
+        "failureAtSpringCompletionRollsBackBoth",
+        "failureInActualOracleCommitRollsBackBoth"
+      ],
+      "time_seconds": "10.407"
+    },
+    {
+      "module": "model-sync-sample",
+      "class": "NowaitOracleAtomicityIT",
+      "tests": 7,
+      "status": "PASS",
+      "methods": [
+        "successfulProjectionAndLedgerCommitTogether",
+        "failureAfterProjectionFlushRollsBackBoth",
+        "obsoleteLeaseCannotApplyProjectionOrLedger",
+        "failureDuringJdbcLedgerWriteRollsBackJpaFlush",
+        "changedLocalRevisionReschedulesWithoutOverwriting",
+        "failureAtSpringCompletionRollsBackBoth",
+        "failureInActualOracleCommitRollsBackBoth"
+      ],
+      "time_seconds": "16.599"
+    },
+    {
+      "module": "model-sync-sample",
+      "class": "OracleWorkerIT",
+      "tests": 1,
+      "status": "PASS",
+      "methods": [
+        "autoConfiguredWorkerPacesBacklogAndBoundsIdleRechecks"
+      ],
+      "time_seconds": "79.553"
+    },
+    {
+      "module": "model-sync-sample",
+      "class": "OracleRecoveryIT",
+      "tests": 6,
+      "status": "PASS",
+      "methods": [
+        "localRevisionAndOwnedFieldsSurviveCrash",
+        "crashAfterOwnerResponse",
+        "crashAfterDurableClaim",
+        "crashAfterRealProjectionFlush",
+        "newerRequestSurvivesCrashAndOldToken",
+        "crashAfterCommitBeforeObservedSuccess"
+      ],
+      "time_seconds": "77.469"
+    },
+    {
+      "module": "model-sync-sample",
+      "class": "OracleIoIT",
+      "tests": 11,
+      "status": "PASS",
+      "methods": [
+        "stalledLoginCleansUpItsPhysicalConnectionAttempt",
+        "unavailableDatabaseConnectionDoesNotWaitIndefinitely",
+        "boundedStopDoesNotCallALockedJpaOperationDrained",
+        "ownerSocketTimeoutEndsThePhysicalClientIndependentlyOfFetchTimeout",
+        "lostCommitAcknowledgementDoesNotLoseCommittedCompletion",
+        "gracefulStopDrainsARealOwnerSocketAndAtomicCompletion",
+        "lateOwnerCannotBecomeASuccessOrAFalseDrain",
+        "poolAcquisitionIsBoundedAndRecovers",
+        "databaseReadStallEndsPhysicalCallAndPoolRecovers",
+        "connectionLossBeforeCommitIsUncertainUntilFreshInspection",
+        "transactionDeadlineRollsBackEarlierWrites"
+      ],
+      "time_seconds": "18.942"
+    },
+    {
+      "module": "model-sync-sample",
+      "class": "OracleLockPolicyIT",
+      "tests": 7,
+      "status": "PASS",
+      "methods": [
+        "disabledPolicyKeepsCompatibleSqlAndSuccess",
+        "enabledProducerRefusalIsNeverAccepted",
+        "firstInsertsRemainOrdinaryAndUncontendedFunctionalityWorks",
+        "actualWorkerBoundsContentionRetriesWithoutForgettingOwnerReads",
+        "enabledSuccessRetainsRefreshGenerationFencingAndLocalRevision",
+        "resultRefusalRollsBackBeforeDurableRetryAndRespectsCooldown",
+        "lockedRetryMetadataIsReportedOnceAndLeavesLeaseRecoverable"
+      ],
+      "time_seconds": "7.285"
+    },
+    {
+      "module": "model-sync-sample",
+      "class": "OracleQuotaContentionIT",
+      "tests": 6,
+      "status": "PASS",
+      "methods": [
+        "existingRegistrationAcrossInstancesDoesNotChangeAdmissionOrSpacing",
+        "failedCooldownAfterOwnerReadPropagatesOnceAndKeepsRecoverableLease",
+        "heldAdmissionRefusesRepeatedlyWhileAnotherInstanceAndGroupContinue",
+        "compatibleDefaultStillCommitsSharedAdmissionAndCooldown",
+        "heldCooldownIsNotReportedPersistedAndNeverShortensPriorCooldown",
+        "coordinatorNeverCallsOwnerWithoutCommittedAdmissionAndRecovers"
+      ],
+      "time_seconds": "6.872"
+    },
+    {
+      "module": "model-sync-sample",
+      "class": "OracleFirstCreationIT",
+      "tests": 12,
+      "status": "PASS",
+      "methods": [
+        "nativeWorkCommit",
+        "firstProjectionAndStateRollbackAreFenced",
+        "defaultWorkCommit",
+        "firstProjectionAndStateCommitAreFenced",
+        "defaultWorkRollback",
+        "nativeQuotaRollback",
+        "nativeQuotaCommit",
+        "nativeWorkRollback",
+        "defaultQuotaRollback",
+        "nativePassiveCreationCommit",
+        "nativePassiveCreationRollback",
+        "defaultQuotaCommit"
+      ],
+      "time_seconds": "12.753"
+    },
+    {
+      "module": "model-sync-sample",
+      "class": "OracleQualificationTargetIT",
+      "tests": 1,
+      "status": "PASS",
+      "methods": [
+        "namedTargetConsumesEveryPolicyAndQualifiedMapping"
+      ],
+      "time_seconds": "0.718"
+    },
+    {
+      "module": "model-sync-sample",
+      "class": "OracleCooldownWorkerIT",
+      "tests": 1,
+      "status": "PASS",
+      "methods": [
+        "pendingPublicationDoesNotLoseLanesAndIndependentProviderCompletes"
+      ],
+      "time_seconds": "2.311"
+    }
+  ],
+  "historical_cancellation": "FAILED",
+  "current_characterization": "NOT_RUN"
+}

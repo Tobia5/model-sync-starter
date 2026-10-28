@@ -1,0 +1,7 @@
+{
+  "category": "LOCAL_CONTENTION",
+  "exception_type": "io.modelsync.core.port.LocalContention",
+  "sql_state": "61000",
+  "vendor_code": 54,
+  "truncated": false
+}

@@ -1,0 +1,12 @@
+package io.modelsync.core.port;
+
+import io.modelsync.core.*;
+import io.modelsync.core.domain.*;
+
+/**
+ * Typed dataset-reading extension point for Vista-style analytical sources.
+ *
+ * <p>No vendor protocol, transport, or authentication mechanism is assumed by the core library.
+ */
+@FunctionalInterface
+public interface VistaPort extends DatasetReader {}

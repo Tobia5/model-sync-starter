@@ -1,0 +1,37 @@
+{
+  "source_sha": "25297fd61724b22cc1c63f2ce098a410f584a1dc",
+  "source_tree": "56967533013048be55e65a8a8a901e61ab18b6fb",
+  "qualification_target": "oracle26-nowait-ledger-first-v1",
+  "claim_scope": "named-configuration-only",
+  "run_id": "5fa399f7-2adb-44be-8e57-c89962f1b8b0",
+  "pit_version": "1.25.9",
+  "junit_provider": "pitest-junit5-plugin 1.2.3",
+  "junit_platform": "6.0.3",
+  "threshold_percent": 85,
+  "score_definition": "100 * KILLED / all generated mutations",
+  "counts": {
+    "KILLED": 165,
+    "SURVIVED": 1,
+    "NO_COVERAGE": 0,
+    "TIMED_OUT": 0,
+    "RUN_ERROR": 0,
+    "UNKNOWN": 0
+  },
+  "generated": 166,
+  "score_percent": 99.39759036144578,
+  "exclusions": [],
+  "scope_manifest": "source-contracts/model-sync-testkit/pom.xml",
+  "reviews": [
+    {
+      "status": "SURVIVED",
+      "class": "io.modelsync.core.domain.FreshnessPolicy",
+      "method": "<init>",
+      "line": 19,
+      "mutator": "org.pitest.mutationtest.engine.gregor.mutators.VoidMethodCallMutator",
+      "description": "removed call to io/modelsync/core/domain/FreshnessPolicy::positive",
+      "reason": "Rechecked current source line19: removing positive(maxAge) retains the positive(refreshAfter) and refreshAfter <= maxAge constraints. Nonpositive maxAge still fails that ordering; null still throws NullPointerException in compareTo. This is the previously reviewed equivalent constructor validation, not an exclusion. It remains in the denominator."
+    }
+  ],
+  "mutation_status": "PASS",
+  "full_qualification": "FAILED"
+}

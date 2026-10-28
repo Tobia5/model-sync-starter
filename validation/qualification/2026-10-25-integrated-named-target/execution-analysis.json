@@ -1,0 +1,117 @@
+{
+  "source_sha": "09f371cc013641a7723e7c355cb58cc86e04b666",
+  "source_tree": "43135c799934192b8a3b5b14da6f3fc4b01cba89",
+  "qualification_target": "oracle26-nowait-ledger-first-v1",
+  "claim_scope": "named-configuration-only",
+  "default": {
+    "run_id": "4c0e79ad-253c-4c96-9256-3f364c5e7abe",
+    "attempt_id": "2057251d-80d7-4af8-b836-7f091c8b33e7",
+    "command": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd -B -ntp -s .mvn/qualification-central.settings.xml clean verify",
+    "status": "PASS",
+    "build_exit": 0,
+    "qualification_exit": 0,
+    "collection_exit": 0,
+    "execution_audit_exit": 0,
+    "elapsed_seconds": 185.023,
+    "junit": {
+      "tests": 156,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "files": 34
+    },
+    "python_tests": 84,
+    "python_elapsed_seconds": 133.66
+  },
+  "full": {
+    "source_sha": "09f371cc013641a7723e7c355cb58cc86e04b666",
+    "source_tree": "43135c799934192b8a3b5b14da6f3fc4b01cba89",
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attempt_id": "ae8cf055-7e4f-4b1a-a7d4-57a7852d40a5",
+    "scope": "full resource admission only; no provisioning or Maven full execution",
+    "qualification_target": "oracle26-nowait-ledger-first-v1",
+    "admission_command": "python ../qualification-evidence/integrated-named-target-20261025/full_capacity.py",
+    "admission_exit": 2,
+    "full_wrapper_command": "python scripts/full-oracle-container.py",
+    "full_wrapper_status": "NOT_RUN",
+    "full_wrapper_exit": null,
+    "full_maven_exit": null,
+    "qualification_exit": null,
+    "full_qualification": "BLOCKED",
+    "container_created": false,
+    "volume_created": false,
+    "cleanup": "NO_RESOURCES_CREATED; full wrapper not invoked",
+    "independent_cancellation_current": "NOT_RUN",
+    "independent_cancellation_historical": "FAILED",
+    "blocker": "Host available11.115/11.224/11.046 GiB below unchanged18 GiB full planning budget; no resource-admission retry",
+    "collector_exit": 0
+  },
+  "admission": {
+    "source_sha": "09f371cc013641a7723e7c355cb58cc86e04b666",
+    "source_tree": "43135c799934192b8a3b5b14da6f3fc4b01cba89",
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "attempt_id": "ae8cf055-7e4f-4b1a-a7d4-57a7852d40a5",
+    "observed_utc": "2026-10-25T08:02:36.256346+00:00",
+    "scope": "one integrated named-target full qualification",
+    "oracle_budget_gib": 6,
+    "maven_pit_gatling_runtime_budget_gib": 8,
+    "reserve_gib": 4,
+    "required_host_available_gib": 18,
+    "full_pipeline_required_host_available_gib": 18,
+    "full_pipeline_explicit": true,
+    "budget_unchanged": true,
+    "oracle_cpu_cap": 4,
+    "resource_change": "no cap increase, unrelated resource or global setting change",
+    "samples": [
+      {
+        "observed_utc": "2026-10-25T08:02:36.8387642Z",
+        "host_available_gib": 11.115
+      },
+      {
+        "observed_utc": "2026-10-25T08:02:40.3954802Z",
+        "host_available_gib": 11.224
+      },
+      {
+        "observed_utc": "2026-10-25T08:02:44.0414192Z",
+        "host_available_gib": 11.046
+      }
+    ],
+    "docker": {
+      "server": "29.8.2",
+      "cpu": 8,
+      "memory_bytes": 25201692672,
+      "running_containers": 4,
+      "observed_container_memory_gib": 3.547,
+      "unallocated_container_capacity_gib": 19.924
+    },
+    "disk_free_gib": [
+      {
+        "drive": "C",
+        "free_gib": 82.491
+      },
+      {
+        "drive": "D",
+        "free_gib": 1069.961
+      }
+    ],
+    "status": "BLOCKED",
+    "exit": 2
+  },
+  "required_oracle_methods": 77,
+  "required_oracle_suites": 16,
+  "oracle_status": "NOT_RUN",
+  "mutation_status": "NOT_RUN",
+  "gatling_status": "NOT_RUN",
+  "million_row_seed": "NOT_RUN",
+  "completed_syncs": "NOT_MEASURED",
+  "standalone_contracts": {
+    "core_assertions": 86,
+    "trigger_assertions": 43,
+    "exit": 0
+  },
+  "production_readiness": "NO_GO",
+  "historical_cancellation": "FAILED",
+  "current_characterization": "NOT_RUN",
+  "prior_archives_unchanged": 13,
+  "product_or_tooling_source_changed": false
+}

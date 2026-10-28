@@ -1,0 +1,23 @@
+{
+  "source": {
+    "run_id": "1afffb7d-52ca-4d4a-8857-23c3cefb8f4c",
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "fad6874c9fa0e0a16ed7d542cace11ea89a991e1",
+    "source_tree": "a530a260738510da84ed7f68fd26a8a75b803d67",
+    "started_ns": 1792619501597257400
+  },
+  "sha256": "af3434238eafdd9f3064012a5d41bf7012c19499e02146fadff7072129afe7aa",
+  "bytes": 3607197,
+  "files": 758,
+  "components": 13,
+  "secret_scan": {
+    "definition": "UTF8/UTF16/nested ZIP generated48hex and nonempty sensitive XML properties",
+    "scanned": 756,
+    "findings": []
+  },
+  "baseline_hashes": {
+    "2026-10-20": "ab7ff892a1d8ceafab878deb977d1eacb7becf53bdca5f3dab71ef06eebbf92c",
+    "2026-10-21-atomicity-queue": "4805e6f2a1aa111cd280f29ccdcc06a106f1112d473b11ff08b470c8230343cd",
+    "2026-10-21-queue-optimization": "e4c2878e674a9331dfda4d6dd89dd8bc97b8f5b5d42554869611323cfed5c4ff"
+  }
+}

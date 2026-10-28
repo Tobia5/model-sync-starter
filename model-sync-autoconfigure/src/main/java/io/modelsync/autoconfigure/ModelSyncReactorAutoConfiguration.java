@@ -1,4 +1,6 @@
 package io.modelsync.autoconfigure;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
 import io.modelsync.reactor.*;
@@ -42,9 +44,11 @@ public class ModelSyncReactorAutoConfiguration {
   ReactorSyncWorker modelSyncWorker(
       SyncCoordinator coordinator,
       ModelSyncProperties p,
+      @Qualifier("modelSyncClock") java.time.Clock clock,
       @Qualifier("modelSyncPersistenceScheduler") Scheduler persistence,
       @Qualifier("modelSyncOwnerScheduler") Scheduler owner) {
     return new ReactorSyncWorker(
-        coordinator, persistence, owner, p.getConcurrency(), p.getPollInterval());
+        coordinator, persistence, owner, p.getConcurrency(), p.getPollInterval(),
+        p.getProductiveInterval(), p.getMaxIdleInterval(), p.getShutdownTimeout(), clock);
   }
 }

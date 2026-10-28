@@ -1,0 +1,307 @@
+{
+  "artifacts": [
+    {
+      "bytes": 8946,
+      "path": "io/modelsync/model-sync-parent/0.2.0-SNAPSHOT/model-sync-parent-0.2.0-SNAPSHOT.pom",
+      "sha256": "48a5fbfaac8e9b638648177cee4ecb9a7ed19f70d8180814b1dd0be8d2783a97"
+    },
+    {
+      "bytes": 665,
+      "path": "io/modelsync/model-sync-core/0.2.0-SNAPSHOT/model-sync-core-0.2.0-SNAPSHOT.pom",
+      "sha256": "594d8540bc08dd5105b67fc85e9a7672d67af160ec27719d61c797efd64270ba"
+    },
+    {
+      "bytes": 90865,
+      "path": "io/modelsync/model-sync-core/0.2.0-SNAPSHOT/model-sync-core-0.2.0-SNAPSHOT.jar",
+      "sha256": "36faedefcf075518d6c4e607ef5406c8c0e3449e6d3a7e042fc24c88d30c503e"
+    },
+    {
+      "bytes": 50902,
+      "path": "io/modelsync/model-sync-core/0.2.0-SNAPSHOT/model-sync-core-0.2.0-SNAPSHOT-sources.jar",
+      "sha256": "c5b74c56dc938079f94b331224a29bccbcbd6d451763361d2658e86a87b5d23e"
+    },
+    {
+      "bytes": 470214,
+      "path": "io/modelsync/model-sync-core/0.2.0-SNAPSHOT/model-sync-core-0.2.0-SNAPSHOT-javadoc.jar",
+      "sha256": "9cc8a1c48b0315368f34c5dae96a58d4e484c3c06c0f8331470b3bd63a81149c"
+    },
+    {
+      "bytes": 1537,
+      "path": "io/modelsync/model-sync-spring/0.2.0-SNAPSHOT/model-sync-spring-0.2.0-SNAPSHOT.pom",
+      "sha256": "76679352036c001aef2aee062e0eb4d58aab6ecfd3b7f596d2de8e87d1e4cb6d"
+    },
+    {
+      "bytes": 15217,
+      "path": "io/modelsync/model-sync-spring/0.2.0-SNAPSHOT/model-sync-spring-0.2.0-SNAPSHOT.jar",
+      "sha256": "b16615150762f06d99cc20cb9450a5bd6e2d78cfa97233b5782b613edc693aae"
+    },
+    {
+      "bytes": 10421,
+      "path": "io/modelsync/model-sync-spring/0.2.0-SNAPSHOT/model-sync-spring-0.2.0-SNAPSHOT-sources.jar",
+      "sha256": "1e2d065ef051b4241ef5c6a0d6f6f82affdde78ca7c830b531448f4e879d5047"
+    },
+    {
+      "bytes": 127031,
+      "path": "io/modelsync/model-sync-spring/0.2.0-SNAPSHOT/model-sync-spring-0.2.0-SNAPSHOT-javadoc.jar",
+      "sha256": "c1411589b1955c1ecebb8a74d8bfc6928584b5d184156c797312cf9ae5e965bc"
+    },
+    {
+      "bytes": 956,
+      "path": "io/modelsync/model-sync-persistence-jpa/0.2.0-SNAPSHOT/model-sync-persistence-jpa-0.2.0-SNAPSHOT.pom",
+      "sha256": "c8e009c9851c7712323e673c18cbb771b46c63c9b435bbef8d5b97e1e5c49b5b"
+    },
+    {
+      "bytes": 7066,
+      "path": "io/modelsync/model-sync-persistence-jpa/0.2.0-SNAPSHOT/model-sync-persistence-jpa-0.2.0-SNAPSHOT.jar",
+      "sha256": "022b420a309954f59ba37e153da0f80cfaf8f37fac322a80e46d6793d1855cca"
+    },
+    {
+      "bytes": 5168,
+      "path": "io/modelsync/model-sync-persistence-jpa/0.2.0-SNAPSHOT/model-sync-persistence-jpa-0.2.0-SNAPSHOT-sources.jar",
+      "sha256": "939354970d78e52c1323c3de8d7f0e7fa33b866f018d2ac491e6a3a6e191da5a"
+    },
+    {
+      "bytes": 103761,
+      "path": "io/modelsync/model-sync-persistence-jpa/0.2.0-SNAPSHOT/model-sync-persistence-jpa-0.2.0-SNAPSHOT-javadoc.jar",
+      "sha256": "e9ee502af54f566b6578e51f72452cad99a26e93ef772e4f02116c64d3d83de0"
+    },
+    {
+      "bytes": 2100,
+      "path": "io/modelsync/model-sync-persistence-jdbc/0.2.0-SNAPSHOT/model-sync-persistence-jdbc-0.2.0-SNAPSHOT.pom",
+      "sha256": "1d3144b25d2a92dd660348c14cf9077e12f4bf62204ae7f4be210cda36c7590f"
+    },
+    {
+      "bytes": 43896,
+      "path": "io/modelsync/model-sync-persistence-jdbc/0.2.0-SNAPSHOT/model-sync-persistence-jdbc-0.2.0-SNAPSHOT.jar",
+      "sha256": "37ea0e04d46194fa10e5d1c720e885486de7310826753347e0c89a2f3577e76d"
+    },
+    {
+      "bytes": 25074,
+      "path": "io/modelsync/model-sync-persistence-jdbc/0.2.0-SNAPSHOT/model-sync-persistence-jdbc-0.2.0-SNAPSHOT-sources.jar",
+      "sha256": "5f4b8021faf557022ac8fd3a027b3daac48f5d625672083fda7bb6088aee3980"
+    },
+    {
+      "bytes": 134572,
+      "path": "io/modelsync/model-sync-persistence-jdbc/0.2.0-SNAPSHOT/model-sync-persistence-jdbc-0.2.0-SNAPSHOT-javadoc.jar",
+      "sha256": "c3446ed8586d0e53625fd42198b8a952a6cd2391857b2873f12057bc21e21c16"
+    },
+    {
+      "bytes": 960,
+      "path": "io/modelsync/model-sync-rest/0.2.0-SNAPSHOT/model-sync-rest-0.2.0-SNAPSHOT.pom",
+      "sha256": "7154cefb5c95d01010f83819bb5c8c50a5d05c04c654c2732fdf94774a5c8150"
+    },
+    {
+      "bytes": 4278,
+      "path": "io/modelsync/model-sync-rest/0.2.0-SNAPSHOT/model-sync-rest-0.2.0-SNAPSHOT.jar",
+      "sha256": "a19bc14852b9cd5c460b7751b5b7beea8d2c3cab0441d7f9eab7f73295b11f40"
+    },
+    {
+      "bytes": 2770,
+      "path": "io/modelsync/model-sync-rest/0.2.0-SNAPSHOT/model-sync-rest-0.2.0-SNAPSHOT-sources.jar",
+      "sha256": "d0666d9130cd5e9ece0a8654135ac6ee5b2c255751abb8e755d0ba3ef4e996f8"
+    },
+    {
+      "bytes": 86929,
+      "path": "io/modelsync/model-sync-rest/0.2.0-SNAPSHOT/model-sync-rest-0.2.0-SNAPSHOT-javadoc.jar",
+      "sha256": "0222560683c698151220716265a000c5b5cf5f4b4e523f26b862bb58f1272f1e"
+    },
+    {
+      "bytes": 1560,
+      "path": "io/modelsync/model-sync-reactor/0.2.0-SNAPSHOT/model-sync-reactor-0.2.0-SNAPSHOT.pom",
+      "sha256": "09f42f7e070e829f7ab1f20e2fc3f25e3f0881371775ad0698fe1dac29258cab"
+    },
+    {
+      "bytes": 21399,
+      "path": "io/modelsync/model-sync-reactor/0.2.0-SNAPSHOT/model-sync-reactor-0.2.0-SNAPSHOT.jar",
+      "sha256": "e1883184780a378ffd108850d5ca54c244104fc0d2732bbd9cb8144ecc319115"
+    },
+    {
+      "bytes": 10028,
+      "path": "io/modelsync/model-sync-reactor/0.2.0-SNAPSHOT/model-sync-reactor-0.2.0-SNAPSHOT-sources.jar",
+      "sha256": "26708986a022900b5c065a387a4ab5434bb99b75ab629d8f3b965ef80ac72510"
+    },
+    {
+      "bytes": 125341,
+      "path": "io/modelsync/model-sync-reactor/0.2.0-SNAPSHOT/model-sync-reactor-0.2.0-SNAPSHOT-javadoc.jar",
+      "sha256": "bf32670e6eaa0728108df973e83601a403ffdd91ae76332d3913488834c144ff"
+    },
+    {
+      "bytes": 941,
+      "path": "io/modelsync/model-sync-webclient/0.2.0-SNAPSHOT/model-sync-webclient-0.2.0-SNAPSHOT.pom",
+      "sha256": "8834aafe07e9f6628d84b96ba5b2ab2a31fe232ff132fd9ace0e7be6c5d06566"
+    },
+    {
+      "bytes": 4356,
+      "path": "io/modelsync/model-sync-webclient/0.2.0-SNAPSHOT/model-sync-webclient-0.2.0-SNAPSHOT.jar",
+      "sha256": "454bcd8f0ecf7017b8236c663054c43d9987e2f3aacd73d7ad61e2929e607a14"
+    },
+    {
+      "bytes": 2807,
+      "path": "io/modelsync/model-sync-webclient/0.2.0-SNAPSHOT/model-sync-webclient-0.2.0-SNAPSHOT-sources.jar",
+      "sha256": "2acc10fb25b3adc79052e4f5b588bce9cf141b2c71d3b1ccb973e02fe8d7572b"
+    },
+    {
+      "bytes": 87136,
+      "path": "io/modelsync/model-sync-webclient/0.2.0-SNAPSHOT/model-sync-webclient-0.2.0-SNAPSHOT-javadoc.jar",
+      "sha256": "eda82cc5d552e08a011ce6a0d34c05d81d648dab2810bf00f0fc2d8d1de723d4"
+    },
+    {
+      "bytes": 2763,
+      "path": "io/modelsync/model-sync-autoconfigure/0.2.0-SNAPSHOT/model-sync-autoconfigure-0.2.0-SNAPSHOT.pom",
+      "sha256": "ca89eba80705871ae954456f2f0ce51b60c8cc7709251189d4505e4d3c3145d6"
+    },
+    {
+      "bytes": 19080,
+      "path": "io/modelsync/model-sync-autoconfigure/0.2.0-SNAPSHOT/model-sync-autoconfigure-0.2.0-SNAPSHOT.jar",
+      "sha256": "2fc3ec7af833f425b1f7aa89afc2b11c89cc040488eade225af6b8b8fb61fa5c"
+    },
+    {
+      "bytes": 11516,
+      "path": "io/modelsync/model-sync-autoconfigure/0.2.0-SNAPSHOT/model-sync-autoconfigure-0.2.0-SNAPSHOT-sources.jar",
+      "sha256": "289b5cdebb9381cc43187d55ae40b3509bf18eb8a276165a336507f75f21abad"
+    },
+    {
+      "bytes": 130611,
+      "path": "io/modelsync/model-sync-autoconfigure/0.2.0-SNAPSHOT/model-sync-autoconfigure-0.2.0-SNAPSHOT-javadoc.jar",
+      "sha256": "98a507ce9f8f70f7c47f44ed35c8e69ff968c2ae0f09933772671fc169ce0174"
+    },
+    {
+      "bytes": 1187,
+      "path": "io/modelsync/model-sync-spring-boot-starter/0.2.0-SNAPSHOT/model-sync-spring-boot-starter-0.2.0-SNAPSHOT.pom",
+      "sha256": "ee77843b36ca7371dbc87e918e2f008f0ea2c3ffc408253557084133e34091fe"
+    },
+    {
+      "bytes": 1613,
+      "path": "io/modelsync/model-sync-spring-boot-starter/0.2.0-SNAPSHOT/model-sync-spring-boot-starter-0.2.0-SNAPSHOT.jar",
+      "sha256": "ae34651e034f0bb2c1a1b36a6320db52b5c53a3765f09833baf0e9fa4d42402e"
+    },
+    {
+      "bytes": 1857,
+      "path": "io/modelsync/model-sync-spring-boot-starter-oracle-jpa/0.2.0-SNAPSHOT/model-sync-spring-boot-starter-oracle-jpa-0.2.0-SNAPSHOT.pom",
+      "sha256": "c795cdb6678cb3648e5ada57c1951736f6fc67f49dd10739c9ce9da27e5af4bb"
+    },
+    {
+      "bytes": 1755,
+      "path": "io/modelsync/model-sync-spring-boot-starter-oracle-jpa/0.2.0-SNAPSHOT/model-sync-spring-boot-starter-oracle-jpa-0.2.0-SNAPSHOT.jar",
+      "sha256": "ff21bdd3dcf0f232cc32e06f723e3604815db1ec25f7a6816f46d05a1b6d2f6d"
+    },
+    {
+      "bytes": 1330,
+      "path": "io/modelsync/model-sync-spring-boot-starter-webclient/0.2.0-SNAPSHOT/model-sync-spring-boot-starter-webclient-0.2.0-SNAPSHOT.pom",
+      "sha256": "ade760f41c00c19b4c6b0bd62470aac60e9dc61bdbb808e5a0febb4298f6bcf6"
+    },
+    {
+      "bytes": 1701,
+      "path": "io/modelsync/model-sync-spring-boot-starter-webclient/0.2.0-SNAPSHOT/model-sync-spring-boot-starter-webclient-0.2.0-SNAPSHOT.jar",
+      "sha256": "05ce109824055b93860bfb118cb94181027df39ea93ea9989bd4ec04ee8b171d"
+    }
+  ],
+  "consumers": {
+    "mvc": {
+      "classpath_sha256": "65abe42ed797e109a91c2dc6484ce6d0e9b5d1d2008e2525ec9b57fa256f35e1",
+      "initial_repository": "empty except exact staged io.modelsync artifacts",
+      "prepare_command": [
+        "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+        "-B",
+        "-ntp",
+        "-s",
+        "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\.mvn\\qualification-central.settings.xml",
+        "-Dmaven.repo.local=D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-mvc",
+        "clean",
+        "test-compile",
+        "org.apache.maven.plugins:maven-dependency-plugin:3.8.1:tree",
+        "-DoutputType=json",
+        "-DoutputFile=target/dependency-tree.json",
+        "org.apache.maven.plugins:maven-dependency-plugin:3.8.1:build-classpath",
+        "-Dmdep.outputFile=target/classpath.txt",
+        "org.apache.maven.plugins:maven-dependency-plugin:3.8.1:go-offline",
+        "org.apache.maven.plugins:maven-dependency-plugin:3.8.1:get",
+        "-Dartifact=org.apache.maven.surefire:surefire-junit-platform:3.5.3"
+      ],
+      "prepare_ended_ns": 1793025361025348300,
+      "prepare_exit": 0,
+      "prepare_started_ns": 1793025306011665500,
+      "repository": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-mvc",
+      "resolved_modelsync": [
+        "model-sync-autoconfigure",
+        "model-sync-core",
+        "model-sync-persistence-jdbc",
+        "model-sync-persistence-jpa",
+        "model-sync-reactor",
+        "model-sync-rest",
+        "model-sync-spring",
+        "model-sync-spring-boot-starter",
+        "model-sync-spring-boot-starter-oracle-jpa"
+      ],
+      "sources": {
+        "pom.xml": "3d98b2ff6530cd990216fd645da7da938ee5bbdd80e7da74a4d62d71b2e4be89",
+        "src/main/java/example/consumer/ConsumerApplication.java": "26a939ff691fdf0963a9d206da227a75261769f98b98cf4ad07478f330811adb",
+        "src/main/java/example/consumer/ConsumerConfiguration.java": "6508996cf64078e974690ea27d89b85b8be5b07864ce9647d7f1a965be791ef0",
+        "src/main/java/example/consumer/ConsumerController.java": "1ff5eec6cc8ef32c976c5b914256a55bb8a3d897cba5edeb0f6ab96c6eddc2ce",
+        "src/main/java/example/consumer/ConsumerObservation.java": "6f30ab7fae3db43c86a60d18775d0c908abafd66326a508f8bc819b4fea94ea8",
+        "src/main/java/example/consumer/ItemEntity.java": "2b278c258c7530a922c05feb9b17d154bd306684e78f7864c22247137fc3bc18",
+        "src/main/java/example/consumer/ItemMapping.java": "52c02e85c91390ccbaa53167857ece248e7db2ff2b5d6ad6e30b543827927e42",
+        "src/main/java/example/consumer/ItemValue.java": "15b8ed8288883bd112b2b0400aa1f382fe0ed72652f8c819de0879042a8c2521",
+        "src/test/java/example/consumer/ConsumerJourneyTest.java": "bce5bd13511c00ddc8d82778bac485e2573dd1b28e14df88d9f4c57a1321624c",
+        "src/test/java/example/consumer/LocalOwner.java": "12cfeb224641cb005c6281d4093018454e9b05a6acb2261d5aff9ca49b55b25c"
+      }
+    },
+    "webflux": {
+      "classpath_sha256": "8caadf2ea8e59b3fd896b4aff14d4fcd88d58bc7378ae8313aa7c29f89230422",
+      "initial_repository": "empty except exact staged io.modelsync artifacts",
+      "prepare_command": [
+        "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+        "-B",
+        "-ntp",
+        "-s",
+        "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\.mvn\\qualification-central.settings.xml",
+        "-Dmaven.repo.local=D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-webflux",
+        "clean",
+        "test-compile",
+        "org.apache.maven.plugins:maven-dependency-plugin:3.8.1:tree",
+        "-DoutputType=json",
+        "-DoutputFile=target/dependency-tree.json",
+        "org.apache.maven.plugins:maven-dependency-plugin:3.8.1:build-classpath",
+        "-Dmdep.outputFile=target/classpath.txt",
+        "org.apache.maven.plugins:maven-dependency-plugin:3.8.1:go-offline",
+        "org.apache.maven.plugins:maven-dependency-plugin:3.8.1:get",
+        "-Dartifact=org.apache.maven.surefire:surefire-junit-platform:3.5.3"
+      ],
+      "prepare_ended_ns": 1793025430431349800,
+      "prepare_exit": 0,
+      "prepare_started_ns": 1793025361089364600,
+      "repository": "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\qualification-evidence\\independent-consumers-20261026-r1\\execution-r3\\m2-webflux",
+      "resolved_modelsync": [
+        "model-sync-autoconfigure",
+        "model-sync-core",
+        "model-sync-persistence-jdbc",
+        "model-sync-persistence-jpa",
+        "model-sync-reactor",
+        "model-sync-rest",
+        "model-sync-spring",
+        "model-sync-spring-boot-starter",
+        "model-sync-spring-boot-starter-oracle-jpa"
+      ],
+      "sources": {
+        "pom.xml": "b7c249ce115785c797b6079a958f6048b7e1998c5ed76e3c2f0d5f724cb413d3",
+        "src/main/java/example/consumer/ConsumerApplication.java": "26a939ff691fdf0963a9d206da227a75261769f98b98cf4ad07478f330811adb",
+        "src/main/java/example/consumer/ConsumerConfiguration.java": "6508996cf64078e974690ea27d89b85b8be5b07864ce9647d7f1a965be791ef0",
+        "src/main/java/example/consumer/ConsumerController.java": "ff0f48f72fa09f364373817a8c15ba66021ddeb732f08bc58a2c38df42f44e20",
+        "src/main/java/example/consumer/ConsumerObservation.java": "6f30ab7fae3db43c86a60d18775d0c908abafd66326a508f8bc819b4fea94ea8",
+        "src/main/java/example/consumer/ItemEntity.java": "2b278c258c7530a922c05feb9b17d154bd306684e78f7864c22247137fc3bc18",
+        "src/main/java/example/consumer/ItemMapping.java": "52c02e85c91390ccbaa53167857ece248e7db2ff2b5d6ad6e30b543827927e42",
+        "src/main/java/example/consumer/ItemValue.java": "15b8ed8288883bd112b2b0400aa1f382fe0ed72652f8c819de0879042a8c2521",
+        "src/test/java/example/consumer/ConsumerJourneyTest.java": "bce5bd13511c00ddc8d82778bac485e2573dd1b28e14df88d9f4c57a1321624c",
+        "src/test/java/example/consumer/LocalOwner.java": "12cfeb224641cb005c6281d4093018454e9b05a6acb2261d5aff9ca49b55b25c"
+      }
+    }
+  },
+  "producer": {
+    "run_id": "b3db2e0f-e56a-420f-b379-0d1e73f15eb0",
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "551427bed4d021339fcc32fef8f633232ff8deb8",
+    "source_tree": "892daec99e12738607a9bfe736d8e98ee8218d0c",
+    "started_ns": 1793025127581613600
+  },
+  "settings_sha256": "ef6dc911e57f86840ab529882c579e4128e9dc05ba6077640b622b852b726940"
+}

@@ -1,8 +1,9 @@
 package io.modelsync.testkit;
-
-import static io.modelsync.core.DatasetPort.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
+import static io.modelsync.core.DatasetPort.compare;
 import java.math.BigDecimal;
 import java.time.*;
 import java.util.*;
@@ -69,26 +70,37 @@ public final class CoreContracts {
                 () ->
                     new FreshnessPolicy(
                         Duration.ofDays(2), Duration.ofDays(1), Duration.ofDays(1))));
+    test("freshness requires positive durations", () -> {
+      for (Duration invalid : List.of(Duration.ZERO, Duration.ofSeconds(-1))) {
+        throwsType(IllegalArgumentException.class, () -> new FreshnessPolicy(invalid, Duration.ofSeconds(1), Duration.ofSeconds(1)));
+        throwsType(IllegalArgumentException.class, () -> new FreshnessPolicy(Duration.ofSeconds(1), invalid, Duration.ofSeconds(1)));
+        throwsType(IllegalArgumentException.class, () -> new FreshnessPolicy(Duration.ofSeconds(1), Duration.ofSeconds(1), invalid));
+      }
+    });
+    test("equal refresh and maximum ages are valid", () -> {
+      var policy = new FreshnessPolicy(Duration.ofSeconds(1), Duration.ofSeconds(1), Duration.ofSeconds(1));
+      eq(FreshnessAge.EXPIRED, policy.age(Instant.EPOCH, Instant.EPOCH.plusSeconds(1)));
+    });
     test(
         "unknown validation age",
-        () -> eq(FreshnessPolicy.Age.UNKNOWN, FreshnessPolicy.defaults().age(null, Instant.now())));
+        () -> eq(FreshnessAge.UNKNOWN, FreshnessPolicy.defaults().age(null, Instant.now())));
     test(
         "future validation time is unknown",
         () ->
             eq(
-                FreshnessPolicy.Age.UNKNOWN,
+                FreshnessAge.UNKNOWN,
                 FreshnessPolicy.defaults().age(Instant.EPOCH.plusSeconds(1), Instant.EPOCH)));
     test(
         "freshness expires at exact max age",
         () -> {
           var p = FreshnessPolicy.defaults();
-          eq(FreshnessPolicy.Age.EXPIRED, p.age(Instant.EPOCH, Instant.EPOCH.plus(p.maxAge())));
+          eq(FreshnessAge.EXPIRED, p.age(Instant.EPOCH, Instant.EPOCH.plus(p.maxAge())));
         });
     test(
         "refresh is due at exact refresh age",
         () -> {
           var p = FreshnessPolicy.defaults();
-          eq(FreshnessPolicy.Age.STALE, p.age(Instant.EPOCH, Instant.EPOCH.plus(p.refreshAfter())));
+          eq(FreshnessAge.STALE, p.age(Instant.EPOCH, Instant.EPOCH.plus(p.refreshAfter())));
         });
     test(
         "incomplete bindings rejected",
@@ -236,6 +248,26 @@ public final class CoreContracts {
           eq("NOT_MODIFIED", f.state().outcome());
           eq(f.clock.instant().plusSeconds(30), f.local().expiresAt());
         });
+    test("304 preserves absent metadata and accepts refreshed owner metadata", () -> {
+      var f = new CoreFixture();
+      Instant changed = f.clock.instant().minusSeconds(100);
+      f.behavior.set(r -> new FetchResult<>(FetchStatus.FOUND, "source", "\"v1\"", changed));
+      f.enqueue(); f.run(); f.advance(11);
+      f.behavior.set(r -> FetchResult.unchanged(null)); f.run();
+      eq("\"v1\"", f.state().validator()); eq(changed, f.state().sourceChangedAt());
+      Instant refreshed = changed.plusSeconds(1);
+      f.advance(11);
+      f.behavior.set(r -> new FetchResult<>(FetchStatus.NOT_MODIFIED, null, "\"v2\"", refreshed)); f.run();
+      eq("\"v2\"", f.state().validator()); eq(refreshed, f.state().sourceChangedAt());
+    });
+    test("verify-only 304 renews agreement without changing projection", () -> {
+      var f = new CoreFixture(false, false);
+      f.projection.compareAndSet(f.key.subject(), null, "source", null);
+      f.enqueue(); f.run(); String revision = f.local().revision(); f.advance(11);
+      f.behavior.set(r -> FetchResult.unchanged(null)); f.run();
+      eq("NOT_MODIFIED", f.state().outcome()); eq(revision, f.local().revision());
+      eq(f.clock.instant(), f.state().reconciledAt());
+    });
     test(
         "eviction keeps ledger and forces unconditional fetch",
         () -> {
@@ -327,6 +359,41 @@ public final class CoreContracts {
           eq(1, f.store.inspect(f.key).attempts());
           eq("FETCH_FAILED", f.store.inspect(f.key).lastCode());
         });
+    test("retry timing grows exponentially with deterministic jitter", () -> {
+      var f = new CoreFixture();
+      f.behavior.set(r -> { throw new java.io.IOException("synthetic failure"); });
+      f.enqueue(); f.run(); eq(f.clock.instant().plusMillis(1500), f.store.inspect(f.key).due());
+      f.clock.advance(Duration.ofMillis(1500)); f.run();
+      eq(2, f.store.inspect(f.key).attempts());
+      eq(f.clock.instant().plusMillis(3000), f.store.inspect(f.key).due());
+    });
+    test("wrapped rate limits preserve shared cooldown without failure penalties", () -> {
+      for (Throwable failure : List.of(new CompletionException(new RateLimitedAfter(Duration.ofSeconds(90))),
+          new ExecutionException(new RateLimitedAfter(Duration.ofSeconds(90))))) {
+        var f = new CoreFixture(); f.enqueue(); var lease = f.coordinator.claim().orElseThrow();
+        f.coordinator.failed(lease, failure);
+        eq(0, f.store.inspect(f.key).attempts());
+        eq(f.clock.instant().plusSeconds(90), f.store.inspect(f.key).due());
+        eq(f.clock.instant().plusSeconds(90), f.gate.acquire("owner").retryAt());
+      }
+    });
+    test("ordinary exception causes do not gain rate-limit semantics", () -> {
+      var f = new CoreFixture(); f.enqueue(); var lease = f.coordinator.claim().orElseThrow();
+      f.coordinator.failed(lease, new IllegalStateException(new RateLimitedAfter(Duration.ofSeconds(90))));
+      eq(1, f.store.inspect(f.key).attempts()); eq("FETCH_FAILED", f.store.inspect(f.key).lastCode());
+      check(f.gate.acquire("owner").granted());
+    });
+    test("completion wrapper without a cause remains a counted failure", () -> {
+      var f = new CoreFixture(); f.enqueue(); var lease = f.coordinator.claim().orElseThrow();
+      f.coordinator.failed(lease, new CompletionException((Throwable) null));
+      eq(1, f.store.inspect(f.key).attempts()); eq("FETCH_FAILED", f.store.inspect(f.key).lastCode());
+    });
+    test("interrupted owner restores the caller interrupt flag", () -> {
+      var f = new CoreFixture(); f.behavior.set(r -> { throw new InterruptedException("synthetic interrupt"); });
+      f.enqueue();
+      try { f.run(); check(Thread.currentThread().isInterrupted()); }
+      finally { Thread.interrupted(); }
+    });
     test(
         "quota denial does not count as source failure",
         () -> {
@@ -345,7 +412,7 @@ public final class CoreContracts {
           Instant until = f.clock.instant().plusSeconds(80);
           f.behavior.set(
               r -> {
-                throw new SyncExceptions.RateLimited(until);
+                throw new RateLimited(until);
               });
           f.enqueue();
           f.run();
@@ -447,7 +514,7 @@ public final class CoreContracts {
           f.advance(61);
           f.coordinator.claim().orElseThrow();
           throwsType(
-              SyncExceptions.LeaseLost.class,
+              LeaseLost.class,
               () -> f.coordinator.finish(plan, FetchResult.found("late", "v1")));
           check(f.projection.load(f.key.subject()).isEmpty());
         });
@@ -540,7 +607,7 @@ public final class CoreContracts {
           var f = new CoreFixture();
           f.behavior.set(
               r -> {
-                throw new SyncExceptions.Permanent("DENIED");
+                throw new Permanent("DENIED");
               });
           f.enqueue();
           f.run();
@@ -599,43 +666,43 @@ public final class CoreContracts {
         "matching dataset manifests reconcile",
         () ->
             eq(
-                Comparison.MATCH,
+                DatasetComparison.MATCH,
                 compare(manifest("s", 10, 0, "abc", "12.00"), manifest("s", 10, 0, "abc", "12"))));
     test(
         "dataset snapshot mismatch is incomparable",
         () ->
             eq(
-                Comparison.INCOMPARABLE,
+                DatasetComparison.INCOMPARABLE,
                 compare(manifest("s1", 10, 0, "abc", "12"), manifest("s2", 10, 0, "abc", "12"))));
     test(
         "unresolved dataset records prevent a pass",
         () ->
             eq(
-                Comparison.INCOMPLETE,
+                DatasetComparison.INCOMPLETE,
                 compare(manifest("s", 10, 1, "abc", "12"), manifest("s", 10, 0, "abc", "12"))));
     test(
         "equal counts do not conceal changed content",
         () ->
             eq(
-                Comparison.DIFFERENT,
+                DatasetComparison.DIFFERENT,
                 compare(manifest("s", 10, 0, "abc", "12"), manifest("s", 10, 0, "def", "12"))));
     test(
         "missing dataset checksum is incomplete",
         () ->
             eq(
-                Comparison.INCOMPLETE,
+                DatasetComparison.INCOMPLETE,
                 compare(manifest("s", 10, 0, null, "12"), manifest("s", 10, 0, null, "12"))));
     test(
         "different business totals are detected",
         () ->
             eq(
-                Comparison.DIFFERENT,
+                DatasetComparison.DIFFERENT,
                 compare(manifest("s", 10, 0, "abc", "12"), manifest("s", 10, 0, "abc", "13"))));
     test(
         "dataset row count difference is detected",
         () ->
             eq(
-                Comparison.DIFFERENT,
+                DatasetComparison.DIFFERENT,
                 compare(manifest("s", 10, 0, "abc", "12"), manifest("s", 11, 0, "abc", "12"))));
     test(
         "negative dataset count is rejected",
@@ -710,7 +777,7 @@ public final class CoreContracts {
           f.projection.compareAndSet(f.key.subject(), null, "unverified", null);
           check(f.gateway.model(String.class).local("tenant-a", "42").isEmpty());
           eq(
-              FreshnessPolicy.Age.UNKNOWN,
+              FreshnessAge.UNKNOWN,
               f.gateway.model(String.class).inspect("tenant-a", "42").orElseThrow().age());
         });
     test(
@@ -719,24 +786,25 @@ public final class CoreContracts {
           var f = new CoreFixture();
           f.behavior.set(
               r -> {
-                throw new SyncExceptions.RateLimitedAfter(Duration.ofSeconds(90));
+                throw new RateLimitedAfter(Duration.ofSeconds(90));
               });
           f.enqueue();
           f.run();
           eq(f.clock.instant().plusSeconds(90), f.store.inspect(f.key).due());
           eq(0, f.store.inspect(f.key).attempts());
+          eq(f.clock.instant().plusSeconds(90), f.gate.acquire("owner").retryAt());
         });
     test(
         "blank dataset checksums cannot pass",
         () ->
             eq(
-                Comparison.INCOMPLETE,
+                DatasetComparison.INCOMPLETE,
                 compare(manifest("s", 1, 0, "", "1"), manifest("s", 1, 0, "", "1"))));
     test(
         "dataset identity cannot be inferred from null fields",
         () ->
             throwsType(
-                IllegalArgumentException.class, () -> new Slice("d", "t", null, "p", "v", "g")));
+                IllegalArgumentException.class, () -> new DatasetSlice("d", "t", null, "p", "v", "g")));
     test(
         "null owner response is a permanent adapter error",
         () -> {
@@ -751,15 +819,15 @@ public final class CoreContracts {
         "header validators cannot contain line breaks",
         () ->
             throwsType(
-                SyncExceptions.Permanent.class, () -> FetchResult.found("x", "etag\r\nheader")));
+                Permanent.class, () -> FetchResult.found("x", "etag\r\nheader")));
     System.out.println("CORE CONTRACTS: " + passed + " passed, " + failed + " failed");
     if (failed != 0) throw new AssertionError(String.join("; ", failures));
   }
 
-  private static Manifest manifest(
+  private static DatasetManifest manifest(
       String snapshot, long rows, long missing, String digest, String total) {
-    return new Manifest(
-        new Slice("customers", "tenant", snapshot, "p1", "v1", "customer"),
+    return new DatasetManifest(
+        new DatasetSlice("customers", "tenant", snapshot, "p1", "v1", "customer"),
         rows,
         missing,
         Map.of("amount", new BigDecimal(total)),

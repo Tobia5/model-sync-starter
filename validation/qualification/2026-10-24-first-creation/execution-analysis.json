@@ -1,0 +1,3531 @@
+{
+  "source_sha": "cfcc53d9bb7a90e20bbd67f4255d8322c1fc0d99",
+  "source_tree": "1a900bb8845c912793fb5136118222a1fac84c8e",
+  "attempts": [
+    {
+      "directory": "default-72c5436b-3fac-4b23-9106-131e37298e0f",
+      "context": {
+        "run_id": "73cbe204-8173-4287-a77c-d294ff1623d8",
+        "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "source_sha": "cfcc53d9bb7a90e20bbd67f4255d8322c1fc0d99",
+        "source_tree": "1a900bb8845c912793fb5136118222a1fac84c8e",
+        "started_ns": 1792857213101270600,
+        "scope": "default",
+        "command_exit": 0,
+        "qualification": "DEFAULT",
+        "files_sha256": {
+          "model-sync-spring/target/surefire-reports/2026-10-24T17-53-35_115.dumpstream": "518e7e77e0396c7e6712cba61619323b04f64408e7b1c14a7f4487196a866295",
+          "model-sync-spring/target/surefire-reports/io.modelsync.spring.RequestSyncAdvisorTest.txt": "24321c8759b20300614fb35d5eef63d3d733bf9003dac96ca856a02a36ad081c",
+          "model-sync-spring/target/surefire-reports/io.modelsync.spring.SyncEventListenerTest.txt": "987d3b30a7d2dc7d2a35173e4b34200f5f1647adead33ef497a3702cacfa9622",
+          "model-sync-spring/target/surefire-reports/TEST-io.modelsync.spring.RequestSyncAdvisorTest.xml": "439349ed2c9f1c5a98d7146ab19758d81fe0f7ac1a63e5223da3f78fb06f677b",
+          "model-sync-spring/target/surefire-reports/TEST-io.modelsync.spring.SyncEventListenerTest.xml": "ab8b4e9ad23dd7c0848a030e8114316572ce8b713ff9968261274d89c3831e2e",
+          "model-sync-persistence-jdbc/target/surefire-reports/2026-10-24T17-53-35_115.dumpstream": "71258c065ed63b85adb5474bedcdd2be7d0448e41ca307481533eb9689917e51",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.JdbcPointLockPolicyTest.txt": "fe17f348b575299c15a53fbf55c8f4d1b38bbd97ff9e79118b44f4c6f622ec55",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.JdbcTriggerStoreTest.txt": "a226bff2c77a2c483f74c917e87ab967ea203f4674713105eb88cc9c8638febd",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.JdbcWorkStoreTest.txt": "e8702a620fb053a85e34a9f1c28e4794351a64fd9eb0f852bf3e11fb62204b06",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.OracleFixtureCleanupTest.txt": "6af7fab3df7a81bc89827a554db00e588d26b0c144f5fd9cee68e71ea60e7891",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.OracleMeasurementsTest.txt": "fbc6ff459f6fcb50d3082ff442929f26df7d6527ec898afd594ff9a6eb38c796",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.QueueClaimTest.txt": "018013a506ddc8088bb0281011cf99abe3c79b150357d81ddee76469f04a66d6",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.SelectorJdbcTemplateTest.txt": "ea8ff5abff597ea0ad57cc108a3002a124d3a07222533a2b7ba8681b43402775",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.JdbcPointLockPolicyTest.xml": "0360071de20f5e3573b8cf254dfb38ad0797c1d2f796a47c44d2f82c0d008065",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.JdbcTriggerStoreTest.xml": "ca1ca8f14cfc528b7ba1f7baf822cbd839b57a039515102a331cd2555ef01199",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.JdbcWorkStoreTest.xml": "9321056fc2f2191097a941847e68e082468ecdf651fe92d582dbd7f482867b45",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.OracleFixtureCleanupTest.xml": "3f876251530a7f10141e2470292cc142063fcba2e7b9c7a4e37890e6fed0aa14",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.OracleMeasurementsTest.xml": "e38596859d6df23a80cb8ba28612d1a00ed1df525d7a26c2006f5bfc7ffaf619",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.QueueClaimTest.xml": "f5d9f26dc94cc8215cb180c4c24b85f56800549fb63861bbf328172cd7d7d134",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.SelectorJdbcTemplateTest.xml": "cae780617184c3a54068e589fe8ffdd91f6515f1837e3e4f2405286bb515124c",
+          "model-sync-rest/target/surefire-reports/2026-10-24T17-53-35_115.dumpstream": "8f441ba9a323958c8df61bea2293467bc080db2567084535ca6c1ef0a81480bf",
+          "model-sync-rest/target/surefire-reports/io.modelsync.rest.HttpSemanticsTest.txt": "ffd4b4a35aacc0c18513a23f481513dc3ea2373a50ccce21e60b58cdcf09bcc7",
+          "model-sync-rest/target/surefire-reports/TEST-io.modelsync.rest.HttpSemanticsTest.xml": "492d16eaafa9f7092ce7e36330fab97ade1cf81e6496f979b182b704e1dd29b0",
+          "model-sync-reactor/target/surefire-reports/2026-10-24T17-53-35_115.dumpstream": "f39c562c8dc57b509666a9682ab918d35abee9809f1ff9df0875bbf420189514",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.AsyncShutdownTest.txt": "37e35865774c39e9a7af421dfc2ac947333d1c4ae41b54fe39aaed1f6cfd7a53",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.ReactiveSyncAccessTest.txt": "d42306c307d44ddfdcaa07dd466c02c9ad126537d48869b3e74a58e0de10ee39",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.ReactorSyncWorkerTest.txt": "63e90754a7408167a7bf84ed8126b0c37f018dc0d60655d3fbc890a2c0bf7127",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.WorkerPacingTest.txt": "8258ae05749677cbc5e216cb4ad32ff36379bac0ade40c49426ff95db9ab775b",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.WorkerShutdownTest.txt": "a0817dc5e6c3fd37853403c08932892bf4d18963e59eeeeff31b1d2e74ad6a66",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.AsyncShutdownTest.xml": "63e9dfc606fbdb25c9b55e284c8e411440a228bc1069a4c056100f36d38bc177",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.ReactiveSyncAccessTest.xml": "f37e10fc7c0ba586bf10a17d3f5819821889e64732598034e402273b1064022a",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.ReactorSyncWorkerTest.xml": "5c1f280bcf5686281bfe4cc671418e910bc563e9468f012e977e9890fa9b7c7e",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.WorkerPacingTest.xml": "e28dc368baddd7529d562074b68394df00dcd25821593e11e12fd831c466280a",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.WorkerShutdownTest.xml": "7c7ee2dcc9f9e125bca0584efcd630ae6cce7396d0f400898b412359537c300b",
+          "model-sync-autoconfigure/target/surefire-reports/2026-10-24T17-53-35_115.dumpstream": "b1e8bee240989b37ba3ff7fc3c33ee8c27e1489ae9089b400b87a753e5a6407d",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.LockPolicyConfigurationTest.txt": "2d4f5892c7fd2075007143a05b35eca034ceb2f0e6ff6a243c5221523e9f5b06",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.ModelSyncAutoConfigurationTest.txt": "15634241588cfae496cc2ffc076d2daacd9aa424814f459fac935b7be51ccb5d",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.ModelSyncTriggerAutoConfigurationTest.txt": "95b6a56d9a01969ab2bd404da29eba6948600c3d041515fe5bf4e43756f04fd2",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.TransactionEnlistmentTest.txt": "73c152dce7d2d110068545d07047a34e31ed2183fcbec3eb5ccb6f0de7f660b3",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.LockPolicyConfigurationTest.xml": "cb8357a5f02b3abc1709669f44b941808fc7ee5403422d6e250dca871736d08d",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.ModelSyncAutoConfigurationTest.xml": "a66cb372d78a530dcc67409bfe045a4a29ac0d9f26dfecf1bf0a06d382cf23eb",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.ModelSyncTriggerAutoConfigurationTest.xml": "d89f2ccbb37b415ef856a1fdc41ca42e08428dd2afd53d99b30e35e62241e9ed",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.TransactionEnlistmentTest.xml": "7af1b164977cd12a730e7e08890fd9a89463af28778778ee946c6e20a0523437",
+          "model-sync-testkit/target/surefire-reports/2026-10-24T17-53-35_115.dumpstream": "66cbae89752feefdaf65bd6da4516225d87ef2d56e0b574c36bb4270b39b161f",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.AdmissionHintsTest.txt": "6a344bcff0e3ed8753f3cac5cd2797e9632209d62d765dee4af5697a6c090479",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.ContentionPolicyTest.txt": "b8ca04b16be03cecb8985166c208340ac224dbc017141215d95f889eed9c0bf7",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.CoreContractsTest.txt": "fba9190dc1e849ee655d98e8eb440ad6cd41646799d2152f9d12869da0136983",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.TriggerContractsTest.txt": "fdb60dbb409bc57496fa622e5dbaebc550cafde36044aefdd3ec802334069780",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.AdmissionHintsTest.xml": "36758c4a0f4184638e1832ae936e6749a716e41031afd262a982d26c9028e65e",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.ContentionPolicyTest.xml": "0985b94c858dcffde538356650b05a84fae20b41abb6f96e9c1d4b18809dd435",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.CoreContractsTest.xml": "52d1c6fc03fd42bdc98e1917b25b9bbdceb8431526ead9014382711ff936de3c",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.TriggerContractsTest.xml": "e864c61328deea2cebb39b35197a8bdab01bb08a884e34fb878c4db9a5bd988b",
+          "model-sync-sample/target/surefire-reports/2026-10-24T17-53-35_115.dumpstream": "24e21a71ca25c9fd5290da5b202287678218d4f9ca69a9314bad80a5f5fdf52f",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.InsertPolicyTest.txt": "0b9db777b11e00f5b79bcd187533f04dd8583e334c87d0ef2796bb034e7c8b14",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.JpaAtomicityTest.txt": "8a2fce680e4cbdc825f6d8ed8b028b526fbf243e1f40fded77ea5f4fbe381e9f",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.JpaCompletionAtomicityTest.txt": "2f7d15398921c49f39b412c6cd24bebd1d19b49d6590bfeb334c43e9927fefe0",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.JpaLockPolicyTest.txt": "9d497d72ca1ab62351d75ba01d6aacd2f32d57980eb00ce8d53afcf32e0ae28c",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.LockedDmlOutcomeTest.txt": "e1e576c67820c89a344e5ecc13e286175e06efae26eaf743e8d88decd2a47519",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.NowaitSqlProbeTest.txt": "a8f01ff8640a5ecb6ee7875a364559c90da8920200834ce4094c86bd555e2e99",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.OracleFaultProxyTest.txt": "44ffdcd659a89be4c7747c1a9bde1b04cb91550522c91e8f42111c47e1e52de7",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.QuotaLockPolicyTest.txt": "1626e0ae6717df3802dba50f731b1845012d8f0bbe6b704f2d09f93168ff3415",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.RecoveryBootstrapTest.txt": "4628c67416a57357abcff57dfbc54660600dcab1c279df2a95c13eeb9b59229c",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.InsertPolicyTest.xml": "e21b12e2e93c65e52f22ec3261a1566b9d32204e34964af1eb3a8bcadd0d59e1",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.JpaAtomicityTest.xml": "748f55f594fd1996de77dd2caf32ae684da54796582acfc46bb7b28b04f067c0",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.JpaCompletionAtomicityTest.xml": "952ee53d074d2aa8a15a5ee92459fbc4ad50a808ccdb3091d289fb3bcae99f4f",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.JpaLockPolicyTest.xml": "de7784f3d294834bfb0f3d3402853935468f900f81e9e86f7380df0df5424f16",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.LockedDmlOutcomeTest.xml": "bd64507908b98825640e04cd96754b41f836ef9f197f3e45d31bd3184047f7fb",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.NowaitSqlProbeTest.xml": "452ef768ad53a86ff325ca3cbca0a58fed160a53bc8345ffae0d899f17a6a496",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.OracleFaultProxyTest.xml": "54c46095fc998437f850272506345a092945d8c17b84a8e68e76dccab0a01f68",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.QuotaLockPolicyTest.xml": "862f49a9f6bb035fe6fc082225a18a6c29cde24f237e5f987e6241d97dcf864c",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.RecoveryBootstrapTest.xml": "2bee6a31311fcf15b59d45c6d399e3f8fe95c81ade47f52961397466b08e06a6",
+          "model-sync-architecture-tests/target/surefire-reports/2026-10-24T17-53-35_115.dumpstream": "869e75f167a8fef0a98fa29d13e7055c80c32ad7210aadbc6ed7b125a7697911",
+          "model-sync-architecture-tests/target/surefire-reports/io.modelsync.architecture.ArchitectureRulesTest.txt": "f6bcdf0279e21a6e92868b2c1d0c7e4bc3afed6931553894dde77bc534338257",
+          "model-sync-architecture-tests/target/surefire-reports/TEST-io.modelsync.architecture.ArchitectureRulesTest.xml": "614ae78eefcec8369f800fe0aba8af9f56f4de84d459b5acbe69dd4ff5bb598c",
+          "target/qm/default-build.log": "012b29478c7ade662af42bf7a1781d18de7c41b2811cb42e9f316505e3a36647",
+          "target/qm/evidence.json": "aacd9d4821925e9125e18f669f300f67735c48ef3e241185f50b0fc58bdf7ff3",
+          "target/qm/QM.md": "581e6d2bcb336d8e96b078c74944c7203135ec238de9f0c88a8a10db0ef9af07",
+          "target/qm/raw-manifest.json": "cb5a61ccde1f3470081d819638b36469367563fbcf59630fa7fcc8136b7cae88",
+          "target/qm/run-context.json": "862755dbdbedd405048710e7d00ce2b40d1fe8364dc324b7a50c621bf42fc96e"
+        }
+      },
+      "result": {
+        "source_sha": "cfcc53d9bb7a90e20bbd67f4255d8322c1fc0d99",
+        "source_tree": "1a900bb8845c912793fb5136118222a1fac84c8e",
+        "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "supervisor_launch_ns": 1792857143093711700,
+        "supervisor_launch_utc": "2026-10-24T15:52:23.093711+00:00",
+        "bound_seconds": 600,
+        "bound_basis": "scoped local diagnostic/default budget",
+        "command": [
+          "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+          "-B",
+          "-ntp",
+          "-s",
+          ".mvn/qualification-central.settings.xml",
+          "clean",
+          "verify"
+        ],
+        "maven_settings": ".mvn/qualification-central.settings.xml",
+        "external_oracle_variables_cleared": true,
+        "exit": 0,
+        "elapsed_seconds": 104.851,
+        "log_decode": "cp1252; normalized to UTF-8; original build.log retained",
+        "collector_exit": 0
+      },
+      "junit": {
+        "tests": 155,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "xml_suites": 33
+    },
+    {
+      "directory": "default-7cb94258-ba4c-4717-a121-46d367c88f2c",
+      "context": {
+        "run_id": "7f704f8e-9c19-40ed-9a8b-81667e8a326a",
+        "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "source_sha": "62a878f551ee9e56f9431208e4fffb06048b6c5c",
+        "source_tree": "6d4c123955dc684593a46181bc01a67ae39c38a7",
+        "started_ns": 1792857018048905500,
+        "scope": "default",
+        "command_exit": 0,
+        "qualification": "DEFAULT",
+        "files_sha256": {
+          "model-sync-spring/target/surefire-reports/2026-10-24T17-50-20_125.dumpstream": "55bbcb1a5553475163e2f7c838a1c9654117649b7285251a9fb65305e96d24e9",
+          "model-sync-spring/target/surefire-reports/io.modelsync.spring.RequestSyncAdvisorTest.txt": "087ab4e1c665eb5a3d274aac12c9514310a03edd8c489ba0af7b046b2ab75604",
+          "model-sync-spring/target/surefire-reports/io.modelsync.spring.SyncEventListenerTest.txt": "22edeb9927b7733f34f6333c36f0ab651b2eb3d486ba1486d7fb65c29544b6d5",
+          "model-sync-spring/target/surefire-reports/TEST-io.modelsync.spring.RequestSyncAdvisorTest.xml": "24f0ef3e8b015d33b22a159c9701405afc2a339c7e5761c3448c7e4315216138",
+          "model-sync-spring/target/surefire-reports/TEST-io.modelsync.spring.SyncEventListenerTest.xml": "4d553645cfee70ea201304084d47de90476d094e2ec2def0bc6d442625f76ea4",
+          "model-sync-persistence-jdbc/target/surefire-reports/2026-10-24T17-50-20_125.dumpstream": "0c3d3e6c7ffed7538f82d7e7a46f9bd4949d1917dc93afb523198482d6cfde74",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.JdbcPointLockPolicyTest.txt": "b3c5b8cc18166ccadfb8fa36c455f33b6ada2cd12d9ebfbe3e24a609878d6120",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.JdbcTriggerStoreTest.txt": "49ace03a8975fdf4eaf82a5c213ff4af2cef504a90a5f4003fb0053b7d87f3f9",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.JdbcWorkStoreTest.txt": "4eb2307681898066c2295ac102784042fd1a7d5c874e803c0ec30d569400e410",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.OracleFixtureCleanupTest.txt": "9b3db441d99f2cfa9efa575cf1e23dd78a997387de05dc8b52be4160f2c717a4",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.OracleMeasurementsTest.txt": "1295d39a08e8b2c02b51cd5a5830fd7597916f5a0921c623560d4d93e8810c80",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.QueueClaimTest.txt": "d152c5b748cf2d4db8123506f2e450228f642a1bddcb1bec4b1b81d3963a244c",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.SelectorJdbcTemplateTest.txt": "7f269cc5fb5606400c4a67f994c152b056dc4f20441e55a900580a094fff7241",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.JdbcPointLockPolicyTest.xml": "85e05733abe003758bff0bd9a6853e1893c07fce74fc935443a82a508a39c501",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.JdbcTriggerStoreTest.xml": "ce5c6f4003e18c99abfcfe6070ff2f390a0b5a860cbb869870de09ab24b71942",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.JdbcWorkStoreTest.xml": "7df3f587828343871f1347d237e3b10f5fcc13624f844303e953ce84668d1eef",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.OracleFixtureCleanupTest.xml": "6fc00cb53968f2000d5e9843d17f8458a9f88a6352eb3beab366cc72a53abcb7",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.OracleMeasurementsTest.xml": "f02b4c9242c5c24c675fdfdf09ec5188ac1d0e7f050b430d6ebf6ce720942f49",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.QueueClaimTest.xml": "3168dd4c0039bb567d2d7c6fb71788322df916a6a31610d1c22894063547637d",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.SelectorJdbcTemplateTest.xml": "8b28c9814d4076df51b24f9476c5f64d9dd4450c1d7f542035f618e4cc78256c",
+          "model-sync-rest/target/surefire-reports/2026-10-24T17-50-20_125.dumpstream": "c62bac821a47518b1cde30ecd0b9ef9e55295898be7e33b91c033ca691370b83",
+          "model-sync-rest/target/surefire-reports/io.modelsync.rest.HttpSemanticsTest.txt": "48b0e45287f0c37f2478158ed7fe402e181ad8d307e35fbb76b3bffcf2f5cfd8",
+          "model-sync-rest/target/surefire-reports/TEST-io.modelsync.rest.HttpSemanticsTest.xml": "fae7582cc8bc3f90cd799ae48eb28fd1d49c6132d8100d2af07a95becea5031d",
+          "model-sync-reactor/target/surefire-reports/2026-10-24T17-50-20_125.dumpstream": "ace7f4a77af9a7052a2cf54eba7715675dc67a1af503b20a8db542ee2563c562",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.AsyncShutdownTest.txt": "b9c51167b4bbb43e7483501b3918307d8ab79fff1f336d829d5f772510751643",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.ReactiveSyncAccessTest.txt": "d7699faea45e75b247cea888b466bd1304b7d7969b8336e987fa59121c7e1ca7",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.ReactorSyncWorkerTest.txt": "c285d00b60ee130a28aa99117a01bddc3b94018439bdd8e6e687e82c4ceba969",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.WorkerPacingTest.txt": "da144fe19eab6a7995f9ab778b87b96ec6f91e01092a2502cb077c2ba93dd62c",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.WorkerShutdownTest.txt": "9094f95bfdd38c5ee62cd0a90af3c35bbd8cf8f20e1c0a319d6b377f2f274697",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.AsyncShutdownTest.xml": "0d81d8aad55f247b09f981f093f7d2ce022feb4001e5d593a4554075d340b2e2",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.ReactiveSyncAccessTest.xml": "90881620257038d468c4aa09cf8a93306c263143775e62ad3497be85409222ea",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.ReactorSyncWorkerTest.xml": "a6065362c0d148546f919665b6023a0866288c41bc50a0be7caa56ce2a637efd",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.WorkerPacingTest.xml": "fb7517ba3b4232d8db83f6e3db426d0942386ce079a6c03de6fe3199d79cba8c",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.WorkerShutdownTest.xml": "14aff750de3234a380e6dbee998a819a8acc24fbd9200717c325d6f9028a655a",
+          "model-sync-autoconfigure/target/surefire-reports/2026-10-24T17-50-20_125.dumpstream": "db76f5af08d67cb25b64594a425030e1b24f4db79de8432e96b28f835b5c0598",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.LockPolicyConfigurationTest.txt": "42cfa927431d27c3a868a573f6a97d7bdebf51e6ab234ed0e676b5800f4615e6",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.ModelSyncAutoConfigurationTest.txt": "f85f58ca3e11806a805f48d701e2ff855ebdbf582b5c8e3f72929806487d822d",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.ModelSyncTriggerAutoConfigurationTest.txt": "f35633b360afed43403d3402b125a8737173a0eb9970e2a002c399a65009bc6e",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.TransactionEnlistmentTest.txt": "5266518ba9e40718fd3ad7f014d3860bdd5c13d4ec0feab4aee9c716cce531a6",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.LockPolicyConfigurationTest.xml": "bb54d7cc23f326a0919dcb55696cb44e78a7926e53f6baa7f13992e2a2bedebf",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.ModelSyncAutoConfigurationTest.xml": "de6e92a7c2ab4053a6243f680fb88a686580ef8bf8abb0cd6c811bed36b10ef3",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.ModelSyncTriggerAutoConfigurationTest.xml": "f6d598b771ef7b79207f752ac8d443047deb8408477bb93d4a6d18a5506ed5d5",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.TransactionEnlistmentTest.xml": "f5366b502f5ddc56a0f1ff719dbb3620989a1e79e55bf2011103d4b6eebfeaa6",
+          "model-sync-testkit/target/surefire-reports/2026-10-24T17-50-20_125.dumpstream": "366f2b95699fc234c35e96b6fcf3f371a313f0403368a5dc18109da396f848e5",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.AdmissionHintsTest.txt": "11201ac5072ea7a504a02e4c4c11d3135a915eb2fd36b4643bd9f36881894e97",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.ContentionPolicyTest.txt": "82cf1eba82cba1c314591dc025c3f209abd22f6ac64040083be8b4764397a9e2",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.CoreContractsTest.txt": "11e2f14c8cb527b59b632769db84dd1c0955a8cc41654f547b4b66d11458c8b0",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.TriggerContractsTest.txt": "c74422366db66c18c833562e77ab86eced186d66185c46eff1647c99565738ba",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.AdmissionHintsTest.xml": "823a68bbaacdc77adc2f6059e4b6354088c700af787e6a9d74268d04e83b9608",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.ContentionPolicyTest.xml": "7fb1150291e831e815cc0bda8e84fc5c94a6096248c5ccf8e52834efa83926b6",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.CoreContractsTest.xml": "fe43ab7527084c0fde3429a2f50b29f6944011cee02ee90a98f9c5589a6300e7",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.TriggerContractsTest.xml": "6a0c3974e7838595fd110462eafe85541e4b9353246653885fba149eace8561f",
+          "model-sync-sample/target/surefire-reports/2026-10-24T17-50-20_125.dumpstream": "186c52b4fadb85910f1ebb795cc57f96a7fc33cff9f730aad6bb941db842ef27",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.InsertPolicyTest.txt": "f5818f9b91b14f4a40bebaa48c43e5babdcae0a34cc826ca8ec013e9ea6e241d",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.JpaAtomicityTest.txt": "a9cae2f1c8569cb3dfe4da8df377abe82087ed5bb89bfe6cea5a1f6ebf50fed9",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.JpaCompletionAtomicityTest.txt": "89f3b32178d99f1c76f89a059c875b15501d6acd6d5861865385cd558f9a850c",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.JpaLockPolicyTest.txt": "d6f5f53cfd137cf774fe0e3b1b1899a2de8d1c069e2288a666198d12f91ead50",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.LockedDmlOutcomeTest.txt": "57c86b7375e327dc07c506c7120dfd8ebf172f133e37d5d73ba45d0512e80623",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.NowaitSqlProbeTest.txt": "933d9e01532a80dadd56bde5b30752df04695698d6f667abc076d524e3f98af8",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.OracleFaultProxyTest.txt": "a03fd2c55a4f544daf151c96fc5ca8818cc923ef04ee6faf8115eda843a657b7",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.QuotaLockPolicyTest.txt": "9fd114d6233b33070c66bb3c9165277c0a71cad053bd3d95edeba6f5ff4d8d45",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.RecoveryBootstrapTest.txt": "87090f6618442e41fa8557d9082f7cbeb612084c5e923c0147ccea90d8b94fb6",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.InsertPolicyTest.xml": "45ced832d48dad6c7e7cb5aae51faa7dd53a33d779022e2f641694f1a564ee73",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.JpaAtomicityTest.xml": "1cce6bd27b8f6f64cc862f8e5b42eb38c409f172b3b339f6bf23ce7a21d128cd",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.JpaCompletionAtomicityTest.xml": "e45ce25200b5adffb27eb0bd063d069033afb4387a0336691dc0e3156044a202",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.JpaLockPolicyTest.xml": "307c06d898acc4f17d77c641a0df08445adbd0f235859754d3d91a52baa4e623",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.LockedDmlOutcomeTest.xml": "0e0ef131482f59e6240760f7c80a14f7c12ad953234c88ab1ccbb36334ad996d",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.NowaitSqlProbeTest.xml": "03e2fd7e4654b67a4b0984541e79492581f0047843f7ca9549525a7fdfa9208f",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.OracleFaultProxyTest.xml": "ad35e4a9f81f515f99d02448dc0069cab142365010b49d58c7e9164f41b365fd",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.QuotaLockPolicyTest.xml": "eb8cc57130c0236d6c8cfe51c4bbbaba9f7fa905fd475c07157228d0ecb73a8c",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.RecoveryBootstrapTest.xml": "6ff7c21e2fe8dac66d7e1e08b23a3ed882906b3121f3781b2d15e232d5fd4055",
+          "model-sync-architecture-tests/target/surefire-reports/2026-10-24T17-50-20_125.dumpstream": "a9444dc816c7721b44cf4f2501e5bb95c4dabadfcad06da08940a949039c224f",
+          "model-sync-architecture-tests/target/surefire-reports/io.modelsync.architecture.ArchitectureRulesTest.txt": "891743fad5c71f1f2c23b12d8d5fae9f314ffa3029f341b267a9c1a533c78a3b",
+          "model-sync-architecture-tests/target/surefire-reports/TEST-io.modelsync.architecture.ArchitectureRulesTest.xml": "0aea7f769b043b8e9c7990703d41025f03711877fd5692f021c1cc832b0c1481",
+          "target/qm/default-build.log": "b7a6647c1e98b7bbfc41db9a87b01893961b192508fbcb5d1545ee429fea80f4",
+          "target/qm/evidence.json": "6816a066723bf7ca87b1b610174f6a5a81c6403a01265310a62b24567a8881ea",
+          "target/qm/QM.md": "cdebc8cb05c1bbbc7bc98529014faaee208a3dd6449d63396346c08f4ab0a74b",
+          "target/qm/raw-manifest.json": "eeae3a45f2b5c26140607fac4f8783957c54f13af044c19c93c0c524407b44af",
+          "target/qm/run-context.json": "fafea9ed414dd446414ae685de937b8c3d34b6883b3f368dea0253abf9c1acd5"
+        }
+      },
+      "result": {
+        "source_sha": "62a878f551ee9e56f9431208e4fffb06048b6c5c",
+        "source_tree": "6d4c123955dc684593a46181bc01a67ae39c38a7",
+        "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "supervisor_launch_ns": 1792856909793186800,
+        "supervisor_launch_utc": "2026-10-24T15:48:29.793186+00:00",
+        "bound_seconds": 600,
+        "bound_basis": "scoped local diagnostic/default budget",
+        "command": [
+          "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+          "-B",
+          "-ntp",
+          "-s",
+          ".mvn/qualification-central.settings.xml",
+          "clean",
+          "verify"
+        ],
+        "maven_settings": ".mvn/qualification-central.settings.xml",
+        "external_oracle_variables_cleared": true,
+        "exit": 0,
+        "elapsed_seconds": 145.084,
+        "log_decode": "cp1252; normalized to UTF-8; original build.log retained",
+        "collector_exit": 0
+      },
+      "junit": {
+        "tests": 155,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "xml_suites": 33
+    },
+    {
+      "directory": "default-b185b8aa-81b4-4c25-869f-b71d2b49516a",
+      "context": {
+        "run_id": "33ad5811-b0d3-4f7a-9ba8-7de8c438c913",
+        "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "source_sha": "754ba0678d5829bb7c21c957d1810b9259f1bf45",
+        "source_tree": "4a1e3c11e791da19294c5d4a1991a08db15bc3f5",
+        "started_ns": 1792856831351189500,
+        "scope": "default",
+        "command_exit": 1,
+        "qualification": "DEFAULT",
+        "files_sha256": {
+          "model-sync-spring/target/surefire-reports/2026-10-24T17-47-13_522.dumpstream": "eebbabef290994e9c475239be83ad5486315635f87ebe4377239a2c8d7c4c0b4",
+          "model-sync-spring/target/surefire-reports/io.modelsync.spring.RequestSyncAdvisorTest.txt": "a4ef61d76daf0fbac3baed70b526b5d57c19eb21199436c23bc55bf019b77e69",
+          "model-sync-spring/target/surefire-reports/io.modelsync.spring.SyncEventListenerTest.txt": "24dcbee1996373a976bd3e1dd4e0862fe50d4e4ea4ec43a9541999266f40648f",
+          "model-sync-spring/target/surefire-reports/TEST-io.modelsync.spring.RequestSyncAdvisorTest.xml": "67f263d2680c3df3b75adba13193acdae953a2e8ba97fd2ad07bc4d8b56badd3",
+          "model-sync-spring/target/surefire-reports/TEST-io.modelsync.spring.SyncEventListenerTest.xml": "70f5b2d7780643cdcadf95d5a3603af8b6ad02cc16702f31f8797b613cc39a73",
+          "model-sync-persistence-jdbc/target/surefire-reports/2026-10-24T17-47-13_522.dumpstream": "15128b1a582390a2a6ac31919b372b2d8119f4ee6f0378834e7014446475e430",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.JdbcPointLockPolicyTest.txt": "e46de87cbd07035bcac65cb45425c2ed403810ffbed40610dff9a1b6604b120a",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.JdbcTriggerStoreTest.txt": "e19457dec2508553fcb183860d8baec24b8f4c8cd5ba6a4009d1e59cc404cc17",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.JdbcWorkStoreTest.txt": "dcc09c8f0e23c520283783bead5043220749bbceb37e2e8548654105f062bf60",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.OracleFixtureCleanupTest.txt": "9b3db441d99f2cfa9efa575cf1e23dd78a997387de05dc8b52be4160f2c717a4",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.OracleMeasurementsTest.txt": "b0bee3263b0a5cd9525a10e0f1526fa827a7dc1b0fc408538c65673c2df3952e",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.QueueClaimTest.txt": "d152c5b748cf2d4db8123506f2e450228f642a1bddcb1bec4b1b81d3963a244c",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.SelectorJdbcTemplateTest.txt": "701232663bda29d55b014be6b70025f88229e2d15c73821eb179b1bd621dffd8",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.JdbcPointLockPolicyTest.xml": "643761e97e6fad687ad285687571fd85f341a09fbcfcfc8d713f007e5abe39bb",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.JdbcTriggerStoreTest.xml": "a99a35a01114b33bc0f6aded7520566f0364877fad99d25a50921d3285d818ba",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.JdbcWorkStoreTest.xml": "e0ec3b9aac3211a407e87c28d26e829172d148c4a227ef5d479f3fc58809f928",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.OracleFixtureCleanupTest.xml": "82270dd6ca66988ee4b24dfac518cfd45c24c90087963e5339eb0e5529627961",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.OracleMeasurementsTest.xml": "75023c2b452e7013618e5dfc0b6e317bdb7b912c0560dbfddecc81895593c504",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.QueueClaimTest.xml": "9b625b7df7827a1c344fb1598a99109d278722f8d00bdb7dad9d25101c931855",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.SelectorJdbcTemplateTest.xml": "8a88a3d6b4c88e908abce650a4f5901256968665e1fe17a381a895d32b0df072",
+          "model-sync-rest/target/surefire-reports/2026-10-24T17-47-13_522.dumpstream": "4cb08b370cc3fe1f1a571238599de8d7d4f76d2c4564d2070ea7d0b0e946722e",
+          "model-sync-rest/target/surefire-reports/io.modelsync.rest.HttpSemanticsTest.txt": "dc795d5995833ecc620f6a5faaa972dd62cbdaacfda79f3a7da8fb4455e516e0",
+          "model-sync-rest/target/surefire-reports/TEST-io.modelsync.rest.HttpSemanticsTest.xml": "fc9e01195b65600086dc5eeac43077e81d081d93126ac89696c2ea0d32f16587",
+          "model-sync-reactor/target/surefire-reports/2026-10-24T17-47-13_522.dumpstream": "902d18f3499ddeae466fd66f7a9424475b3980da4eb22c6b9e2d5ea2b1640ce1",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.AsyncShutdownTest.txt": "c27002fbd30da1b2e7cceb0c600d9376240a9b2984911acd166732c8fd2e41a1",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.ReactiveSyncAccessTest.txt": "d7699faea45e75b247cea888b466bd1304b7d7969b8336e987fa59121c7e1ca7",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.ReactorSyncWorkerTest.txt": "c285d00b60ee130a28aa99117a01bddc3b94018439bdd8e6e687e82c4ceba969",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.WorkerPacingTest.txt": "e6c0a3bb3ad7e71979c6dcb842d78c4707de632540c8f230b30a8532ea510164",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.WorkerShutdownTest.txt": "9094f95bfdd38c5ee62cd0a90af3c35bbd8cf8f20e1c0a319d6b377f2f274697",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.AsyncShutdownTest.xml": "1d5e7e421d73bee22f6991839a9adc5b22119c0cd53bc115685ff21c78a2beef",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.ReactiveSyncAccessTest.xml": "93e329611efd3179defde329012e39f85651385eda8240cc0001e52fddd5cc2b",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.ReactorSyncWorkerTest.xml": "712216b057fdef36c9dc9722077344235074c4ac8fa2041dd7fd27743f7ac739",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.WorkerPacingTest.xml": "9b43212a35471f8f1510161286af37f74f62c868474d250c02887bc4b2df42ad",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.WorkerShutdownTest.xml": "95ac072dfa71d4c5137795f9421e0fab288aceb0fdd963ef1a6f14fc415ffa28",
+          "model-sync-autoconfigure/target/surefire-reports/2026-10-24T17-47-13_522.dumpstream": "b46973d51dd208dd35b386dd90091f8fccf7fe6e93a765fbf749398751c99a64",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.LockPolicyConfigurationTest.txt": "535b7b74c13662a22c2099810fa888462e74f4d9274fa8f66e120769ca5dc801",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.ModelSyncAutoConfigurationTest.txt": "93df6ff467b434453b055d602635898ae36e4844313aa7e7bb4e9fdb2289b9a4",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.ModelSyncTriggerAutoConfigurationTest.txt": "480b73f087b04736e67d60e6b0a464f2bc4663e56215dc35a28a3335b24c69de",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.TransactionEnlistmentTest.txt": "0d95f67c3e4255faaf3c6b3422cac104ffe1344b290b08bfb64b80466fcb3098",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.LockPolicyConfigurationTest.xml": "c0da99e170d773ab89ae00e1303c4ded7970d0d09ff64f9e6caf9b2058f29783",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.ModelSyncAutoConfigurationTest.xml": "94bf65643af56c15cab52faabdedf6fbe62b9158755e8cd62a3687389d106bb4",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.ModelSyncTriggerAutoConfigurationTest.xml": "92079749b32e81685b1e400411af0cc6d195569cf2fe918a47f528177cacef55",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.TransactionEnlistmentTest.xml": "e43bd06039f55349e5796a42883f1f3332fc9a297dfe755ae9ecdadf94603df1",
+          "model-sync-testkit/target/surefire-reports/2026-10-24T17-47-13_522.dumpstream": "edb2562dbe8d7469c91eb91a06c95c4c2bb0aec66c556c6cb7da5c06770c7df9",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.AdmissionHintsTest.txt": "5438596ca3222294e4732c40d0c59616d61f22a89d57fd9f0fcc086e2ee46616",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.ContentionPolicyTest.txt": "16238e4bf483175e6142fd9bf67117faaa7f9add5eaddb802dfdad5bcc1ca0dd",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.CoreContractsTest.txt": "a72f15264b88528a3ce61e5d0dcf297f165f1ef866411a764a1456262a4ff38f",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.TriggerContractsTest.txt": "f895a26e14496c4bffdc7758cad2cc3780c92e9dcc8b41988c5c0f7b77f77752",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.AdmissionHintsTest.xml": "8d16bca5841085483c418a1530a6e6cd784795fd95ddb75dc9e47c5d8378d08b",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.ContentionPolicyTest.xml": "9082548ed67f21f08a430a6f079b5d09b2ae73e38be99102923228317d450411",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.CoreContractsTest.xml": "e5426ef0beeb69cbaac7379fdd1f5af5c743e8ffb5497eebe52905b9a4116df0",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.TriggerContractsTest.xml": "22725bad8ae0d7da487d94b40753fdfe5bd2dfab47dfebee5f7bffe817554774",
+          "target/qm/default-build.log": "464b9ba4a1e5935134b7db607c5cead34d0773783d4f6a5a8e1eae0a40c66942",
+          "target/qm/evidence.json": "d740ad8915a1bf799320a91c079f2622598e094204760128d1ef5b8745d95c92",
+          "target/qm/QM.md": "a006ab469c810492d1d490e8f24f7a19bf84b996e3f5fd3889681290aa722d94",
+          "target/qm/raw-manifest.json": "2125806745bd4edb43089c8f3c7b08c458060bed975179abd91363ba36cf24f9",
+          "target/qm/run-context.json": "c8b80ded900afe18c294bc00f47edddb0c2216422721fdd811ec33214e60d6fa"
+        }
+      },
+      "result": {
+        "source_sha": "754ba0678d5829bb7c21c957d1810b9259f1bf45",
+        "source_tree": "4a1e3c11e791da19294c5d4a1991a08db15bc3f5",
+        "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "supervisor_launch_ns": 1792856748384001800,
+        "supervisor_launch_utc": "2026-10-24T15:45:48.384001+00:00",
+        "bound_seconds": 600,
+        "bound_basis": "scoped local diagnostic/default budget",
+        "command": [
+          "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+          "-B",
+          "-ntp",
+          "-s",
+          ".mvn/qualification-central.settings.xml",
+          "clean",
+          "verify"
+        ],
+        "maven_settings": ".mvn/qualification-central.settings.xml",
+        "external_oracle_variables_cleared": true,
+        "exit": 1,
+        "elapsed_seconds": 100.219,
+        "log_decode": "cp1252; normalized to UTF-8; original build.log retained",
+        "collector_exit": 0
+      },
+      "junit": {
+        "tests": 119,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "xml_suites": 23
+    },
+    {
+      "directory": "default-d602c2ea-b136-4c70-97f2-e262157ac37e",
+      "context": {
+        "run_id": "35c35ba7-a594-45ee-8fed-fec7a02536a7",
+        "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "source_sha": "f55f9299d0cdb67a742e8cf0cf8aa5f001f31333",
+        "source_tree": "15e75f5f1292ed0850bfffc73486939c4fe0e02a",
+        "started_ns": 1792856268370104400,
+        "scope": "default",
+        "command_exit": 0,
+        "qualification": "DEFAULT",
+        "files_sha256": {
+          "model-sync-spring/target/surefire-reports/2026-10-24T17-37-50_736.dumpstream": "3329598f7894178447463acb7f6ec53a22fb6fa03c75c71da6845122be59a343",
+          "model-sync-spring/target/surefire-reports/io.modelsync.spring.RequestSyncAdvisorTest.txt": "b9e16613945ccc5a7650698715410636677c49278869b5d25cc99d5eebe27541",
+          "model-sync-spring/target/surefire-reports/io.modelsync.spring.SyncEventListenerTest.txt": "22edeb9927b7733f34f6333c36f0ab651b2eb3d486ba1486d7fb65c29544b6d5",
+          "model-sync-spring/target/surefire-reports/TEST-io.modelsync.spring.RequestSyncAdvisorTest.xml": "a750b94c55b36cb8f54e52ff0d259c2fcae2f3b8aa0bbb43b2ba1e46a16878d3",
+          "model-sync-spring/target/surefire-reports/TEST-io.modelsync.spring.SyncEventListenerTest.xml": "39c1c7c4a22d3650dea10a1254db66034e1025a3ccc5fe7e674598a33228e341",
+          "model-sync-persistence-jdbc/target/surefire-reports/2026-10-24T17-37-50_736.dumpstream": "68cfceeb09238c014c9a926e2625258d80c5091b6ddc8a13bd7b8d0781665d78",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.JdbcPointLockPolicyTest.txt": "10d273939e36dfcc4c409b3dc88cfd117ecdbf06482a327e59e77ceecd3d9c4d",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.JdbcTriggerStoreTest.txt": "7409d0d549041f8b402860925f4d3eb0dea6fc0936318a4bb09b8274da0ef192",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.JdbcWorkStoreTest.txt": "796633a970d480551d4029e3b5879dd2a14fa057eab2ce1df8cc376d44a80212",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.OracleFixtureCleanupTest.txt": "28b4958f8df026c04bb30e1bffcbe6ae8a3b3de52b2db9f23adc967d3b9c7c15",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.OracleMeasurementsTest.txt": "0f1e23be2a16a5e366328d9e15060fd496abcc050edc76f4f333987729e82bba",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.QueueClaimTest.txt": "3a55c0efabd5d77a6f392b18e5bc87db5ecb953979d05aafc3ecf973b30f37a9",
+          "model-sync-persistence-jdbc/target/surefire-reports/io.modelsync.jdbc.SelectorJdbcTemplateTest.txt": "3bfe941e3ceeda09a9092031b49f6ce758ee8c9a020cfe1917205ad9afecf27e",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.JdbcPointLockPolicyTest.xml": "08ef239782d074a7db36115e2d0a4dce37ac585f8401cdc1d7de50465bb21f1f",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.JdbcTriggerStoreTest.xml": "6fba2952109915ce5a12c3eb21a1a905c55ce77a46e60cc337080391a9484eb1",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.JdbcWorkStoreTest.xml": "a4b9cb2a2dd7717e62b2e70974f493586e50aa0de5dbeba68950818e3d92598e",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.OracleFixtureCleanupTest.xml": "58f262220547ff9ec8438dd3950aacd02c232a750223756de84436977b4088aa",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.OracleMeasurementsTest.xml": "17577dbeb7210477d51ed4fe79ba7bd409c5a4eedb5814a150845db0214f7d2a",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.QueueClaimTest.xml": "82580eb4d6309e3d053565928bcb42f2f2924b32e26bd75c6de3bdeb9a92ecd4",
+          "model-sync-persistence-jdbc/target/surefire-reports/TEST-io.modelsync.jdbc.SelectorJdbcTemplateTest.xml": "55acc24fb2486c2b4dcd0dc5aedb5accf92d61acbb6801f679754eeaa65e8f6a",
+          "model-sync-rest/target/surefire-reports/2026-10-24T17-37-50_736.dumpstream": "24e2e10ddd490834d8ba7af9509312704e9f2a4f026c604bce76b2780549de12",
+          "model-sync-rest/target/surefire-reports/io.modelsync.rest.HttpSemanticsTest.txt": "e6bde859d665870a411922a5fd53ce841c61e858fb22ebdc7a584b3f9368be6e",
+          "model-sync-rest/target/surefire-reports/TEST-io.modelsync.rest.HttpSemanticsTest.xml": "c94ca34de71a1aaac210b9634434eb59c75f77a52a8ff6edd0657256d768751b",
+          "model-sync-reactor/target/surefire-reports/2026-10-24T17-37-50_736.dumpstream": "e0eace0394d6129415ad12cb8b7a49046de1e1870390849e107ec00f5798e975",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.AsyncShutdownTest.txt": "37e35865774c39e9a7af421dfc2ac947333d1c4ae41b54fe39aaed1f6cfd7a53",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.ReactiveSyncAccessTest.txt": "d436f21ca384475c4b73738aca731bd41132fb89ed06a1a5956e3ad2f57c46ae",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.ReactorSyncWorkerTest.txt": "c285d00b60ee130a28aa99117a01bddc3b94018439bdd8e6e687e82c4ceba969",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.WorkerPacingTest.txt": "da144fe19eab6a7995f9ab778b87b96ec6f91e01092a2502cb077c2ba93dd62c",
+          "model-sync-reactor/target/surefire-reports/io.modelsync.reactor.WorkerShutdownTest.txt": "b3ad9dde431f0545392c031cd28d71332abbdf7a6d6cc6079ed9b8772ee0e8b0",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.AsyncShutdownTest.xml": "77044334b666be051e7d0cc803f6c431099766a905df6aeb0663eaf2f0d79594",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.ReactiveSyncAccessTest.xml": "712e48c497b8faf44924d2f28e8262276456bc707c54ce5a8eaaafb1713f4a10",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.ReactorSyncWorkerTest.xml": "5a6448f8d9e3773ddcdec7639e761ceb7454a3e6e6807a27f75a571d88d7b2b4",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.WorkerPacingTest.xml": "7e02c739a3084c4a685cf1f69ab39b8867838bfe8ecae56cb58b8aa16fde64e1",
+          "model-sync-reactor/target/surefire-reports/TEST-io.modelsync.reactor.WorkerShutdownTest.xml": "07d9f0df1eb165f37168a183634b7d35c3317ac2a08b897e20aaccde5aa82f9a",
+          "model-sync-autoconfigure/target/surefire-reports/2026-10-24T17-37-50_736.dumpstream": "527a3a946cb06f1cccd7720615966c29e0167329eaa410691c573aac921cad39",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.LockPolicyConfigurationTest.txt": "40b0a1238dde202372bd94ce1cc50baf25b049ed52660edff8d1c7509ee21410",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.ModelSyncAutoConfigurationTest.txt": "3b5e212248db6875d6d4b46213fb6f83f9cdd143c31195654fcd6a26c5132c76",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.ModelSyncTriggerAutoConfigurationTest.txt": "1ffea7c698bf25a9837713211cba7c6ddfce655bf49eb0d9b800f7a0fad36ffb",
+          "model-sync-autoconfigure/target/surefire-reports/io.modelsync.autoconfigure.TransactionEnlistmentTest.txt": "5266518ba9e40718fd3ad7f014d3860bdd5c13d4ec0feab4aee9c716cce531a6",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.LockPolicyConfigurationTest.xml": "9e86b5b857a454a8a24733de34ad452913081c75712aaeb731c318e0290b69ea",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.ModelSyncAutoConfigurationTest.xml": "6ae376ffff52c0bac2483d187640ba1a74fe391119002821872bc6e011703afb",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.ModelSyncTriggerAutoConfigurationTest.xml": "632880772b68fdeac461a80acf472823f3bcfe35de7c6437037fecb6e730d972",
+          "model-sync-autoconfigure/target/surefire-reports/TEST-io.modelsync.autoconfigure.TransactionEnlistmentTest.xml": "5361f4acb7e1e2682f08c079d00ed4887c8fdb5d4c0689ba56df309f1836f7a5",
+          "model-sync-testkit/target/surefire-reports/2026-10-24T17-37-50_736.dumpstream": "3a27011ba82d57ea90248d25e2ef0f5618461b7e442a10afa12f4f403511827e",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.AdmissionHintsTest.txt": "72d3f8e2fd6c6f0531464bf8b550b177f17e20443deb88369a1f5a0bcc70ac14",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.ContentionPolicyTest.txt": "1b06ce26e245fd8ece58dcc2ed61fafab9ac3b6c87dea2b2e07580f3a3adfbb0",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.CoreContractsTest.txt": "e2bbc87a1abb7d8415db6cd9469dea0447956385d6295c41522836645a31eada",
+          "model-sync-testkit/target/surefire-reports/io.modelsync.testkit.TriggerContractsTest.txt": "cd77e17e6ad494b11c87fba1fa6b8d2424b6314f6304ce4cacfb0026aa51c103",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.AdmissionHintsTest.xml": "c8f424b172266b2e255a101b47fcaf400b693c2bdda81b9e2bf0f4831834d1d5",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.ContentionPolicyTest.xml": "d8aef21ff1bf6e774b086500a54ef5b4513b883d0d013fff655b8d55e5c3439a",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.CoreContractsTest.xml": "bbc2b306a4a39fc082a49ec5e983c51611ae0a4a9d2b4784296cf33fff1a6136",
+          "model-sync-testkit/target/surefire-reports/TEST-io.modelsync.testkit.TriggerContractsTest.xml": "483d3c39d25032de1d93e783d323c5fe75014f3a9a3fa10534306d855d0278c2",
+          "model-sync-sample/target/surefire-reports/2026-10-24T17-37-50_736.dumpstream": "58d271b285151c0c92b5ee3eba45fd4b8b306af36d7635e6eee0d088901436b0",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.JpaAtomicityTest.txt": "5c0a63b88014fc8d02d3665b642a8fddc41a4680eaf7a50a0f11a08560b75dd3",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.JpaCompletionAtomicityTest.txt": "69748803d3319207f9935cd1c8e33ffb274f2e922c76af716f4a005c1da31e1d",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.JpaLockPolicyTest.txt": "405123e2de3ff485158e600b3bbdb232085e58a13af4c38ca1b79b6b46617448",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.LockedDmlOutcomeTest.txt": "091afa3acc27725cc8b0b0f71b6fe6f2f2ff8222a64b697a903f3b33a861afe5",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.NowaitSqlProbeTest.txt": "84d85a0a9dfc997275e6523f8b5c56721d9fc78ab89c25ad672475fc816fa035",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.OracleFaultProxyTest.txt": "a03fd2c55a4f544daf151c96fc5ca8818cc923ef04ee6faf8115eda843a657b7",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.QuotaLockPolicyTest.txt": "7538442b3830b8f822f41e22937292cac1591ff5b1eeef6746a64f3c3dcb7208",
+          "model-sync-sample/target/surefire-reports/io.modelsync.sample.RecoveryBootstrapTest.txt": "eeb6ace94d01dacaf96a6250355959a52f6cf8ea506fb85525953b3a4741bde8",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.JpaAtomicityTest.xml": "4efabf0564cfbd3d49d724004ce9722f1ed71cc41f2f2b0947292624271a4014",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.JpaCompletionAtomicityTest.xml": "b87ff627474af344eb8f6c3e5905397edf98227682591506f2fc8fde61d2449d",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.JpaLockPolicyTest.xml": "524d91fa2a1f0ad749b20e01591693eecf06e46c2fec095477d714eb65a3b060",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.LockedDmlOutcomeTest.xml": "096d3aeda1eed46a0899cc1b0fa0163b190f5bd2b826e600b17188bfb6b874c8",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.NowaitSqlProbeTest.xml": "56d1aa0f9c20ef73b65d789e65f9e65a6a0b2db148fe0576165c144cf8ae69f6",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.OracleFaultProxyTest.xml": "79dddbdc3e2a4461429abaf39e715334245d94b0226fe7beb7842b28063d12d4",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.QuotaLockPolicyTest.xml": "34180ca47365f18c716798788b158e15108b3ff887f1e625c763411776de5e5e",
+          "model-sync-sample/target/surefire-reports/TEST-io.modelsync.sample.RecoveryBootstrapTest.xml": "1cc8ce52efd10c9b2195bce2d6c2aa73f82b96850d600e10376a130b538091d1",
+          "model-sync-architecture-tests/target/surefire-reports/2026-10-24T17-37-50_736.dumpstream": "4329fd99ece85be4d60399df1a39d87aae479ddf8ac961e85e5870c0a6b4593f",
+          "model-sync-architecture-tests/target/surefire-reports/io.modelsync.architecture.ArchitectureRulesTest.txt": "a79f239f83bb3a499ae60ed57a091c7dacdb2329737ab95da87a8fe2e8ac20d7",
+          "model-sync-architecture-tests/target/surefire-reports/TEST-io.modelsync.architecture.ArchitectureRulesTest.xml": "d82002a3ce13d39f57fd3ec2a34117dd982f9e0503aaf447024fff2023afeefe",
+          "target/qm/default-build.log": "44c29073c1b33496b8ec7a988c7856e0d18e837aac4880bc718bf241541776b0",
+          "target/qm/evidence.json": "e1dfdb164c2ba1b192f985e223b61750b662e73eb846cf381da94d5b617039d3",
+          "target/qm/QM.md": "52a5492d462665c176a74c820cc4b6e2279c89c10d2e81292f9d381934425a5f",
+          "target/qm/raw-manifest.json": "9423b0c6f9cbcb8c507b361e7a0ba8dc750c6e578075a16db80b0a2af5c0e8e9",
+          "target/qm/run-context.json": "e980a9b8d2f86312ab79c9cbd3013fd2a8837a40f5783137bf0db6cd5b5ec902"
+        }
+      },
+      "result": {
+        "source_sha": "f55f9299d0cdb67a742e8cf0cf8aa5f001f31333",
+        "source_tree": "15e75f5f1292ed0850bfffc73486939c4fe0e02a",
+        "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "supervisor_launch_ns": 1792856167693998500,
+        "supervisor_launch_utc": "2026-10-24T15:36:07.693998+00:00",
+        "bound_seconds": 600,
+        "bound_basis": "scoped local diagnostic/default budget",
+        "command": [
+          "D:\\04_PROJECTS\\model-sync-spring-boot-starter-0.1.0\\model-sync-starter\\mvnw.cmd",
+          "-B",
+          "-ntp",
+          "-s",
+          ".mvn/qualification-central.settings.xml",
+          "clean",
+          "verify"
+        ],
+        "maven_settings": ".mvn/qualification-central.settings.xml",
+        "external_oracle_variables_cleared": true,
+        "exit": 0,
+        "elapsed_seconds": 135.506,
+        "log_decode": "cp1252; normalized to UTF-8; original build.log retained",
+        "collector_exit": 0
+      },
+      "junit": {
+        "tests": 149,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "xml_suites": 32
+    },
+    {
+      "directory": "diagnostic-3b6aa446-6d2a-44ee-b2a9-04cb6c0eeb00",
+      "context": {
+        "run_id": "1ea8bf28-27f0-4225-970e-6298b62e8335",
+        "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "source_sha": "f55f9299d0cdb67a742e8cf0cf8aa5f001f31333",
+        "source_tree": "15e75f5f1292ed0850bfffc73486939c4fe0e02a",
+        "started_ns": 1792856511779382200,
+        "scope": "diagnostic",
+        "command_exit": 0,
+        "qualification": "DIAGNOSTIC_ONLY",
+        "files_sha256": {
+          "model-sync-sample/target/qm/oracle-first-creation.json": "92c5a07bb158bdc146659d1d62db871dd4204bf0e4958b9e44bbc89dbb7b48f4",
+          "target/qm/diagnostic-build.log": "b42910f243532a3e5ca8bf5e9ebb472e54134eb78e10e85a8a7786cd2481b6a0",
+          "target/qm/oracle-container.json": "33802b88c8ca481e6fc0c416c3d4ab6d095b32a30123d7c4c7cbba76d9ec76c1",
+          "target/qm/oracle-diagnostic.json": "f19da9150c06cf511e84542541c28d6bd693eaae027f931a2cbd38098d895989",
+          "target/qm/run-context.json": "59fd91fd5c4552309d1c4ff408b7ebb97143fe744de99412c560622a4fafa592"
+        }
+      },
+      "result": {
+        "source_sha": "f55f9299d0cdb67a742e8cf0cf8aa5f001f31333",
+        "source_tree": "15e75f5f1292ed0850bfffc73486939c4fe0e02a",
+        "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "supervisor_launch_ns": 1792856354263202700,
+        "supervisor_launch_utc": "2026-10-24T15:39:14.263202+00:00",
+        "bound_seconds": 1200,
+        "bound_basis": "scoped local diagnostic/default budget",
+        "command": [
+          "C:\\Python312\\python.exe",
+          "-u",
+          "scripts/full-oracle-container.py",
+          "--creation-diagnostic"
+        ],
+        "maven_settings": ".mvn/qualification-central.settings.xml",
+        "external_oracle_variables_cleared": true,
+        "exit": 0,
+        "elapsed_seconds": 174.727,
+        "log_decode": "utf-8"
+      },
+      "junit": {
+        "tests": 0,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "xml_suites": 0
+    },
+    {
+      "directory": "diagnostic-d9944649-3e18-40a5-a9d7-fb854328be1d",
+      "context": {
+        "run_id": "16a9d2a6-3581-4715-a9d5-895875d3e34e",
+        "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "source_sha": "cfcc53d9bb7a90e20bbd67f4255d8322c1fc0d99",
+        "source_tree": "1a900bb8845c912793fb5136118222a1fac84c8e",
+        "started_ns": 1792857427787769200,
+        "scope": "diagnostic",
+        "command_exit": 0,
+        "qualification": "DIAGNOSTIC_ONLY",
+        "files_sha256": {
+          "model-sync-sample/target/qm/oracle-first-creation.json": "14aa02ad555182e5a9cd4db3dfe3cda4ea022d824b91222c18bdc5b0f3ccc166",
+          "target/qm/diagnostic-build.log": "147d2b6cd6f13048539876bc0e6b409adc629f990e3214c17a76b19dda17f4c1",
+          "target/qm/oracle-container.json": "bd46581508f6473c4a4a9ee4251c8d9e7e417ad3d7c3bfb5c26f6770c53bfdb9",
+          "target/qm/oracle-diagnostic.json": "5f08821ee78f735a3b0201c7d472d3d8b00e9c6fc2ee5af341b2ed6f18ebfa4a",
+          "target/qm/run-context.json": "997af1f1e3c8861caa77258447163a91a400b4ea2097289c0c649ad0a7119406"
+        }
+      },
+      "result": {
+        "source_sha": "cfcc53d9bb7a90e20bbd67f4255d8322c1fc0d99",
+        "source_tree": "1a900bb8845c912793fb5136118222a1fac84c8e",
+        "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "supervisor_launch_ns": 1792857306648470100,
+        "supervisor_launch_utc": "2026-10-24T15:55:06.648470+00:00",
+        "bound_seconds": 1200,
+        "bound_basis": "scoped local diagnostic/default budget",
+        "command": [
+          "C:\\Python312\\python.exe",
+          "-u",
+          "scripts/full-oracle-container.py",
+          "--creation-diagnostic"
+        ],
+        "maven_settings": ".mvn/qualification-central.settings.xml",
+        "external_oracle_variables_cleared": true,
+        "exit": 0,
+        "elapsed_seconds": 143.213,
+        "log_decode": "utf-8"
+      },
+      "junit": {
+        "tests": 0,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "xml_suites": 0
+    }
+  ],
+  "final_measurements": {
+    "run_id": "16a9d2a6-3581-4715-a9d5-895875d3e34e",
+    "source_change_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "source_sha": "cfcc53d9bb7a90e20bbd67f4255d8322c1fc0d99",
+    "source_tree": "1a900bb8845c912793fb5136118222a1fac84c8e",
+    "started_ns": 1792857427787769200,
+    "scope": "compliant-first-creation",
+    "status": "PASS",
+    "cases": [
+      {
+        "name": "work-native-commit",
+        "status": "PASS",
+        "insert_policy": "ORACLE_26_NOWAIT",
+        "runtime_pool_each": 3,
+        "observer_pool": 2,
+        "acquire_ms": 1000,
+        "connect_ms": 1500,
+        "read_ms": 10000,
+        "manager_timeout_seconds": -1,
+        "a_sessions": [
+          {
+            "serial": 47708,
+            "sid": 220
+          },
+          {
+            "serial": 48401,
+            "sid": 59
+          },
+          {
+            "serial": 63962,
+            "sid": 221
+          }
+        ],
+        "b_sessions": [
+          {
+            "serial": 42381,
+            "sid": 60
+          },
+          {
+            "serial": 42230,
+            "sid": 222
+          },
+          {
+            "serial": 29407,
+            "sid": 61
+          }
+        ],
+        "a_after_insert_before_commit": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0ahgjg4zydsdq",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 47708
+        },
+        "a_ticket_provisional": true,
+        "b_before_a_resolution": {
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "5mx0g9dxuruzb",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 42381
+          },
+          "serial": 42381,
+          "server_before_rollback": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "5mx0g9dxuruzb",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 42381
+          },
+          "previous_sql": "insert into MS_WORK (work_id,binding_id,tenant_id,subject_id,priority,generation,attempts,force_refresh,work_status,next_at_ms,requested_at_ms) values (:1 ,:2 ,:3 ,:4 ,:5 ,1,0,:6 ,'WAITING',:7 ,:8 ) nowait",
+          "sid": 60,
+          "physical_return_ms": 75,
+          "failure_type": "io.modelsync.core.port.LocalContention",
+          "oracle_code": 54
+        },
+        "a_unresolved_at_refusal": true,
+        "a_during_b_refusal": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0ahgjg4zydsdq",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 47708
+        },
+        "b_pool_active_after_refusal": 0,
+        "physical_while_a_paused": 1,
+        "b_failed_transaction_accepted": false,
+        "a_resolution": "COMMIT",
+        "a": {
+          "after_insert_before_commit": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0ahgjg4zydsdq",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 220,
+            "SERIAL": 47708
+          },
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0ahgjg4zydsdq",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 220,
+            "SERIAL": 47708
+          },
+          "serial": 47708,
+          "sid": 220,
+          "physical_return_ms": 197,
+          "failure_type": "NONE"
+        },
+        "a_accepted": true,
+        "b_after_resolution": {
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0qngxhrdud7jt",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 42381
+          },
+          "serial": 42381,
+          "sid": 60,
+          "physical_return_ms": 12,
+          "failure_type": "NONE"
+        },
+        "committed_work": {
+          "GENERATION": 2,
+          "PRIORITY": 0,
+          "FORCE_REFRESH": 1,
+          "WORK_STATUS": "WAITING",
+          "TENANT_ID": "synthetic-creation",
+          "SUBJECT_ID": "c1616405-bb70-4727-a77b-d68aa14d6308"
+        },
+        "classification": "MEASURED_INSERT_REFUSAL",
+        "emergency_release": false,
+        "physical_after_resolution": 0,
+        "pools_after": [
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "0ahgjg4zydsdq",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 220,
+                "SERIAL": 47708
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 59,
+                "SERIAL": 48401
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 221,
+                "SERIAL": 63962
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          },
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "0qngxhrdud7jt",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 60,
+                "SERIAL": 42381
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 222,
+                "SERIAL": 42230
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 61,
+                "SERIAL": 29407
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          }
+        ],
+        "physical_remaining": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "projection-state-fence-rollback",
+        "status": "PASS",
+        "insert_policy": "DEFAULT",
+        "runtime_pool_each": 3,
+        "observer_pool": 2,
+        "acquire_ms": 1000,
+        "connect_ms": 1500,
+        "read_ms": 10000,
+        "manager_timeout_seconds": -1,
+        "a_sessions": [
+          {
+            "serial": 24466,
+            "sid": 222
+          },
+          {
+            "serial": 18089,
+            "sid": 61
+          },
+          {
+            "serial": 63148,
+            "sid": 221
+          }
+        ],
+        "b_sessions": [
+          {
+            "serial": 24975,
+            "sid": 60
+          },
+          {
+            "serial": 45091,
+            "sid": 220
+          },
+          {
+            "serial": 53900,
+            "sid": 59
+          }
+        ],
+        "a_after_insert_before_commit": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0rmv30uf32v9c",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 222,
+          "SERIAL": 24466
+        },
+        "b_before_a_resolution": {
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4rrcx6pxm100r",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 24975
+          },
+          "serial": 24975,
+          "server_before_rollback": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4rrcx6pxm100r",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 24975
+          },
+          "previous_sql": "select * from MS_WORK where work_id=:1 for update nowait",
+          "sid": 60,
+          "physical_return_ms": 15,
+          "failure_type": "io.modelsync.core.port.LocalContention",
+          "oracle_code": 54
+        },
+        "a_unresolved_at_refusal": true,
+        "a_during_b_refusal": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0rmv30uf32v9c",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 222,
+          "SERIAL": 24466
+        },
+        "b_pool_active_after_refusal": 0,
+        "physical_while_a_paused": 1,
+        "b_failed_transaction_accepted": false,
+        "b_mapping_entered": false,
+        "a_resolution": "ROLLBACK",
+        "a": {
+          "after_insert_before_commit": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0rmv30uf32v9c",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 222,
+            "SERIAL": 24466
+          },
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0rmv30uf32v9c",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 222,
+            "SERIAL": 24466
+          },
+          "serial": 24466,
+          "sid": 222,
+          "physical_return_ms": 462,
+          "failure_type": "io.modelsync.sample.CreationRollback"
+        },
+        "a_accepted": false,
+        "classification": "SERIALIZED_BY_WORK_FENCE",
+        "a_jpa_sql": [
+          "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+          "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+          "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=? for update of ce1_0.storage_key nowait",
+          "insert into sample_customer (display_name,expires_at,review_requested_at,source_id,customer_status,tenant_id,local_version,storage_key) values (?,?,?,?,?,?,?,?)",
+          "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?"
+        ],
+        "state_insert_sql": [
+          {
+            "sql_id": "174jwj6fjdpnr",
+            "sql": "insert into MS_STATE (work_id,validated_at_ms,reconciled_at_ms,matched_digest,owner_validator,outcome,source_changed_at_ms) values (:1 ,:2 ,:3 ,:4 ,:5 ,:6 ,:7 )"
+          }
+        ],
+        "state_sql_scope": "loaded SQL text; no cursor delta attribution",
+        "owner_reads": 2,
+        "successful_result_commits": 1,
+        "emergency_release": false,
+        "physical_after_resolution": 0,
+        "pools_after": [
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "0rmv30uf32v9c",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 222,
+                "SERIAL": 24466
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 61,
+                "SERIAL": 18089
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "4rrcx6pxm100r",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 221,
+                "SERIAL": 63148
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          },
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "4rrcx6pxm100r",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 60,
+                "SERIAL": 24975
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 220,
+                "SERIAL": 45091
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "526hzwkxubgmc",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 59,
+                "SERIAL": 53900
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          }
+        ],
+        "physical_remaining": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "work-default-commit",
+        "status": "PASS",
+        "insert_policy": "DEFAULT",
+        "runtime_pool_each": 3,
+        "observer_pool": 2,
+        "acquire_ms": 1000,
+        "connect_ms": 1500,
+        "read_ms": 10000,
+        "manager_timeout_seconds": -1,
+        "a_sessions": [
+          {
+            "serial": 16032,
+            "sid": 220
+          },
+          {
+            "serial": 10142,
+            "sid": 59
+          },
+          {
+            "serial": 7717,
+            "sid": 221
+          }
+        ],
+        "b_sessions": [
+          {
+            "serial": 53226,
+            "sid": 60
+          },
+          {
+            "serial": 19480,
+            "sid": 222
+          },
+          {
+            "serial": 13165,
+            "sid": 61
+          }
+        ],
+        "a_after_insert_before_commit": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0ahgjg4zydsdq",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 16032
+        },
+        "a_ticket_provisional": true,
+        "b_while_a_unresolved": {
+          "STATUS": "ACTIVE",
+          "EVENT": "enq: TX - row lock contention",
+          "STATE": "WAITING",
+          "SQL_ID": "2r0ff1fzacgd9",
+          "PREV_SQL_ID": "4rrcx6pxm100r",
+          "BLOCKING_SESSION": 220,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 1,
+          "SID": 60,
+          "SERIAL": 53226
+        },
+        "blocked_sql": "insert into MS_WORK (work_id,binding_id,tenant_id,subject_id,priority,generation,attempts,force_refresh,work_status,next_at_ms,requested_at_ms) values (:1 ,:2 ,:3 ,:4 ,:5 ,1,0,:6 ,'WAITING',:7 ,:8 )",
+        "a_unresolved": true,
+        "b_physically_complete_before_a_resolution": false,
+        "a_resolution": "COMMIT",
+        "a": {
+          "after_insert_before_commit": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0ahgjg4zydsdq",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 220,
+            "SERIAL": 16032
+          },
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0ahgjg4zydsdq",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 220,
+            "SERIAL": 16032
+          },
+          "serial": 16032,
+          "sid": 220,
+          "physical_return_ms": 50,
+          "failure_type": "NONE"
+        },
+        "a_accepted": true,
+        "b_after_resolution": {
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0qngxhrdud7jt",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 53226
+          },
+          "serial": 53226,
+          "sid": 60,
+          "physical_return_ms": 49,
+          "failure_type": "NONE"
+        },
+        "committed_work": {
+          "GENERATION": 2,
+          "PRIORITY": 0,
+          "FORCE_REFRESH": 1,
+          "WORK_STATUS": "WAITING",
+          "TENANT_ID": "synthetic-creation",
+          "SUBJECT_ID": "67e69228-0e51-4cc5-820e-6047f33da2b3"
+        },
+        "classification": "UNBOUNDED_DEFAULT_WAIT",
+        "emergency_release": false,
+        "physical_after_resolution": 0,
+        "pools_after": [
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "0ahgjg4zydsdq",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 220,
+                "SERIAL": 16032
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 59,
+                "SERIAL": 10142
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 221,
+                "SERIAL": 7717
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          },
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "0qngxhrdud7jt",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 60,
+                "SERIAL": 53226
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 222,
+                "SERIAL": 19480
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 61,
+                "SERIAL": 13165
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          }
+        ],
+        "physical_remaining": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "projection-state-fence-commit",
+        "status": "PASS",
+        "insert_policy": "DEFAULT",
+        "runtime_pool_each": 3,
+        "observer_pool": 2,
+        "acquire_ms": 1000,
+        "connect_ms": 1500,
+        "read_ms": 10000,
+        "manager_timeout_seconds": -1,
+        "a_sessions": [
+          {
+            "serial": 8749,
+            "sid": 222
+          },
+          {
+            "serial": 35558,
+            "sid": 61
+          },
+          {
+            "serial": 18887,
+            "sid": 221
+          }
+        ],
+        "b_sessions": [
+          {
+            "serial": 4640,
+            "sid": 60
+          },
+          {
+            "serial": 56235,
+            "sid": 220
+          },
+          {
+            "serial": 29554,
+            "sid": 59
+          }
+        ],
+        "a_after_insert_before_commit": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0rmv30uf32v9c",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 222,
+          "SERIAL": 8749
+        },
+        "b_before_a_resolution": {
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4rrcx6pxm100r",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 4640
+          },
+          "serial": 4640,
+          "server_before_rollback": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4rrcx6pxm100r",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 4640
+          },
+          "previous_sql": "select * from MS_WORK where work_id=:1 for update nowait",
+          "sid": 60,
+          "physical_return_ms": 12,
+          "failure_type": "io.modelsync.core.port.LocalContention",
+          "oracle_code": 54
+        },
+        "a_unresolved_at_refusal": true,
+        "a_during_b_refusal": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0rmv30uf32v9c",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 222,
+          "SERIAL": 8749
+        },
+        "b_pool_active_after_refusal": 0,
+        "physical_while_a_paused": 1,
+        "b_failed_transaction_accepted": false,
+        "b_mapping_entered": false,
+        "a_resolution": "COMMIT",
+        "a": {
+          "after_insert_before_commit": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0rmv30uf32v9c",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 222,
+            "SERIAL": 8749
+          },
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0rmv30uf32v9c",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 222,
+            "SERIAL": 8749
+          },
+          "serial": 8749,
+          "sid": 222,
+          "physical_return_ms": 63,
+          "failure_type": "NONE"
+        },
+        "a_accepted": true,
+        "classification": "SERIALIZED_BY_WORK_FENCE",
+        "a_jpa_sql": [
+          "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+          "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=?",
+          "select ce1_0.storage_key,ce1_0.display_name,ce1_0.expires_at,ce1_0.review_requested_at,ce1_0.source_id,ce1_0.customer_status,ce1_0.tenant_id,ce1_0.local_version from sample_customer ce1_0 where ce1_0.storage_key=? for update of ce1_0.storage_key nowait",
+          "insert into sample_customer (display_name,expires_at,review_requested_at,source_id,customer_status,tenant_id,local_version,storage_key) values (?,?,?,?,?,?,?,?)"
+        ],
+        "state_insert_sql": [
+          {
+            "sql_id": "174jwj6fjdpnr",
+            "sql": "insert into MS_STATE (work_id,validated_at_ms,reconciled_at_ms,matched_digest,owner_validator,outcome,source_changed_at_ms) values (:1 ,:2 ,:3 ,:4 ,:5 ,:6 ,:7 )"
+          }
+        ],
+        "state_sql_scope": "loaded SQL text; no cursor delta attribution",
+        "owner_reads": 2,
+        "successful_result_commits": 2,
+        "emergency_release": false,
+        "physical_after_resolution": 0,
+        "pools_after": [
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "0rmv30uf32v9c",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 222,
+                "SERIAL": 8749
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 61,
+                "SERIAL": 35558
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "4rrcx6pxm100r",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 221,
+                "SERIAL": 18887
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          },
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "4rrcx6pxm100r",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 60,
+                "SERIAL": 4640
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 220,
+                "SERIAL": 56235
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "526hzwkxubgmc",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 59,
+                "SERIAL": 29554
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          }
+        ],
+        "physical_remaining": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "work-default-rollback",
+        "status": "PASS",
+        "insert_policy": "DEFAULT",
+        "runtime_pool_each": 3,
+        "observer_pool": 2,
+        "acquire_ms": 1000,
+        "connect_ms": 1500,
+        "read_ms": 10000,
+        "manager_timeout_seconds": -1,
+        "a_sessions": [
+          {
+            "serial": 17751,
+            "sid": 220
+          },
+          {
+            "serial": 49561,
+            "sid": 59
+          },
+          {
+            "serial": 16741,
+            "sid": 221
+          }
+        ],
+        "b_sessions": [
+          {
+            "serial": 51376,
+            "sid": 60
+          },
+          {
+            "serial": 43035,
+            "sid": 222
+          },
+          {
+            "serial": 3282,
+            "sid": 61
+          }
+        ],
+        "a_after_insert_before_commit": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0ahgjg4zydsdq",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 17751
+        },
+        "a_ticket_provisional": true,
+        "b_while_a_unresolved": {
+          "STATUS": "ACTIVE",
+          "EVENT": "enq: TX - row lock contention",
+          "STATE": "WAITING",
+          "SQL_ID": "2r0ff1fzacgd9",
+          "PREV_SQL_ID": "4rrcx6pxm100r",
+          "BLOCKING_SESSION": 220,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 1,
+          "SID": 60,
+          "SERIAL": 51376
+        },
+        "blocked_sql": "insert into MS_WORK (work_id,binding_id,tenant_id,subject_id,priority,generation,attempts,force_refresh,work_status,next_at_ms,requested_at_ms) values (:1 ,:2 ,:3 ,:4 ,:5 ,1,0,:6 ,'WAITING',:7 ,:8 )",
+        "a_unresolved": true,
+        "b_physically_complete_before_a_resolution": false,
+        "a_resolution": "ROLLBACK",
+        "a": {
+          "after_insert_before_commit": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0ahgjg4zydsdq",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 220,
+            "SERIAL": 17751
+          },
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0ahgjg4zydsdq",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 220,
+            "SERIAL": 17751
+          },
+          "serial": 17751,
+          "sid": 220,
+          "physical_return_ms": 48,
+          "failure_type": "io.modelsync.sample.CreationRollback"
+        },
+        "a_accepted": false,
+        "b_after_resolution": {
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "2r0ff1fzacgd9",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 51376
+          },
+          "serial": 51376,
+          "sid": 60,
+          "physical_return_ms": 36,
+          "failure_type": "NONE"
+        },
+        "committed_work": {
+          "GENERATION": 1,
+          "PRIORITY": 0,
+          "FORCE_REFRESH": 1,
+          "WORK_STATUS": "WAITING",
+          "TENANT_ID": "synthetic-creation",
+          "SUBJECT_ID": "7fc840d1-e0f9-431d-b2f6-58e715c3da7d"
+        },
+        "classification": "UNBOUNDED_DEFAULT_WAIT",
+        "emergency_release": false,
+        "physical_after_resolution": 0,
+        "pools_after": [
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "0ahgjg4zydsdq",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 220,
+                "SERIAL": 17751
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 59,
+                "SERIAL": 49561
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 221,
+                "SERIAL": 16741
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          },
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "2r0ff1fzacgd9",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 60,
+                "SERIAL": 51376
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 222,
+                "SERIAL": 43035
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 61,
+                "SERIAL": 3282
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          }
+        ],
+        "physical_remaining": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "quota-native-rollback",
+        "status": "PASS",
+        "insert_policy": "ORACLE_26_NOWAIT",
+        "runtime_pool_each": 3,
+        "observer_pool": 2,
+        "acquire_ms": 1000,
+        "connect_ms": 1500,
+        "read_ms": 10000,
+        "manager_timeout_seconds": -1,
+        "a_sessions": [
+          {
+            "serial": 50285,
+            "sid": 222
+          },
+          {
+            "serial": 49458,
+            "sid": 61
+          },
+          {
+            "serial": 62737,
+            "sid": 221
+          }
+        ],
+        "b_sessions": [
+          {
+            "serial": 64738,
+            "sid": 60
+          },
+          {
+            "serial": 52168,
+            "sid": 220
+          },
+          {
+            "serial": 27575,
+            "sid": 59
+          }
+        ],
+        "a_after_insert_before_commit": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "4gxzfbn5utjpm",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 222,
+          "SERIAL": 50285
+        },
+        "b_before_a_resolution": {
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "fw8vc2s8x9zhp",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 64738
+          },
+          "serial": 64738,
+          "server_before_rollback": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "fw8vc2s8x9zhp",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 64738
+          },
+          "previous_sql": "insert into MS_QUOTA (quota_group,spacing_ms,next_allowed_ms) values (:1 ,:2 ,0) nowait",
+          "sid": 60,
+          "physical_return_ms": 8,
+          "failure_type": "io.modelsync.core.port.LocalContention",
+          "oracle_code": 54
+        },
+        "a_unresolved_at_refusal": true,
+        "a_during_b_refusal": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "4gxzfbn5utjpm",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 222,
+          "SERIAL": 50285
+        },
+        "b_pool_active_after_refusal": 0,
+        "physical_while_a_paused": 1,
+        "b_failed_transaction_accepted": false,
+        "a_resolution": "ROLLBACK",
+        "a": {
+          "after_insert_before_commit": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4gxzfbn5utjpm",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 222,
+            "SERIAL": 50285
+          },
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4gxzfbn5utjpm",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 222,
+            "SERIAL": 50285
+          },
+          "serial": 50285,
+          "sid": 222,
+          "physical_return_ms": 34,
+          "failure_type": "io.modelsync.sample.CreationRollback"
+        },
+        "a_accepted": false,
+        "b_after_resolution": {
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "1s4gyu76cbuaz",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 64738
+          },
+          "serial": 64738,
+          "sid": 60,
+          "physical_return_ms": 6,
+          "failure_type": "NONE"
+        },
+        "committed_configuration": {
+          "SPACING_MS": 17,
+          "NEXT_ALLOWED_MS": 0
+        },
+        "classification": "MEASURED_INSERT_REFUSAL",
+        "emergency_release": false,
+        "physical_after_resolution": 0,
+        "pools_after": [
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "4gxzfbn5utjpm",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 222,
+                "SERIAL": 50285
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 61,
+                "SERIAL": 49458
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 221,
+                "SERIAL": 62737
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          },
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "1s4gyu76cbuaz",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 60,
+                "SERIAL": 64738
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 220,
+                "SERIAL": 52168
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "1s4gyu76cbuaz",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 59,
+                "SERIAL": 27575
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          }
+        ],
+        "physical_remaining": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "quota-native-commit",
+        "status": "PASS",
+        "insert_policy": "ORACLE_26_NOWAIT",
+        "runtime_pool_each": 3,
+        "observer_pool": 2,
+        "acquire_ms": 1000,
+        "connect_ms": 1500,
+        "read_ms": 10000,
+        "manager_timeout_seconds": -1,
+        "a_sessions": [
+          {
+            "serial": 12513,
+            "sid": 220
+          },
+          {
+            "serial": 26513,
+            "sid": 59
+          },
+          {
+            "serial": 65164,
+            "sid": 221
+          }
+        ],
+        "b_sessions": [
+          {
+            "serial": 62267,
+            "sid": 60
+          },
+          {
+            "serial": 47666,
+            "sid": 222
+          },
+          {
+            "serial": 36166,
+            "sid": 61
+          }
+        ],
+        "a_after_insert_before_commit": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "4gxzfbn5utjpm",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 12513
+        },
+        "b_before_a_resolution": {
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "fw8vc2s8x9zhp",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 62267
+          },
+          "serial": 62267,
+          "server_before_rollback": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "fw8vc2s8x9zhp",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 62267
+          },
+          "previous_sql": "insert into MS_QUOTA (quota_group,spacing_ms,next_allowed_ms) values (:1 ,:2 ,0) nowait",
+          "sid": 60,
+          "physical_return_ms": 8,
+          "failure_type": "io.modelsync.core.port.LocalContention",
+          "oracle_code": 54
+        },
+        "a_unresolved_at_refusal": true,
+        "a_during_b_refusal": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "4gxzfbn5utjpm",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 12513
+        },
+        "b_pool_active_after_refusal": 0,
+        "physical_while_a_paused": 1,
+        "b_failed_transaction_accepted": false,
+        "a_resolution": "COMMIT",
+        "a": {
+          "after_insert_before_commit": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4gxzfbn5utjpm",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 220,
+            "SERIAL": 12513
+          },
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4gxzfbn5utjpm",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 220,
+            "SERIAL": 12513
+          },
+          "serial": 12513,
+          "sid": 220,
+          "physical_return_ms": 32,
+          "failure_type": "NONE"
+        },
+        "a_accepted": true,
+        "b_after_resolution": {
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "1s4gyu76cbuaz",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 62267
+          },
+          "serial": 62267,
+          "sid": 60,
+          "physical_return_ms": 3,
+          "failure_type": "NONE"
+        },
+        "committed_configuration": {
+          "SPACING_MS": 17,
+          "NEXT_ALLOWED_MS": 0
+        },
+        "classification": "MEASURED_INSERT_REFUSAL",
+        "emergency_release": false,
+        "physical_after_resolution": 0,
+        "pools_after": [
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "4gxzfbn5utjpm",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 220,
+                "SERIAL": 12513
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 59,
+                "SERIAL": 26513
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 221,
+                "SERIAL": 65164
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          },
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "1s4gyu76cbuaz",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 60,
+                "SERIAL": 62267
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 222,
+                "SERIAL": 47666
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "1s4gyu76cbuaz",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 61,
+                "SERIAL": 36166
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          }
+        ],
+        "physical_remaining": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "work-native-rollback",
+        "status": "PASS",
+        "insert_policy": "ORACLE_26_NOWAIT",
+        "runtime_pool_each": 3,
+        "observer_pool": 2,
+        "acquire_ms": 1000,
+        "connect_ms": 1500,
+        "read_ms": 10000,
+        "manager_timeout_seconds": -1,
+        "a_sessions": [
+          {
+            "serial": 26459,
+            "sid": 222
+          },
+          {
+            "serial": 49413,
+            "sid": 61
+          },
+          {
+            "serial": 25255,
+            "sid": 221
+          }
+        ],
+        "b_sessions": [
+          {
+            "serial": 6146,
+            "sid": 60
+          },
+          {
+            "serial": 27553,
+            "sid": 220
+          },
+          {
+            "serial": 51839,
+            "sid": 59
+          }
+        ],
+        "a_after_insert_before_commit": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0ahgjg4zydsdq",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 222,
+          "SERIAL": 26459
+        },
+        "a_ticket_provisional": true,
+        "b_before_a_resolution": {
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "5mx0g9dxuruzb",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 6146
+          },
+          "serial": 6146,
+          "server_before_rollback": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "5mx0g9dxuruzb",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 6146
+          },
+          "previous_sql": "insert into MS_WORK (work_id,binding_id,tenant_id,subject_id,priority,generation,attempts,force_refresh,work_status,next_at_ms,requested_at_ms) values (:1 ,:2 ,:3 ,:4 ,:5 ,1,0,:6 ,'WAITING',:7 ,:8 ) nowait",
+          "sid": 60,
+          "physical_return_ms": 12,
+          "failure_type": "io.modelsync.core.port.LocalContention",
+          "oracle_code": 54
+        },
+        "a_unresolved_at_refusal": true,
+        "a_during_b_refusal": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0ahgjg4zydsdq",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 222,
+          "SERIAL": 26459
+        },
+        "b_pool_active_after_refusal": 0,
+        "physical_while_a_paused": 1,
+        "b_failed_transaction_accepted": false,
+        "a_resolution": "ROLLBACK",
+        "a": {
+          "after_insert_before_commit": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0ahgjg4zydsdq",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 222,
+            "SERIAL": 26459
+          },
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0ahgjg4zydsdq",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 222,
+            "SERIAL": 26459
+          },
+          "serial": 26459,
+          "sid": 222,
+          "physical_return_ms": 38,
+          "failure_type": "io.modelsync.sample.CreationRollback"
+        },
+        "a_accepted": false,
+        "b_after_resolution": {
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "5mx0g9dxuruzb",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 6146
+          },
+          "serial": 6146,
+          "sid": 60,
+          "physical_return_ms": 6,
+          "failure_type": "NONE"
+        },
+        "committed_work": {
+          "GENERATION": 1,
+          "PRIORITY": 0,
+          "FORCE_REFRESH": 1,
+          "WORK_STATUS": "WAITING",
+          "TENANT_ID": "synthetic-creation",
+          "SUBJECT_ID": "06b65420-410d-4551-b42b-f9cb004611be"
+        },
+        "classification": "MEASURED_INSERT_REFUSAL",
+        "emergency_release": false,
+        "physical_after_resolution": 0,
+        "pools_after": [
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "0ahgjg4zydsdq",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 222,
+                "SERIAL": 26459
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 61,
+                "SERIAL": 49413
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 221,
+                "SERIAL": 25255
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          },
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "5mx0g9dxuruzb",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 60,
+                "SERIAL": 6146
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 220,
+                "SERIAL": 27553
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 59,
+                "SERIAL": 51839
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          }
+        ],
+        "physical_remaining": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "quota-default-rollback",
+        "status": "PASS",
+        "insert_policy": "DEFAULT",
+        "runtime_pool_each": 3,
+        "observer_pool": 2,
+        "acquire_ms": 1000,
+        "connect_ms": 1500,
+        "read_ms": 10000,
+        "manager_timeout_seconds": -1,
+        "a_sessions": [
+          {
+            "serial": 21895,
+            "sid": 220
+          },
+          {
+            "serial": 4474,
+            "sid": 59
+          },
+          {
+            "serial": 16712,
+            "sid": 221
+          }
+        ],
+        "b_sessions": [
+          {
+            "serial": 3021,
+            "sid": 60
+          },
+          {
+            "serial": 52363,
+            "sid": 222
+          },
+          {
+            "serial": 36141,
+            "sid": 61
+          }
+        ],
+        "a_after_insert_before_commit": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "4gxzfbn5utjpm",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 21895
+        },
+        "b_while_a_unresolved": {
+          "STATUS": "ACTIVE",
+          "EVENT": "enq: TX - row lock contention",
+          "STATE": "WAITING",
+          "SQL_ID": "97ya18r2wacya",
+          "PREV_SQL_ID": "1s4gyu76cbuaz",
+          "BLOCKING_SESSION": 220,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 1,
+          "SID": 60,
+          "SERIAL": 3021
+        },
+        "blocked_sql": "insert into MS_QUOTA (quota_group,spacing_ms,next_allowed_ms) values (:1 ,:2 ,0)",
+        "a_unresolved": true,
+        "b_physically_complete_before_a_resolution": false,
+        "a_resolution": "ROLLBACK",
+        "a": {
+          "after_insert_before_commit": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4gxzfbn5utjpm",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 220,
+            "SERIAL": 21895
+          },
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4gxzfbn5utjpm",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 220,
+            "SERIAL": 21895
+          },
+          "serial": 21895,
+          "sid": 220,
+          "physical_return_ms": 45,
+          "failure_type": "io.modelsync.sample.CreationRollback"
+        },
+        "a_accepted": false,
+        "b_after_resolution": {
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "1s4gyu76cbuaz",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 3021
+          },
+          "serial": 3021,
+          "sid": 60,
+          "physical_return_ms": 30,
+          "failure_type": "NONE"
+        },
+        "committed_configuration": {
+          "SPACING_MS": 17,
+          "NEXT_ALLOWED_MS": 0
+        },
+        "classification": "UNBOUNDED_DEFAULT_WAIT",
+        "emergency_release": false,
+        "physical_after_resolution": 0,
+        "pools_after": [
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "4gxzfbn5utjpm",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 220,
+                "SERIAL": 21895
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 59,
+                "SERIAL": 4474
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 221,
+                "SERIAL": 16712
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          },
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "1s4gyu76cbuaz",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 60,
+                "SERIAL": 3021
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 222,
+                "SERIAL": 52363
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "1s4gyu76cbuaz",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 61,
+                "SERIAL": 36141
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          }
+        ],
+        "physical_remaining": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "passive-native-commit",
+        "status": "PASS",
+        "insert_policy": "ORACLE_26_NOWAIT",
+        "runtime_pool_each": 3,
+        "observer_pool": 2,
+        "acquire_ms": 1000,
+        "connect_ms": 1500,
+        "read_ms": 10000,
+        "manager_timeout_seconds": -1,
+        "a_sessions": [
+          {
+            "serial": 49728,
+            "sid": 222
+          },
+          {
+            "serial": 51693,
+            "sid": 61
+          },
+          {
+            "serial": 60494,
+            "sid": 221
+          }
+        ],
+        "b_sessions": [
+          {
+            "serial": 4875,
+            "sid": 60
+          },
+          {
+            "serial": 33376,
+            "sid": 220
+          },
+          {
+            "serial": 41352,
+            "sid": 59
+          }
+        ],
+        "a_after_insert_before_commit": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0ahgjg4zydsdq",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 222,
+          "SERIAL": 49728
+        },
+        "a_ticket_provisional": true,
+        "b_before_a_resolution": {
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4m5nk4fxkp59w",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 4875
+          },
+          "serial": 4875,
+          "server_before_rollback": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4m5nk4fxkp59w",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 4875
+          },
+          "previous_sql": "insert into MS_WORK (work_id,binding_id,tenant_id,subject_id,priority,generation,attempts,force_refresh,work_status,next_at_ms,requested_at_ms) values (:1 ,:2 ,:3 ,:4 ,:5 ,1,0,0,'WAITING',:6 ,:7 ) nowait",
+          "sid": 60,
+          "physical_return_ms": 15,
+          "failure_type": "io.modelsync.core.port.LocalContention",
+          "oracle_code": 54
+        },
+        "a_unresolved_at_refusal": true,
+        "a_during_b_refusal": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0ahgjg4zydsdq",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 222,
+          "SERIAL": 49728
+        },
+        "b_pool_active_after_refusal": 0,
+        "physical_while_a_paused": 1,
+        "b_failed_transaction_accepted": false,
+        "a_resolution": "COMMIT",
+        "a": {
+          "after_insert_before_commit": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0ahgjg4zydsdq",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 222,
+            "SERIAL": 49728
+          },
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0ahgjg4zydsdq",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 222,
+            "SERIAL": 49728
+          },
+          "serial": 49728,
+          "sid": 222,
+          "physical_return_ms": 41,
+          "failure_type": "NONE"
+        },
+        "a_accepted": true,
+        "b_after_resolution": {
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "acaph2p8882jz",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 4875
+          },
+          "serial": 4875,
+          "sid": 60,
+          "physical_return_ms": 7,
+          "failure_type": "NONE"
+        },
+        "committed_work": {
+          "GENERATION": 1,
+          "PRIORITY": 0,
+          "FORCE_REFRESH": 1,
+          "WORK_STATUS": "WAITING",
+          "TENANT_ID": "synthetic-creation",
+          "SUBJECT_ID": "81a0af48-8482-4901-981e-5ee409b12019"
+        },
+        "classification": "MEASURED_INSERT_REFUSAL",
+        "emergency_release": false,
+        "physical_after_resolution": 0,
+        "pools_after": [
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "0ahgjg4zydsdq",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 222,
+                "SERIAL": 49728
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 61,
+                "SERIAL": 51693
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 221,
+                "SERIAL": 60494
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          },
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "acaph2p8882jz",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 60,
+                "SERIAL": 4875
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 220,
+                "SERIAL": 33376
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 59,
+                "SERIAL": 41352
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          }
+        ],
+        "physical_remaining": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "passive-native-rollback",
+        "status": "PASS",
+        "insert_policy": "ORACLE_26_NOWAIT",
+        "runtime_pool_each": 3,
+        "observer_pool": 2,
+        "acquire_ms": 1000,
+        "connect_ms": 1500,
+        "read_ms": 10000,
+        "manager_timeout_seconds": -1,
+        "a_sessions": [
+          {
+            "serial": 23130,
+            "sid": 220
+          },
+          {
+            "serial": 7869,
+            "sid": 59
+          },
+          {
+            "serial": 30227,
+            "sid": 221
+          }
+        ],
+        "b_sessions": [
+          {
+            "serial": 26902,
+            "sid": 60
+          },
+          {
+            "serial": 46372,
+            "sid": 222
+          },
+          {
+            "serial": 15428,
+            "sid": 61
+          }
+        ],
+        "a_after_insert_before_commit": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0ahgjg4zydsdq",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 23130
+        },
+        "a_ticket_provisional": true,
+        "b_before_a_resolution": {
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4m5nk4fxkp59w",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 26902
+          },
+          "serial": 26902,
+          "server_before_rollback": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4m5nk4fxkp59w",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 26902
+          },
+          "previous_sql": "insert into MS_WORK (work_id,binding_id,tenant_id,subject_id,priority,generation,attempts,force_refresh,work_status,next_at_ms,requested_at_ms) values (:1 ,:2 ,:3 ,:4 ,:5 ,1,0,0,'WAITING',:6 ,:7 ) nowait",
+          "sid": 60,
+          "physical_return_ms": 14,
+          "failure_type": "io.modelsync.core.port.LocalContention",
+          "oracle_code": 54
+        },
+        "a_unresolved_at_refusal": true,
+        "a_during_b_refusal": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "0ahgjg4zydsdq",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 220,
+          "SERIAL": 23130
+        },
+        "b_pool_active_after_refusal": 0,
+        "physical_while_a_paused": 1,
+        "b_failed_transaction_accepted": false,
+        "a_resolution": "ROLLBACK",
+        "a": {
+          "after_insert_before_commit": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0ahgjg4zydsdq",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 220,
+            "SERIAL": 23130
+          },
+          "completion": "ROLLED_BACK",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "0ahgjg4zydsdq",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 220,
+            "SERIAL": 23130
+          },
+          "serial": 23130,
+          "sid": 220,
+          "physical_return_ms": 40,
+          "failure_type": "io.modelsync.sample.CreationRollback"
+        },
+        "a_accepted": false,
+        "b_after_resolution": {
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4m5nk4fxkp59w",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 26902
+          },
+          "serial": 26902,
+          "sid": 60,
+          "physical_return_ms": 6,
+          "failure_type": "NONE"
+        },
+        "committed_work": {
+          "GENERATION": 1,
+          "PRIORITY": 0,
+          "FORCE_REFRESH": 0,
+          "WORK_STATUS": "WAITING",
+          "TENANT_ID": "synthetic-creation",
+          "SUBJECT_ID": "b88fff01-669f-4624-89e3-62f767ff92fa"
+        },
+        "classification": "MEASURED_INSERT_REFUSAL",
+        "emergency_release": false,
+        "physical_after_resolution": 0,
+        "pools_after": [
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "0ahgjg4zydsdq",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 220,
+                "SERIAL": 23130
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 59,
+                "SERIAL": 7869
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 221,
+                "SERIAL": 30227
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          },
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "4m5nk4fxkp59w",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 60,
+                "SERIAL": 26902
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 222,
+                "SERIAL": 46372
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 61,
+                "SERIAL": 15428
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          }
+        ],
+        "physical_remaining": 0,
+        "cleanup_verified": true
+      },
+      {
+        "name": "quota-default-commit",
+        "status": "PASS",
+        "insert_policy": "DEFAULT",
+        "runtime_pool_each": 3,
+        "observer_pool": 2,
+        "acquire_ms": 1000,
+        "connect_ms": 1500,
+        "read_ms": 10000,
+        "manager_timeout_seconds": -1,
+        "a_sessions": [
+          {
+            "serial": 33113,
+            "sid": 222
+          },
+          {
+            "serial": 46636,
+            "sid": 61
+          },
+          {
+            "serial": 38789,
+            "sid": 221
+          }
+        ],
+        "b_sessions": [
+          {
+            "serial": 16416,
+            "sid": 60
+          },
+          {
+            "serial": 42832,
+            "sid": 220
+          },
+          {
+            "serial": 54798,
+            "sid": 59
+          }
+        ],
+        "a_after_insert_before_commit": {
+          "STATUS": "INACTIVE",
+          "EVENT": "SQL*Net message from client",
+          "STATE": "WAITING",
+          "SQL_ID": null,
+          "PREV_SQL_ID": "4gxzfbn5utjpm",
+          "BLOCKING_SESSION": null,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 0,
+          "SID": 222,
+          "SERIAL": 33113
+        },
+        "b_while_a_unresolved": {
+          "STATUS": "ACTIVE",
+          "EVENT": "enq: TX - row lock contention",
+          "STATE": "WAITING",
+          "SQL_ID": "97ya18r2wacya",
+          "PREV_SQL_ID": "1s4gyu76cbuaz",
+          "BLOCKING_SESSION": 222,
+          "TRANSACTION_ACTIVE": 1,
+          "LOCK_WAIT": 1,
+          "SID": 60,
+          "SERIAL": 16416
+        },
+        "blocked_sql": "insert into MS_QUOTA (quota_group,spacing_ms,next_allowed_ms) values (:1 ,:2 ,0)",
+        "a_unresolved": true,
+        "b_physically_complete_before_a_resolution": false,
+        "a_resolution": "COMMIT",
+        "a": {
+          "after_insert_before_commit": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4gxzfbn5utjpm",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 1,
+            "LOCK_WAIT": 0,
+            "SID": 222,
+            "SERIAL": 33113
+          },
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "4gxzfbn5utjpm",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 222,
+            "SERIAL": 33113
+          },
+          "serial": 33113,
+          "sid": 222,
+          "physical_return_ms": 37,
+          "failure_type": "NONE"
+        },
+        "a_accepted": true,
+        "b_after_resolution": {
+          "completion": "COMMITTED",
+          "server_after_transaction": {
+            "STATUS": "INACTIVE",
+            "EVENT": "SQL*Net message from client",
+            "STATE": "WAITING",
+            "SQL_ID": null,
+            "PREV_SQL_ID": "1s4gyu76cbuaz",
+            "BLOCKING_SESSION": null,
+            "TRANSACTION_ACTIVE": 0,
+            "LOCK_WAIT": 0,
+            "SID": 60,
+            "SERIAL": 16416
+          },
+          "serial": 16416,
+          "sid": 60,
+          "physical_return_ms": 26,
+          "failure_type": "NONE"
+        },
+        "committed_configuration": {
+          "SPACING_MS": 17,
+          "NEXT_ALLOWED_MS": 0
+        },
+        "classification": "UNBOUNDED_DEFAULT_WAIT",
+        "emergency_release": false,
+        "physical_after_resolution": 0,
+        "pools_after": [
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "4gxzfbn5utjpm",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 222,
+                "SERIAL": 33113
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 61,
+                "SERIAL": 46636
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "010pttqxsbujs",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 221,
+                "SERIAL": 38789
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          },
+          {
+            "idle": 3,
+            "sessions": [
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "1s4gyu76cbuaz",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 60,
+                "SERIAL": 16416
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "68wkq6sfb0j26",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 220,
+                "SERIAL": 42832
+              },
+              {
+                "STATUS": "INACTIVE",
+                "EVENT": "SQL*Net message from client",
+                "STATE": "WAITING",
+                "SQL_ID": null,
+                "PREV_SQL_ID": "1s4gyu76cbuaz",
+                "BLOCKING_SESSION": null,
+                "TRANSACTION_ACTIVE": 0,
+                "LOCK_WAIT": 0,
+                "SID": 59,
+                "SERIAL": 54798
+              }
+            ],
+            "active": 0,
+            "waiting": 0
+          }
+        ],
+        "physical_remaining": 0,
+        "cleanup_verified": true
+      }
+    ],
+    "observation_ms": 5000,
+    "oracle": "Oracle AI Database 26ai Free Release 23.26.3.0.0 - Develop, Learn, and Run for Free\nVersion 23.26.3.0.0",
+    "oracle_major": 23,
+    "oracle_minor": 26,
+    "driver": "23.26.3.0.0",
+    "jdk": "21.0.12.1+1-LTS",
+    "hibernate": "7.4.5.Final",
+    "owned_executor_terminated": true,
+    "physical_remaining": 0,
+    "owned_pools_closed": true,
+    "table_removed": true
+  },
+  "cleanup": {
+    "msq-3d4b3499c130": {
+      "run_id": "1ea8bf28-27f0-4225-970e-6298b62e8335",
+      "source_sha": "f55f9299d0cdb67a742e8cf0cf8aa5f001f31333",
+      "command": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.Id}}",
+        "msq-3d4b3499c130"
+      ],
+      "exit": 1,
+      "stderr": "error: no such object: msq-3d4b3499c130",
+      "absent": true
+    },
+    "msq-3d4b3499c130-data": {
+      "run_id": "1ea8bf28-27f0-4225-970e-6298b62e8335",
+      "source_sha": "f55f9299d0cdb67a742e8cf0cf8aa5f001f31333",
+      "command": [
+        "docker",
+        "volume",
+        "inspect",
+        "--format",
+        "{{.Name}}",
+        "msq-3d4b3499c130-data"
+      ],
+      "exit": 1,
+      "stderr": "Error response from daemon: get msq-3d4b3499c130-data: no such volume",
+      "absent": true
+    },
+    "msq-365da070fd18": {
+      "run_id": "16a9d2a6-3581-4715-a9d5-895875d3e34e",
+      "source_sha": "cfcc53d9bb7a90e20bbd67f4255d8322c1fc0d99",
+      "command": [
+        "docker",
+        "inspect",
+        "--format",
+        "{{.Id}}",
+        "msq-365da070fd18"
+      ],
+      "exit": 1,
+      "stderr": "error: no such object: msq-365da070fd18",
+      "absent": true
+    },
+    "msq-365da070fd18-data": {
+      "run_id": "16a9d2a6-3581-4715-a9d5-895875d3e34e",
+      "source_sha": "cfcc53d9bb7a90e20bbd67f4255d8322c1fc0d99",
+      "command": [
+        "docker",
+        "volume",
+        "inspect",
+        "--format",
+        "{{.Name}}",
+        "msq-365da070fd18-data"
+      ],
+      "exit": 1,
+      "stderr": "Error response from daemon: get msq-365da070fd18-data: no such volume",
+      "absent": true
+    }
+  },
+  "full": "NOT_RUN",
+  "production": "NO-GO",
+  "original_gate": "unchanged; no applicability waiver from INSERT evidence",
+  "provider_gap": "failed cooldown extension remains unpublished"
+}

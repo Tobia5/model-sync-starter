@@ -1,5 +1,8 @@
 # Oracle operations, capacity and safety
 
+> **Trigger-extension update:** for job/event/visit APIs, on-demand recurrence and current validation boundaries, use the [handbook](USER-HANDBOOK.md), [arc42 architecture](ARC42.md), [production runbook](PRODUCTION.md) and [review report](REVIEW.md). This document retains the original design/history; original test counts and schema-v1 examples are not the new release evidence.
+
+
 ## 1. Deployment gates
 
 Do not promote this source snapshot solely because the offline core tests pass. Before a live rollout: run the full Maven reactor, Spring/H2 tests, Oracle integration/concurrency tests, real client contract tests, and load tests at your actual row count and provider rate. Verify access control, credentials, driver/database compatibility and retention requirements. There is no production-ready claim in this artifact.
@@ -106,7 +109,7 @@ export MODELSYNC_ORACLE_TEST_SCHEMA_ACK=DEDICATED_TEST_SCHEMA
 export MODELSYNC_ORACLE_URL='jdbc:oracle:thin:@//test-host:1521/test-service'
 export MODELSYNC_ORACLE_USER='dedicated_test_user'
 # Inject MODELSYNC_ORACLE_PASSWORD through your approved secret mechanism.
-mvn -B -ntp -pl model-sync-persistence-jdbc -am -Poracle-it verify
+./mvnw -B -ntp -Pfull clean verify
 ```
 
 The test refuses to run without the acknowledgment or with preexisting work. It removes only its own exact work/state key. Do not supply production credentials. It does not apply DDL automatically.

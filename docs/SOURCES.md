@@ -1,5 +1,8 @@
 # Official design references
 
+> **Trigger-extension update:** for job/event/visit APIs, on-demand recurrence and current validation boundaries, use the [handbook](USER-HANDBOOK.md), [arc42 architecture](ARC42.md), [production runbook](PRODUCTION.md) and [review report](REVIEW.md). This document retains the original design/history; original test counts and schema-v1 examples are not the new release evidence.
+
+
 Consulted 2026-10-19. These references support framework/API decisions, not a claim that this project has passed a full framework or Oracle build. Project-specific algorithms and limitations are documented separately.
 
 | ID | Primary source | Used for |

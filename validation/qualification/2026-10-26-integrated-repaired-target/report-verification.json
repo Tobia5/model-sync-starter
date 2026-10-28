@@ -1,0 +1,25 @@
+{
+  "tested_source": "a0f46d7a6f188263f8822e3ad728e1894076871a",
+  "tested_tree": "0382fbeb887e3b3c2a55533f8ebc65cf522acb51",
+  "full_run_id": "751ea112-4068-48a0-97fc-c12605a59802",
+  "archive_sha256": "917cc99ba0f0f455f811b061e12801f3c4d3a261cc56de562ddb21b0972dd63c",
+  "archive_bytes": 5036287,
+  "archive_entries": 550,
+  "zip_crc": "PASS",
+  "entry_digests": "PASS",
+  "prior_archives_unchanged": 20,
+  "historical_qm_suffix": "BYTE_IDENTICAL",
+  "original_generated_full_QM_and_evidence": "BYTE_IDENTICAL",
+  "full_report_files": 417,
+  "default_report_files": 95,
+  "pit_html_asset_files": 13,
+  "gatling_html_asset_files": 192,
+  "post_report_checks": {
+    "python scripts/check-docs.py": 0,
+    "python scripts/check-architecture.py": 0,
+    "git diff --check": 0
+  },
+  "repository_changes": "report/docs/artifacts only",
+  "full": "PASS",
+  "production": "NO_GO"
+}

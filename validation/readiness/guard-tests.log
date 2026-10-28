@@ -1,0 +1,23 @@
+test_child_version_drift (test_release_checks.PublicationChecks.test_child_version_drift) ... ok
+test_confirmation_required (test_release_checks.PublicationChecks.test_confirmation_required) ... ok
+test_destination_change_rejected (test_release_checks.PublicationChecks.test_destination_change_rejected) ... ok
+test_non_main (test_release_checks.PublicationChecks.test_non_main) ... ok
+test_pr_cannot_publish (test_release_checks.PublicationChecks.test_pr_cannot_publish) ... ok
+test_release_rejected (test_release_checks.PublicationChecks.test_release_rejected) ... ok
+test_sample_cannot_deploy (test_release_checks.PublicationChecks.test_sample_cannot_deploy) ... ok
+test_valid_snapshot (test_release_checks.PublicationChecks.test_valid_snapshot) ... ok
+test_wrong_repository (test_release_checks.PublicationChecks.test_wrong_repository) ... ok
+test_empty (test_release_checks.ReportChecks.test_empty) ... ok
+test_error (test_release_checks.ReportChecks.test_error) ... ok
+test_failure (test_release_checks.ReportChecks.test_failure) ... ok
+test_malformed (test_release_checks.ReportChecks.test_malformed) ... ok
+test_missing (test_release_checks.ReportChecks.test_missing) ... ok
+test_missing_expected_class (test_release_checks.ReportChecks.test_missing_expected_class) ... ok
+test_no_test_modules (test_release_checks.ReportChecks.test_no_test_modules) ... ok
+test_pass (test_release_checks.ReportChecks.test_pass) ... ok
+test_skipped (test_release_checks.ReportChecks.test_skipped) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 0.035s
+
+OK

@@ -1,0 +1,148 @@
+import copy
+from importlib.util import module_from_spec, spec_from_file_location
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import time
+import unittest
+from unittest.mock import patch, Mock
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from qualification_target import manifest, validate_host, validate_projection, collect, qualify, characterization, audit_source, ROOT
+from run_evidence import begin, invalidate, current
+
+
+class QualificationTargetTests(unittest.TestCase):
+    def projection(self):
+        return {'scope': 'named-target-changed-existing-projection', 'status': 'PASS',
+                'sql_phase': 'changed-existing-B', 'matched_nowait_select': True, 'sql_dropped': 0, 'owner_calls': 2,
+                'sql': ['select p.x from sample_customer p for update of p.x nowait'],
+                'phases': [{'phase': phase, 'committed': {'DISPLAY_NAME': value, 'OWNER_VALIDATOR': validator,
+                    'GENERATION': generation, 'OUTCOME': 'APPLIED', 'WORK_STATUS': 'IDLE',
+                    'LOCAL_VERSION': generation-1, 'MATCHED_DIGEST': digest*64}}
+                    for phase,value,validator,generation,digest in [('created-A','A','A',1,'a'), ('changed-existing-B','changed-B','B',2,'b')]]}
+
+    def test_projection_requires_changed_committed_pair_and_bounded_phase_sql(self):
+        validate_projection(self.projection())
+        for key,bad in [('status','FAILED'),('sql_phase','created-A'),('sql_dropped',1),
+                        ('matched_nowait_select',False),('owner_calls',1),('sql',[])]:
+            with self.subTest(key=key):
+                value=self.projection();value[key]=bad
+                with self.assertRaises(ValueError):validate_projection(value)
+        for field,bad in [('LOCAL_VERSION',0),('OWNER_VALIDATOR','A'),('OUTCOME','MATCH'),('MATCHED_DIGEST','a'*64)]:
+            with self.subTest(field=field):
+                value=self.projection();value['phases'][1]['committed'][field]=bad
+                with self.assertRaises(ValueError):validate_projection(value)
+
+    def test_missing_or_wrong_run_projection_prevents_qualification(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root,_=self.fixture(directory);path=root/'model-sync-sample/target/qm/oracle-target-projection.json'
+            path.unlink()
+            with self.assertRaises(ValueError):qualify(root)
+            path.write_text(json.dumps({**current(root),**self.projection(),'run_id':'earlier'}))
+            with self.assertRaisesRegex(ValueError,'mismatch'):qualify(root)
+
+    def receipt(self):
+        value = manifest()
+        return {'scope': 'named-qualification-host', 'qualification_target': value['target'],
+                'claim_scope': value['claim_scope'], 'status': 'PASS', **value['policies'],
+                'actual_adapter_settings_verified': True, 'qualified_mapping_consumed': True,
+                'datasource_enlisted': True, 'writer_protocol': 'ledger-first',
+                **{k: v for k, v in value['platform'].items() if k != 'oracle_brand'}, 'oracle': 'Oracle AI Database 26ai 23.26.3.0.0'}
+
+    def test_preserves_all_previous_77_methods(self):
+        old=json.loads((ROOT/'scripts/tests/fixtures/oracle-required-77.json').read_text())
+        self.assertEqual(77,sum(len(methods) for suites in old.values() for methods in suites.values()))
+        current=manifest()['mandatory']
+        for module,suites in old.items():
+            for suite,methods in suites.items():
+                self.assertTrue(set(methods)<=set(current[module][suite]))
+        self.assertEqual('DURABLE',manifest()['policies']['cooldown_policy'])
+
+    def test_default_fallback_each_policy_and_broad_qualification_are_rejected(self):
+        validate_host(self.receipt())
+        for key in manifest()['policies']:
+            value = {**self.receipt(), key: 'DEFAULT'}
+            with self.assertRaisesRegex(ValueError, 'DEFAULT'): validate_host(value)
+        for key, wrong in [('claim_scope', 'all-configurations'), ('qualification_target', 'DEFAULT'),
+                           ('qualified_mapping_consumed', False), ('datasource_enlisted', False), ('oracle_minor', 25)]:
+            with self.assertRaises(ValueError): validate_host({**self.receipt(), key: wrong})
+
+    def test_original_reproducer_and_exact_one_method_selection_are_preserved(self):
+        audit_source()
+        self.assertEqual('NOT_RUN', characterization(None)['current_status'])
+        self.assertEqual('FAILED', characterization(None)['historical_capability'])
+        failed = {'cases': [{'name': 'statement-lock-timeout', 'status': 'FAILED'}]}
+        self.assertEqual('FAILED', characterization(failed)['current_status'])
+
+    def fixture(self, directory):
+        root = Path(directory)
+        (root / '.gitignore').write_text('target/\n')
+        for args in [('init',), ('config', 'user.email', 'synthetic@example.invalid'),
+                     ('config', 'user.name', 'Synthetic'), ('add', '.gitignore'), ('commit', '-m', 'fixture')]:
+            subprocess.run(['git', *args], cwd=root, check=True, capture_output=True)
+        run = begin(root)
+        folder = root / 'model-sync-sample/target/qm'
+        folder.mkdir(parents=True)
+        paths = []
+        for role in manifest()['required_host_roles']:
+            path = folder / f'qualification-host-{role}.json'
+            path.write_text(json.dumps({**run, **self.receipt(), 'role': role}))
+            paths.append(path)
+        (folder/'oracle-target-projection.json').write_text(json.dumps({**run,**self.projection()}))
+        return root, paths
+
+    def test_stale_wrong_run_malformed_and_blocked_following_success(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root, paths = self.fixture(directory)
+            self.assertEqual('PASS', qualify(root)['status'])
+            original = paths[0].read_text()
+            os.utime(paths[0], (time.time() - 60, time.time() - 60))
+            with self.assertRaisesRegex(ValueError, 'Stale'): collect(root)
+            paths[0].write_text(json.dumps({**json.loads(original), 'run_id': 'earlier'}))
+            with self.assertRaisesRegex(ValueError, 'mismatch'): collect(root)
+            paths[0].write_text('[]')
+            with self.assertRaisesRegex(ValueError, 'mismatch'): collect(root)
+            paths[0].write_text(original)
+            paths[1].unlink()
+            with self.assertRaisesRegex(ValueError, 'incomplete'): qualify(root)
+            invalidate(root)
+            with self.assertRaisesRegex(ValueError, 'marker absent'): collect(root)
+
+    def test_missing_required_method_cannot_be_hidden_by_same_suite_count(self):
+        spec = spec_from_file_location('named_full_gate', ROOT / 'scripts/check-full-reports.py')
+        gate = module_from_spec(spec); spec.loader.exec_module(gate)
+        with tempfile.TemporaryDirectory() as directory:
+            root, _ = self.fixture(directory)
+            for module, suites in manifest()['mandatory'].items():
+                folder = root / module / 'target/failsafe-reports'; folder.mkdir(parents=True)
+                for name, methods in suites.items():
+                    (folder / f'TEST-{name}.xml').write_text(f'<testsuite name="{name}" tests="{len(methods)}" errors="0" failures="0" skipped="0">'
+                        + ''.join(f'<testcase name="{method}"/>' for method in methods) + '</testsuite>')
+            self.assertIn('OracleIoIT', gate.oracle_suites(root))
+            path = root / 'model-sync-sample/target/failsafe-reports/TEST-OracleIoIT.xml'
+            path.write_text(path.read_text().replace('connectionLossBeforeCommitIsUncertainUntilFreshInspection', 'substitute'))
+            with self.assertRaisesRegex(ValueError, 'OracleIoIT'): gate.oracle_suites(root)
+
+    def test_rejected_qualification_still_writes_diagnostics_and_preserves_build_exit(self):
+        spec = spec_from_file_location('qm_rejected_target', ROOT / 'scripts/qm-report.py')
+        qm = module_from_spec(spec); spec.loader.exec_module(qm)
+        with tempfile.TemporaryDirectory() as directory:
+            root, _ = self.fixture(directory)
+            (root / 'pom.xml').write_text('<project xmlns="http://maven.apache.org/POM/4.0.0"/>')
+            run = begin(root)
+            for path in (root / 'model-sync-sample/target/qm').glob('qualification-host-*.json'):
+                path.write_text(json.dumps({**json.loads(path.read_text()), **run}))
+            with patch.object(qm, 'ROOT', root), patch.object(sys, 'argv', ['qm-report.py', '--full-command', 'fixture', '--full-status', 'PASS', '--full-exit', '0']), \
+                 patch.object(qm, 'load_checker', return_value=Mock(check=Mock(side_effect=ValueError('missing mandatory method')))), \
+                 patch.object(qm, 'command', return_value='fixture'), patch.object(qm, 'manifest', return_value={}), patch('builtins.print'):
+                with self.assertRaises(SystemExit) as ended: qm.main()
+            self.assertEqual(1, ended.exception.code)
+            report = json.loads((root / 'target/qm/evidence.json').read_text())
+            self.assertEqual(0, report['runs']['full']['exit'])
+            self.assertEqual(1, report['runs']['full']['qualification_exit'])
+            self.assertEqual('FAILED', report['runs']['full']['status'])
+            self.assertTrue((root / 'target/qm/QM.md').is_file())

@@ -1,9 +1,13 @@
 package io.modelsync.jdbc;
+import io.modelsync.core.port.*;
+import io.modelsync.core.application.*;
+import io.modelsync.core.domain.*;
 
 import io.modelsync.core.*;
 import java.sql.*;
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.*;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -14,17 +18,75 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  */
 public final class JdbcWorkStore implements WorkStore {
   private final JdbcTemplate jdbc;
+  private final JdbcPointLockPolicy pointLockPolicy;
+  private final JdbcInsertPolicy insertPolicy;
+  private final AtomicIntegerArray bindingLanes = new AtomicIntegerArray(Priority.values().length);
+  private final AtomicIntegerArray claimLanes = new AtomicIntegerArray(Priority.values().length);
 
   public JdbcWorkStore(JdbcTemplate jdbc) {
-    this.jdbc = jdbc;
+    this(jdbc, JdbcPointLockPolicy.DEFAULT);
+  }
+
+  /**
+   * @param jdbc transaction-bound JDBC access, enlisted with the local projection transaction
+   * @param pointLockPolicy explicit Oracle NOWAIT opt-in; does not bound inserts or other SQL
+   */
+  public JdbcWorkStore(JdbcTemplate jdbc, JdbcPointLockPolicy pointLockPolicy) {
+    this(jdbc, pointLockPolicy, JdbcInsertPolicy.DEFAULT);
+  }
+
+  /** Explicit creation policy, independent of point locking; queue and state SQL are unchanged. */
+  public JdbcWorkStore(JdbcTemplate jdbc, JdbcPointLockPolicy pointLockPolicy, JdbcInsertPolicy insertPolicy) {
+    this.jdbc = Objects.requireNonNull(jdbc);
+    this.pointLockPolicy = Objects.requireNonNull(pointLockPolicy);
+    if (pointLockPolicy == JdbcPointLockPolicy.ORACLE_NOWAIT
+        && !Boolean.TRUE.equals(jdbc.execute((ConnectionCallback<Boolean>) c ->
+            "Oracle".equals(c.getMetaData().getDatabaseProductName()))))
+      throw new IllegalArgumentException("ORACLE_NOWAIT point locks require an Oracle datasource");
+    this.insertPolicy = Objects.requireNonNull(insertPolicy);
+    insertPolicy.validate(jdbc);
+  }
+
+  private void insertWork(String sql, Object... values) {
+    try { jdbc.update(sql + insertPolicy.suffix(), values); }
+    catch (org.springframework.dao.DataAccessException failure) {
+      SQLException refusal = oracleLockRefusal(failure);
+      if (insertPolicy == JdbcInsertPolicy.ORACLE_26_NOWAIT && refusal != null)
+        throw new LocalContention("work-record creation",
+            new SQLException("Oracle insert-lock refusal", refusal.getSQLState(), refusal.getErrorCode()));
+      throw failure;
+    }
   }
 
   public void verifySchema() {
     String version =
         jdbc.queryForObject(
             "select meta_value from MS_META where meta_name='schema_version'", String.class);
-    if (!"1".equals(version))
+    if (!"1".equals(version) && !"2".equals(version))
       throw new IllegalStateException("Unsupported Model Sync schema version");
+    Set<String> indexes = jdbc.execute((ConnectionCallback<Set<String>>) connection -> {
+      Set<String> names = new HashSet<>();
+      try (ResultSet metadata = connection.getMetaData().getIndexInfo(
+          connection.getCatalog(), connection.getSchema(), "MS_WORK", false, true)) {
+        while (metadata.next()) names.add(metadata.getString("INDEX_NAME"));
+      }
+      return names;
+    });
+    if (indexes == null || !indexes.containsAll(Set.of("MS_WORK_READY_IX","MS_WORK_RECOVER_IX","MS_WORK_BIND_READY_IX")))
+      throw new IllegalStateException("Queue indexes missing: apply reviewed oracle-queue-v1/v2 migrations before starting workers");
+
+  }
+
+  @Override
+  public boolean supportsOnDemand() {
+    return "2".equals(jdbc.queryForObject(
+        "select meta_value from MS_META where meta_name='schema_version'", String.class));
+  }
+
+  @Override
+  public void completeOnDemand(WorkLease lease, SyncState state, Instant now) {
+    if (!supportsOnDemand()) throw new IllegalStateException("ON_DEMAND requires schema v2");
+    completeInternal(lease, state, null, now);
   }
 
   private void tx() {
@@ -32,21 +94,10 @@ public final class JdbcWorkStore implements WorkStore {
       throw new IllegalStateException("Ledger operation outside local transaction");
   }
 
-  private record Row(
-      WorkKey key,
-      int priority,
-      long generation,
-      int attempts,
-      boolean force,
-      String status,
-      String token,
-      Long until,
-      long nextAt) {}
-
-  private Row row(ResultSet r) throws SQLException {
+  private JdbcWorkRow row(ResultSet r) throws SQLException {
     long until = r.getLong("lease_until_ms");
     Long leaseUntil = r.wasNull() ? null : until;
-    return new Row(
+    return new JdbcWorkRow(
         new WorkKey(
             r.getString("binding_id"),
             new SubjectKey(r.getString("tenant_id"), r.getString("subject_id"))),
@@ -57,14 +108,29 @@ public final class JdbcWorkStore implements WorkStore {
         r.getString("work_status"),
         r.getString("lease_token"),
         leaseUntil,
-        r.getLong("next_at_ms"));
+        r.getLong("next_at_ms"),
+        r.getString("last_error_code"));
   }
 
-  private Optional<Row> locked(String id) {
-    return jdbc
-        .query("select * from MS_WORK where work_id=? for update", (r, n) -> row(r), id)
+  private Optional<JdbcWorkRow> locked(String id) {
+    try {
+      return jdbc
+        .query(pointLockPolicy.sql(), (r, n) -> row(r), id)
         .stream()
         .findFirst();
+    } catch (org.springframework.dao.DataAccessException failure) {
+      SQLException refusal = oracleLockRefusal(failure);
+      if (pointLockPolicy == JdbcPointLockPolicy.ORACLE_NOWAIT && refusal != null)
+        throw new LocalContention("work-record point lock",
+            new SQLException("Oracle row-lock refusal", refusal.getSQLState(), refusal.getErrorCode()));
+      throw failure;
+    }
+  }
+
+  static SQLException oracleLockRefusal(Throwable failure) {
+    for (Throwable cause = failure; cause != null; cause = cause.getCause())
+      if (cause instanceof SQLException sql && sql.getErrorCode() == 54) return sql;
+    return null;
   }
 
   @Override
@@ -72,10 +138,10 @@ public final class JdbcWorkStore implements WorkStore {
     tx();
     Objects.requireNonNull(priority);
     String id = key.storageId();
-    Optional<Row> found = locked(id);
+    Optional<JdbcWorkRow> found = locked(id);
     if (found.isEmpty()) {
       try {
-        jdbc.update(
+        insertWork(
             "insert into MS_WORK"
                 + " (work_id,binding_id,tenant_id,subject_id,priority,generation,attempts,force_refresh,work_status,next_at_ms,requested_at_ms)"
                 + " values (?,?,?,?,?,1,0,?,'WAITING',?,?)",
@@ -93,7 +159,7 @@ public final class JdbcWorkStore implements WorkStore {
         if (found.isEmpty()) throw concurrentInsert;
       }
     }
-    Row r = found.orElseThrow();
+    JdbcWorkRow r = found.orElseThrow();
     // Hash collisions are fantastically unlikely, but never treat one as the same subject.
     if (!r.key().equals(key)) throw new IllegalStateException("Work identity collision");
     String status = r.status().equals("LEASED") ? "LEASED" : "WAITING";
@@ -113,39 +179,108 @@ public final class JdbcWorkStore implements WorkStore {
   }
 
   @Override
-  public Optional<WorkLease> claim(Priority priority, Instant now, Duration duration) {
+  public Optional<String> enqueueRefresh(WorkKey key, Priority priority, Instant now) {
     tx();
-    // Do NOT append Oracle FETCH FIRST to FOR UPDATE. Fetch one row from the locking cursor.
-    String sql =
-        "select * from MS_WORK where priority=? and ((work_status='WAITING' and next_at_ms<=?) or"
-            + " (work_status='LEASED' and lease_until_ms<=?)) order by next_at_ms,work_id for"
-            + " update skip locked";
-    Optional<Row> selected =
-        jdbc.execute(
-            (ConnectionCallback<Optional<Row>>)
-                connection -> {
-                  try (PreparedStatement ps = connection.prepareStatement(sql)) {
-                    ps.setInt(1, priority.ordinal());
-                    ps.setLong(2, now.toEpochMilli());
-                    ps.setLong(3, now.toEpochMilli());
-                    ps.setFetchSize(1);
-                    ps.setMaxRows(1);
-                    try (ResultSet rs = ps.executeQuery()) {
-                      return rs.next() ? Optional.of(row(rs)) : Optional.empty();
-                    }
-                  }
-                });
+    Objects.requireNonNull(priority, "priority");
+    String id = key.storageId();
+    Optional<JdbcWorkRow> found = locked(id);
+    if (found.isEmpty()) {
+      try {
+        insertWork("insert into MS_WORK (work_id,binding_id,tenant_id,subject_id,priority,generation,attempts,force_refresh,work_status,next_at_ms,requested_at_ms) values (?,?,?,?,?,1,0,0,'WAITING',?,?)",
+            id, key.binding(), key.subject().tenant(), key.subject().id(), priority.ordinal(), now.toEpochMilli(), now.toEpochMilli());
+        return Optional.of(id);
+      } catch (DuplicateKeyException concurrentInsert) {
+        found = locked(id);
+        if (found.isEmpty()) throw concurrentInsert;
+      }
+    }
+    JdbcWorkRow row = found.orElseThrow();
+    if (!row.key().equals(key)) throw new IllegalStateException("Work identity collision");
+    if (row.status().equals("DEAD")) return Optional.empty();
+    if (row.status().equals("LEASED")) return Optional.of(id);
+    boolean idle = row.status().equals("IDLE");
+    // A visit may accelerate a periodic refresh, but must never bypass an error backoff.
+    long due = idle ? now.toEpochMilli() : row.lastCode() == null
+        ? Math.min(row.nextAt(), now.toEpochMilli()) : row.nextAt();
+    jdbc.update("update MS_WORK set work_status='WAITING',priority=?,next_at_ms=?,generation=?,requested_at_ms=? where work_id=?",
+        Math.min(row.priority(), priority.ordinal()), due,
+        idle ? row.generation() + 1 : row.generation(), now.toEpochMilli(), id);
+    return Optional.of(id);
+  }
+
+  @Override
+  public Optional<WorkLease> claim(Priority priority, Instant now, Duration duration) {
+    return claimInternal(priority, now, duration, null);
+  }
+
+  @Override
+  public Optional<WorkLease> claim(Priority priority, Instant now, Duration duration, Set<String> waitingBindings) {
+    Objects.requireNonNull(waitingBindings);
+    return claimInternal(priority, now, duration, waitingBindings.stream().sorted().toList());
+  }
+
+  private Optional<WorkLease> claimInternal(Priority priority, Instant now, Duration duration, List<String> waitingBindings) {
+    tx();
+    // Alternate lanes within each weighted priority: sustained arrivals cannot starve recovery,
+    // and repeated expirations cannot starve ordinary work. This is scheduling, not fencing state.
+    boolean recoveryFirst = (claimLanes.getAndIncrement(priority.ordinal()) & 1) != 0;
+    Optional<JdbcWorkRow> selected = selectLane(priority, now, recoveryFirst, waitingBindings);
+    if (selected.isEmpty()) selected = selectLane(priority, now, !recoveryFirst, waitingBindings);
+    return lease(selected, priority, now, duration);
+  }
+
+  private Optional<JdbcWorkRow> selectLane(Priority priority, Instant now, boolean recovery, List<String> waitingBindings) {
+    if (recovery || waitingBindings == null) return select(priority, now, recovery, null);
+    if (waitingBindings.isEmpty()) return Optional.empty();
+    int start = Math.floorMod(bindingLanes.getAndIncrement(priority.ordinal()), waitingBindings.size());
+    for (int offset = 0; offset < waitingBindings.size(); offset++) {
+      var result = select(priority, now, false, waitingBindings.get((start + offset) % waitingBindings.size()));
+      if (result.isPresent()) return result;
+    }
+    return Optional.empty();
+  }
+
+  private Optional<JdbcWorkRow> select(Priority priority, Instant now, boolean recovery, String binding) {
+    // Numeric deadlines preserve index order under linguistic NLS_SORT settings too.
+    // Equal deadlines have no promised order. No Oracle pagination/locking combination.
+    String sql = recovery
+        ? "select /*+ index_asc(w MS_WORK_RECOVER_IX) first_rows(1) */ w.* from MS_WORK w where priority=?"
+            + " and work_status='LEASED' and lease_until_ms<=? order by lease_until_ms for update skip locked"
+        : binding != null
+            ? "select /*+ index_asc(w MS_WORK_BIND_READY_IX) first_rows(1) */ w.* from MS_WORK w where binding_id=? and priority=?"
+                + " and work_status='WAITING' and next_at_ms<=? order by next_at_ms for update skip locked"
+        : "select /*+ index_asc(w MS_WORK_READY_IX) first_rows(1) */ w.* from MS_WORK w where priority=?"
+            + " and work_status='WAITING' and next_at_ms<=? order by next_at_ms for update skip locked";
+    Optional<JdbcWorkRow> selected = jdbc.execute((ConnectionCallback<Optional<JdbcWorkRow>>) connection -> {
+      try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        int index=1;
+        if (binding != null) statement.setString(index++,binding);
+        statement.setInt(index++,priority.ordinal());
+        statement.setLong(index,now.toEpochMilli());
+        statement.setFetchSize(1);
+        statement.setMaxRows(1);
+        try (ResultSet rows=statement.executeQuery()) {
+          return rows.next() ? Optional.of(row(rows)) : Optional.empty();
+        }
+      }
+    });
+    return selected == null ? Optional.empty() : selected;
+  }
+
+  private Optional<WorkLease> lease(Optional<JdbcWorkRow> selected, Priority priority, Instant now, Duration duration) {
     if (selected == null || selected.isEmpty()) return Optional.empty();
-    Row r = selected.get();
+    JdbcWorkRow r = selected.get();
     String token = UUID.randomUUID().toString();
     Instant until = now.plus(duration);
-    jdbc.update(
+    int updated = jdbc.update(
         "update MS_WORK set"
             + " work_status='LEASED',lease_token=?,lease_until_ms=?,leased_generation=generation"
             + " where work_id=?",
         token,
         until.toEpochMilli(),
         r.key().storageId());
+    if (updated != 1)
+      throw new IllegalStateException("Ledger claim changed " + updated + " rows for " + r.key().storageId());
     return Optional.of(
         new WorkLease(r.key(), token, r.generation(), r.attempts(), r.force(), priority, until));
   }
@@ -195,8 +330,12 @@ public final class JdbcWorkStore implements WorkStore {
 
   @Override
   public void complete(WorkLease lease, SyncState s, Instant nextAt, Instant now) {
+    completeInternal(lease, s, Objects.requireNonNull(nextAt, "nextAt"), now);
+  }
+
+  private void completeInternal(WorkLease lease, SyncState s, Instant nextAt, Instant now) {
     tx();
-    Row r = currentToken(lease);
+    JdbcWorkRow r = currentToken(lease);
     int updated =
         jdbc.update(
             "update MS_STATE set"
@@ -222,13 +361,15 @@ public final class JdbcWorkStore implements WorkStore {
           s.outcome(),
           millis(s.sourceChangedAt()));
     boolean pending = r.generation() != lease.generation();
+    boolean idle = !pending && nextAt == null;
     jdbc.update(
         "update MS_WORK set"
-            + " work_status='WAITING',priority=?,force_refresh=?,next_at_ms=?,attempts=0,last_error_code=null,lease_token=null,lease_until_ms=null"
+            + " work_status=?,priority=?,force_refresh=?,next_at_ms=?,attempts=0,last_error_code=null,lease_token=null,lease_until_ms=null"
             + " where work_id=?",
+        idle ? "IDLE" : "WAITING",
         pending ? r.priority() : Priority.BACKGROUND.ordinal(),
         pending && r.force() ? 1 : 0,
-        (pending ? now : nextAt).toEpochMilli(),
+        (pending || idle ? now : nextAt).toEpochMilli(),
         lease.key().storageId());
   }
 
@@ -236,7 +377,7 @@ public final class JdbcWorkStore implements WorkStore {
   public void reschedule(
       WorkLease lease, Instant nextAt, String code, boolean failure, int maxAttempts, Instant now) {
     tx();
-    Row r = currentToken(lease);
+    JdbcWorkRow r = currentToken(lease);
     boolean pending = r.generation() != lease.generation();
     int attempts = pending ? 0 : r.attempts() + (failure ? 1 : 0);
     String status = attempts >= maxAttempts ? "DEAD" : "WAITING";
@@ -251,10 +392,10 @@ public final class JdbcWorkStore implements WorkStore {
         lease.key().storageId());
   }
 
-  private Row currentToken(WorkLease lease) {
-    Row r = locked(lease.key().storageId()).orElseThrow(SyncExceptions.LeaseLost::new);
+  private JdbcWorkRow currentToken(WorkLease lease) {
+    JdbcWorkRow r = locked(lease.key().storageId()).orElseThrow(LeaseLost::new);
     if (!r.status().equals("LEASED") || !Objects.equals(r.token(), lease.token()))
-      throw new SyncExceptions.LeaseLost();
+      throw new LeaseLost();
     return r;
   }
 }

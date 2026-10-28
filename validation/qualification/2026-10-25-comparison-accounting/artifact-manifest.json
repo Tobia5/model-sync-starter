@@ -1,0 +1,14 @@
+{
+  "source_sha": "36ec8cac6cb5143d8f6f0a2e5a0818114652f724",
+  "source_tree": "fd6d1bf049ed00b5116684240fd1a8c728815ff5",
+  "run_id": "1451f5ce-a4c4-4654-ba9a-947dc493ccc6",
+  "scope": "default, focused failed attempts and all8 comparison evidence; full NOT_RUN",
+  "zip_sha256": "11cdd81a0d0a7b3a8ee362d0a04729fcc2c2560f50976f1b9783b8a0ffb5f223",
+  "zip_bytes": 946593,
+  "zip_entries": 323,
+  "crc_check": "PASS",
+  "prior_archives_verified_unchanged": 15,
+  "secret_scan": "PASS: bounded 48-hex generated credentials and Oracle password properties absent",
+  "historical_full": "FAILED",
+  "current_full": "NOT_RUN"
+}

@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.modelsync</groupId>
     <artifactId>model-sync-parent</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
   </parent>
   <artifactId>model-sync-persistence-jdbc</artifactId>
   <dependencies>
@@ -31,10 +31,14 @@
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency><groupId>io.modelsync</groupId><artifactId>model-sync-spring</artifactId><version>${project.version}</version><scope>test</scope></dependency>
+    <dependency><groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>tools.jackson.core</groupId><artifactId>jackson-databind</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>io.modelsync</groupId><artifactId>model-sync-testkit</artifactId><version>${project.version}</version><scope>test</scope></dependency>
   </dependencies>
   <profiles>
     <profile>
-      <id>oracle-it</id>
+      <id>full</id>
       <dependencies>
         <dependency>
           <groupId>com.oracle.database.jdbc</groupId>
@@ -42,23 +46,6 @@
           <scope>test</scope>
         </dependency>
       </dependencies>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-failsafe-plugin</artifactId>
-            <version>3.5.3</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>integration-test</goal>
-                  <goal>verify</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
     </profile>
   </profiles>
 </project>
